@@ -73,3 +73,12 @@ tmp/
 uv.toml
 
 /cleanup.sh
+
+# Local research environment and generated audit outputs
+/.cache/
+/coverage*.json
+/research_outputs/
+/.env
+/.env.*
+*.ckpt
+*.safetensors
