@@ -48,6 +48,8 @@ def test_snapshot_detects_change_and_ignores_environment(tmp_path):
     source.write_text("baseline")
     (tmp_path / ".venv").mkdir()
     (tmp_path / ".venv" / "b").write_text("ignored")
+    (tmp_path / "datasets").mkdir()
+    (tmp_path / "datasets" / "archive.zip.part").write_bytes(b"in-progress download")
     before = audit.snapshot(tmp_path)
     source.write_text("changed")
     assert before != audit.snapshot(tmp_path)

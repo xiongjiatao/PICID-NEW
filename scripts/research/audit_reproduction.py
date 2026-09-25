@@ -27,6 +27,12 @@ SKIP = {
     "research_outputs",
     ".pytest_cache",
     ".ruff_cache",
+    "datasets",
+    "checkpoints",
+    "logs",
+    "results",
+    ".model_cache",
+    ".nox",
 }
 
 
