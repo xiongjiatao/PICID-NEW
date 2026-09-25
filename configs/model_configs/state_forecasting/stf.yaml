@@ -1,0 +1,21 @@
+#@package _global_
+
+defaults:
+  - override /dataset: state_forecasting/default
+  - override /datamodule: base_datamodule
+  - override /model: stf
+  - override /optimization: warmup_reduce_on_plateau
+
+task_definition:
+  requires_training: true
+
+model:
+  max_seq_len: ${sum:${task_definition.seq_len},${task_definition.pred_len}}
+  d_yc: ${infer_data_dim:features,-1}
+  d_yt: ${infer_data_dim:features,-1}
+  d_x: 0
+  n_timefeatures: 0
+
+optimization:
+  scheduler:
+    factor: 0.95

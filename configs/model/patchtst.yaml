@@ -1,0 +1,26 @@
+_target_: picid.model.forecasters.patchtst_model.PatchTST_Forecaster
+
+metadata:
+  lightning_model: true
+
+task_type: ${task_definition.task_type}
+ts_in: null # must be set by the model_config
+ts_out: null # must be set by the model_config
+d_yc: null # must be set by the model_config
+d_yt: null # must be set by the model_config
+d_x: null # must be set by the model_config
+d_model: 256 # 256
+d_ff: 128 # 512
+e_layers: 3
+d_layers: 3
+dropout: 0.1
+freq: null # hourly
+time_emb_dim: 32
+use_x_dim: true
+include_x_t: true
+
+patch_len: 16
+stride: 8
+
+use_revin: false
+use_seasonal_decomp: false

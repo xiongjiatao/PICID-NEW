@@ -1,0 +1,25 @@
+# https://www.sciencedirect.com/science/article/pii/S0952197622005723
+
+seq_len: 50 # window size
+label_len: 0 # overlap size
+pred_len: 0 # prediction size
+task_type: rul
+padding_left_flag: True # Ensure sequences are left-padded to have enough history and consistent lengths of train/val/test regardless of seq_len
+
+stride: 1
+stride_train: 1
+subset_ratio: 1.0
+subset_seed: ${seed}
+
+model:
+  data_requirements:
+    input_tensors:
+      - features
+      - rul
+      - timestamps
+      - health_states
+      - unit
+      - concepts
+
+target_metric: val/loss
+target_metric_mode: min

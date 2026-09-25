@@ -1,0 +1,18 @@
+#@package _global_
+
+defaults:
+  - override /dataset: diagnostics/fault_classification_multiunit_dataset
+  - override /datamodule: base_datamodule
+  - override /model: patchtst
+  - override /optimization: warmup_reduce_on_plateau
+
+task_definition:
+  requires_training: true
+
+model:
+  ts_in: ${task_definition.seq_len}
+  ts_out: 1 # task definition.pred_len is 0 for diagnostics, but the model needs the output to be > 0, so we set it to 1 here
+  d_yc: 0
+  d_yt: ${task_definition.num_classes}
+  d_x: ${infer_data_dim:features,-1}
+  include_x_t: false

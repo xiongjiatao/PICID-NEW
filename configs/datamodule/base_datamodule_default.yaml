@@ -1,0 +1,17 @@
+_target_: picid.data.datamodules.base.BaseDataModule
+train_batch_size: null
+val_batch_size: null
+test_batch_size: null
+
+num_workers: 4
+prefetch_factor: 10
+
+# --Fixed ones--
+shuffle_train: True
+shuffle_val: False
+shuffle_test: False
+# We have moved this functionality to the dataset classes:
+# train_subset_ratio: ${oc.select:task_definition.subset_ratio,null}
+# val_subset_ratio: null
+# test_subset_ratio: null
+# subset_seed: ${oc.select:task_definition.subset_seed,null}

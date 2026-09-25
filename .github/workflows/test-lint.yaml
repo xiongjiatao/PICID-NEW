@@ -1,0 +1,44 @@
+name: Lint
+
+on:
+  push:
+    branches: [ main, github-actions-test, neurips2026-submission ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: "pyproject.toml"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      # 4. Install the environment
+      # uv sync installs picid + configured dependency groups + dev tools
+      - name: Install Dependencies
+        run: uv sync --group dev
+
+      # 5. Run Ruff (Style & Syntax)
+      # It will only check 'picid' based on your pyproject.toml settings
+      - name: Ruff Check
+        run: uv run ruff check picid
+
+      # 6. Run Mypy (Type Logic)
+      - name: Mypy Type Check
+        # We point it specifically at picid to avoid submodule errors
+        run: uv run mypy picid
+        # Set to true if you don't want to block PRs while fixing existing errors
+        continue-on-error: true

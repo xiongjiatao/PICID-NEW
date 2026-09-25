@@ -1,0 +1,13 @@
+_target_: picid.model.estimators.carte.wrapper.FitPredictCarteWrapper
+task_type: ${task_definition.task_type}
+
+yield_strategy: True
+yield_batch_size: 1
+
+num_model: 10 # 10 models for the bagging strategy
+disable_pbar: false # True if you want cleanness
+random_state: 0
+device: ${trainer.accelerator}
+# I think this runs n_jobs estimator fits in parallel, be careful with memory
+n_jobs: 5
+pretrained_model_path: ${paths.model_cache_dir}

@@ -1,0 +1,7 @@
+
+_target_: picid.model.estimators.isolation_forest.wrapper.FitPredictIsolationForestWrapper
+task_type: ${task_definition.task_type}
+
+n_estimators: 100
+contamination: 0.1
+random_state: 42

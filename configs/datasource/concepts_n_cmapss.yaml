@@ -1,0 +1,33 @@
+# Dataset loader config
+# Must have keys: data_name, task_mode
+
+_target_: picid.data.datasources.concepts_n_cmapss.N_CMAPSSDataSource
+
+# Must have keys
+data_name: ${.data_folder}_${.load_arguments.n_DS}
+task_mode: rul
+
+# Additional
+data_folder: N-CMAPSS
+path: ${paths.data_dir}/${.data_folder}
+cruise: false
+subsampling_rate: 1
+combined_concepts: false
+binary_concepts: true
+RUL: "linear"
+include_healthy: true
+scaling: "legacy"
+
+load_arguments:
+  n_DS: "02"
+  mode: "train"
+  fc: null
+  units: null
+  concepts:
+    - "LPT-E"
+    - "LPT-F"
+    - "HPT-E"
+
+# TODO: We currently have no data splitter implemented
+# for this dataset to split within an unit.
+data_splitter: null

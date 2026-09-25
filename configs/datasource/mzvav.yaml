@@ -1,0 +1,16 @@
+_target_: picid.data.datasources.base.multi_source_loader.MultiSourceLoader
+_recursive_: False
+
+data_name: MultiSource_MZVAV
+task_mode: fault # rul, fault
+#cache_dir: ${paths.data_dir}/mzvav_cache
+
+defaults:
+  - /datasource@set1: mzvav_2-2
+
+source_list:
+  set1: ${..set1}
+
+set1:
+  load_arguments:
+    unit_number: "2-2"

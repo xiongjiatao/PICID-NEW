@@ -1,0 +1,110 @@
+# plot_features:
+#   transform:
+#     unit_key: unit_id
+#     _target_: picid.transforms.visualization.features_target_plotter.FeatureTargetPlotter
+#     saving_path: ${paths.log_dir}/images
+#     features_key: features
+#     target_key: target
+
+#   metadata:
+#     apply_to: ["features", "target", "unit_id"]
+
+subsample_features_target:
+  transform:
+    _target_: picid.transforms.base_transforms.subsample.WindowedAggregationTransform
+    step: 10
+    window_size: 1
+    aggregation: last
+    dim: 0
+  metadata:
+    apply_to: [features, target]
+
+# plot_features_subsampled:
+#   transform:
+#     unit_key: unit_id
+#     _target_: picid.transforms.visualization.features_target_plotter.FeatureTargetPlotter
+#     saving_path: ${paths.log_dir}/images_subsampled
+#     features_key: features
+#     target_key: target
+#
+#   metadata:
+#     apply_to: ["features", "target", "unit_id"]
+#
+ragged2regularragged:
+  transform:
+    _target_: picid.transforms.base_transforms.shape_manipulations.RegularizeRaggedDataTransform
+
+  metadata:
+    apply_to: "features"
+
+reshape_x_for_health_index:
+  transform:
+    _target_: picid.transforms.base_transforms.reshaping.ReshapeTransform
+    pattern: "a b c -> (a b) c"
+  metadata:
+    apply_to: features
+    assign_to: features_flatten
+
+# features2RMS:
+#   transform:
+#     _target_: picid.transforms.signal_processing.rms.MovingRMSTransform
+#     window_size: 2560
+#     apply_to_columns: True
+#     save_images: True
+#     saving_path: ${paths.log_dir}/rms_images
+#     unit_key: unit_id
+
+#   metadata:
+#     apply_to: ['features_flatten', 'unit_id']
+#     assign_to: index
+
+target_to_regular_ragged:
+  transform:
+    _target_: picid.transforms.base_transforms.shape_manipulations.RegularizeRaggedDataTransform
+
+  metadata:
+    apply_to: "target"
+
+reshape_y:
+  transform:
+    _target_: picid.transforms.base_transforms.reshaping.ReshapeTransform
+    pattern: "a b c -> (a b) c"
+  metadata:
+    apply_to: target
+    assign_to: target
+
+scaler_target:
+  transform:
+    _target_: picid.transforms.bearings.health_index.HealthIndexTransform
+    runtime_key: target
+    unit_key: unit_id
+    dataset_name: XJTU-SY
+
+  metadata:
+    apply_to: ["target", "unit_id"]
+    assign_to: rul
+
+reshape_x:
+  transform:
+    _target_: picid.transforms.base_transforms.reshaping.ReshapeTransform
+    pattern: "a b c -> (a b) c"
+  metadata:
+    apply_to: features
+    assign_to: features
+
+# plot:
+#   transform:
+#     _target_: picid.transforms.base_transforms.plot_transforms.PlotFeatures
+#     unit_key: unit_id
+
+#   metadata:
+#     apply_to: ['features',  'unit_id']
+#     assign_to: ['features']
+
+scaler_features:
+  transform:
+    _target_: picid.transforms.base_transforms.scaler.StandardScalerSklearn
+
+  metadata:
+    apply_to: features
+    fit_on: train

@@ -1,0 +1,25 @@
+_target_: picid.model.forecasters.crossformer_model.Crossformer_Forecaster
+
+metadata:
+  lightning_model: true
+
+task_type: ${task_definition.task_type}
+ts_in: null # must be set by the model_config
+ts_out: null # must be set by the model_config
+d_yc: null # must be set by the model_config
+d_yt: null # must be set by the model_config
+d_x: null # must be set by the model_config
+d_model: 128
+d_ff: 128
+e_layers: 3
+dropout: 0.2
+
+seg_len: 6
+win_size: 2
+factor: 10
+n_heads: 4
+baseline: false
+decoder_embedding: DSW
+
+use_revin: false
+use_seasonal_decomp: false

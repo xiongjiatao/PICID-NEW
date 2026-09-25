@@ -1,0 +1,5 @@
+_target_: picid.data.datasources.unibo.loader.UNIBO21Loader
+
+data_name: UNIBO21
+task_mode: SOC
+data_dir: ${paths.data_dir}

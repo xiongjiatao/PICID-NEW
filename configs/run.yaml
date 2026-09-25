@@ -1,0 +1,73 @@
+# @package _global_
+
+# specify here default configuration
+# order of defaults determines the order in which configs override each other
+defaults:
+  - _self_
+  - datasource: null
+  - transforms: null
+  - dataset: null
+  - datamodule: null
+  - model: null
+  - task_definition: null
+  - optimization: default
+  - loss: default
+  - evaluator: null
+  - callbacks: default
+  - logger: wandb
+  - trainer: default
+  - paths: default
+  - hydra: default
+  - cache: default
+
+  # experiment configs allow for version control of specific hyperparameters
+  # e.g. best hyperparameters for given model and datamodule
+  - experiment: null
+
+  # config for hyperparameter optimization
+  - hparams_search: null
+
+  # # optional local config for machine/user specific settings
+  # # it's optional since it doesn't need to exist and is excluded from version control
+  # - optional local: default
+
+  # debugging config (enable through command line, e.g. `python train.py debug=default)
+  - debug: null #
+
+# task name, determines output directory path
+experiment_group: "debug"
+
+# tags to help you identify your experiments
+# you can overwrite this in experiment configs
+# overwrite from command line with `python train.py tags="[first_tag, second_tag]"`
+tags: ["dev"]
+
+# set False to skip model training
+train: True
+
+# evaluate on test set, using best model weights achieved during training
+# lightning chooses best weights based on the metric specified in checkpoint callback
+test: True
+
+# simply provide checkpoint path to resume training
+ckpt_path: null
+
+# seed for random number generators in pytorch, numpy and python.random
+seed: 42
+
+# Limit the number of threads used by pytorch to the specified value
+# the reason for is that with time series we are quite heavy on data loading
+# costs for batch assembly which is parallelized using multiple threads
+# by the respective libraries (e.g. numpy, pandas, torch ...)
+# if we want to run multiple experiments in parallel on the same GPU
+# we need to limit the number of threads per experiment
+# otherwise, the system gets overloaded and experiments start to slow down drastically.
+# This is caused by the libraries assuming max_threds = f(number of total CPU cores)
+# and the container usually sees all CPU cores of the host system which are a lot for servers.
+num_threads: 32
+
+enable_progress_bar: True
+
+# If strange cuda errors in attention, try to set this to False to see if OOM errors play a role
+# because sometimes flash attention does not throw an error in an OOM situation.
+flash_attention: True

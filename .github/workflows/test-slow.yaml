@@ -1,0 +1,36 @@
+name: Slow & Snapshot Tests
+
+on:
+  push:
+    branches: [ "main", "neurips2026-submission" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  slow-and-snapshots:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: |
+          uv sync --group dev
+
+      - name: Download PHME20 (for requires_snapshots tests)
+        run: |
+          uv run python -c "from phmd.download import download; download('PHME20', cache_dir='datasets/phmd_cache', unzip=True)"
+
+      - name: Run slow and requires_snapshots tests
+        run: uv run pytest test/ -m "(slow or requires_snapshots) and not real_data" -v

@@ -1,0 +1,34 @@
+#@package _global_
+
+defaults:
+  - override /datasource: xjtu_sy
+  - override /evaluator: per_unit
+  - override /task_definition: prognostics/rul
+
+
+callbacks:
+  early_stopping:
+    monitor: val/loss
+    mode: min
+
+  model_checkpoint:
+    monitor: val/loss
+    mode: min
+
+evaluator:
+  train:
+    inverse_transform_name: scaler_target
+    metric_names: ["phm_score", "mae", "mse", "rmse"]
+    apply_inverse_scaling: True
+  val:
+    inverse_transform_name: scaler_target
+    metric_names: ["phm_score", "mae", "mse", "rmse"]
+    apply_inverse_scaling: True
+  test:
+    inverse_transform_name: scaler_target
+    metric_names: ["phm_score", "mae", "mse", "rmse"]
+    apply_inverse_scaling: True
+
+dataset:
+  dataset_cfg:
+    get_unit_id: true

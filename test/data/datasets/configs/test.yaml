@@ -1,0 +1,7 @@
+defaults:
+  - _self_
+  - model: null # tabpfn.yaml
+  - dataset: null
+  - paths: default
+  - datasource: null
+  # - experiment: default.yaml

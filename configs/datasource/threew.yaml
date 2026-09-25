@@ -1,0 +1,20 @@
+_target_: picid.data.datasources.threew.ThreeWLoader
+data_name: threew
+task_mode: anomaly_detection
+data_dir: ${paths.data_dir}
+
+# 3W predefined fold file.
+folds_file: threew_dataset/folds/folds_clf_02.csv
+validation_fold: 0
+test_fold: 1
+
+# Include OVA rows so anomaly labels contain both normal and anomalous timesteps.
+include_ova: true
+include_simulated_train: true
+
+# Binary anomaly target is produced in `target`; event classes are optional.
+export_event_class: true
+num_classes: 2
+num_event_classes: 9
+
+download: true

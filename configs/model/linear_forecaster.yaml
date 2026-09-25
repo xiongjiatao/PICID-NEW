@@ -1,0 +1,16 @@
+_target_: picid.model.forecasters.linear_model.linear_model.Linear_Forecaster
+task_type: ${task_definition.task_type}
+
+metadata:
+  lightning_model: true
+
+d_yc:  null # must be set by the model_config
+d_yt:  null # must be set by the model_config
+d_x: null # must be set by the model_config
+context_points: null # must be set by the model_config
+
+linear_window: 0
+linear_shared_weights: false
+
+use_revin: true
+use_seasonal_decomp: true

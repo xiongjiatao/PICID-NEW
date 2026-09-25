@@ -1,0 +1,176 @@
+_target_: picid.data.datasources.base.multi_source_loader.MultiSourceLoader
+_recursive_: False
+
+# Must have keys for the pipeline
+data_name: MultiSource_concepts_N-CMAPSS
+task_mode: rul
+
+defaults:
+  - /datasource@train1: concepts_n_cmapss
+  - /datasource@train2: concepts_n_cmapss
+  - /datasource@train3: concepts_n_cmapss
+  - /datasource@train4: concepts_n_cmapss
+
+  - /datasource@val1: concepts_n_cmapss
+  - /datasource@val2: concepts_n_cmapss
+  - /datasource@val3: concepts_n_cmapss
+  - /datasource@val4: concepts_n_cmapss
+
+  - /datasource@test1: concepts_n_cmapss
+  - /datasource@test2: concepts_n_cmapss
+  - /datasource@test3: concepts_n_cmapss
+  - /datasource@test4: concepts_n_cmapss
+
+source_list:
+  train1: ${..train1}
+  train2: ${..train2}
+  train3: ${..train3}
+  train4: ${..train4}
+
+  val1: ${..val1}
+  val2: ${..val2}
+  val3: ${..val3}
+  val4: ${..val4}
+
+  test1: ${..test1}
+  test2: ${..test2}
+  test3: ${..test3}
+  test4: ${..test4}
+
+multisource_data_splitter:
+  _target_: picid.data.preprocessing.BySourceSplitter
+  sources_train: [ train1, train2, train3, train4 ]
+  sources_test: [ test1, test2, test3, test4 ]
+
+  # We use train unit 6 from the training sets for validation
+  sources_val: [ val1, val2, val3, val4 ]
+
+# TODO:
+# Model performance depends a lot on the data set splits
+# Many papers use n_DS = 2 which has wierd units. (2,5,7 etc.)
+# most papers use DS 2 4 engines for train a 3 for test 2 for val.
+
+# Chi-ching took 3 datasets ds 1 4 7. Beacause each one has different fault types.
+# N-ds defines the fault type (high-pressure turbine, low-pressure turbine.)
+
+# he did only detection, at which cycle the fault occurs (Arthur has the dataset)
+# because RUL did not work well.
+# he took only the crusing part and does reconstruction error over entire cycle.
+
+# RUL is predicted per cycle
+
+# challenge is to map whole cycle into one value. (of varying length)
+# need to fiugre out cycle id
+
+# roughly several K data points per cycle
+
+_train_load_args: &train_args
+  units: [ 1, 2, 3, 4, 5 ]
+  mode: "train"
+
+_val_load_args: &val_args
+  units: [ 6 ]
+  mode: "train"
+
+_test_load_args: &test_args
+  units: [ 7, 8, 9, 10 ]
+  mode: "test"
+
+########## Train Sources ##########
+train1:
+  load_arguments:
+    n_DS: "01"
+    concepts:
+      - "HPT"
+    <<: *train_args
+  group_by_unit: True
+
+train2:
+  load_arguments:
+    n_DS: "04"
+    concepts:
+      - "Fan"
+    <<: *train_args
+  group_by_unit: True
+
+train3:
+  load_arguments:
+    n_DS: "05"
+    concepts:
+      - "HPC"
+    <<: *train_args
+  group_by_unit: True
+
+train4:
+  load_arguments:
+    n_DS: "07"
+    concepts:
+      - "LPT"
+    <<: *train_args
+  group_by_unit: True
+########## Val Sources ##########
+
+val1:
+  load_arguments:
+    n_DS: "01"
+    concepts:
+      - "HPT"
+    <<: *val_args
+  group_by_unit: True
+
+val2:
+  load_arguments:
+    n_DS: "04"
+    concepts:
+      - "Fan"
+    <<: *val_args
+  group_by_unit: True
+
+val3:
+  load_arguments:
+    n_DS: "05"
+    concepts:
+      - "HPC"
+    <<: *val_args
+  group_by_unit: True
+
+val4:
+  load_arguments:
+    n_DS: "07"
+    concepts:
+      - "LPT"
+    <<: *val_args
+  group_by_unit: True
+
+########## Test Sources ##########
+test1:
+  load_arguments:
+    n_DS: "01"
+    concepts:
+      - "HPT"
+    <<: *test_args
+  group_by_unit: True
+
+test2:
+  load_arguments:
+    n_DS: "04"
+    concepts:
+      - "Fan"
+    <<: *test_args
+  group_by_unit: True
+
+test3:
+  load_arguments:
+    n_DS: "05"
+    concepts:
+      - "HPC"
+    <<: *test_args
+  group_by_unit: True
+
+test4:
+  load_arguments:
+    n_DS: "07"
+    concepts:
+      - "LPT"
+    <<: *test_args
+  group_by_unit: True

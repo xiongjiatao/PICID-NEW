@@ -1,0 +1,8 @@
+defaults:
+  - base_datamodule
+
+shuffle_train: false
+shuffle_val: false
+shuffle_test: false
+
+train_batch_size: 32

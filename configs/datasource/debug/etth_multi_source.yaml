@@ -1,0 +1,33 @@
+defaults:
+  - /datasource@src1: ETTh1
+  - /datasource@src2: ETTh1
+
+
+_target_: picid.data.datasources.multi_source_pipeline.MultiSource
+_recursive_: False
+
+source_list:
+  src1: ${..src1}
+  src2: ${..src2}
+
+multisource_transforms:
+  multisource_feature_minmax_scaler:
+    transform:
+      _target_: picid.transforms.base_transforms.scaler.MinMaxScalerSklearn # Your wrapper class
+    metadata:
+      apply_to: features # The key within each source's dict (e.g., source1['features'])
+      fit_on: train     # The split to fit on (e.g., source1['features']['train'])
+      # multi_source_fit: True # Flag indicating a multi-source fitting strategy
+
+
+
+#load_arguments: null
+#data_splitter: null
+#scalers: null
+
+# src1:
+#   load_arguments:
+#     n_DS: "FD001"
+# src2:
+#   load_arguments:
+#     n_DS: "FD002"

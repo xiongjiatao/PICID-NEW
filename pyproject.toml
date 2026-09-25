@@ -1,0 +1,251 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["picid"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"configs" = "picid/configs"
+
+[project]
+name = "picid"
+version = "0.1.0"
+description = "Prognostics, Health Management (PHM) and Forecasting Benchmark Arena — a unified, config-driven framework for PHM and forecasting experiments from data loading to evaluation."
+readme = "README.md"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    # License: to be decided
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+]
+requires-python = ">=3.12"
+dependencies = [
+    "numpy<=2.3.0",
+    "hydra-core>=1.3.2",
+    "hydra-colorlog>=1.2.0",
+    "einops>=0.7.0",
+    "scikit-learn>=1.3.2",
+    "pandas>=2.1.1",
+    "omegaconf>=2.3.0",
+    "torchsummary>=1.5.1",
+    "pyrootutils>=1.0.4",
+    "lightning>=2.5.2",
+    "performer-pytorch>=1.1.4",
+    "torchinfo>=1.7.1",
+    "h5netcdf>=1.1.0",
+    "netcdf4>=1.6.5",
+    "openpyxl>=3.1.2",
+    "jupyter>=1.1.1",
+    "python-box>=7.3.2",
+    "positional-encodings>=6.0.3",
+    # Careful with wandb >=0.23.0, we were loosing results on wandb due to an unknown bug
+    "wandb==0.22.0",
+    "progpy>=1.7.1",
+    "pyarrow>=20.0.0",
+    "rich>=14.0.0",
+    "awkward>=2.8.7",
+    "xarray>=2025.10.1",
+    "hvplot>=0.12.1",
+    "h5py>=3.14.0",
+    "faiss-cpu==1.11.0",
+    "huggingface-hub>=0.35.3",
+    "rul-datasets",
+    "sortedcontainers>=2.4.0",
+    "numba>=0.62.1",
+    "cloudpickle>=3.1.1",
+    "fvcore>=0.1.5.post20221221",
+    "tables>=3.10.2",
+    "questionary>=2.0.0",
+]
+
+[project.scripts]
+picid-assemble = "picid.cli.assemble:main"
+picid-run = "picid.run:main"
+
+[tool.uv]
+default-groups = ["tabfm", "phmd"]
+
+[dependency-groups]
+dev = [
+    "nox>=2025.11.12",
+    "pre-commit",
+    "pytest",
+    "pytest-cov",
+    "coverage",
+    "jupyter",
+    "mypy",
+    "pytest-mock",
+    "mkdocs-material>=9.6.20",
+    "mkdocstrings[python]>=0.30.0",
+    # "uni2ts",
+    "viztracer>=1.0.4",
+    "panel>=1.8.1",
+    "holoviews>=1.21.0",
+    "seaborn>=0.13.2",
+]
+tabfm = ["tabdpt", "carte-ai", "TabPFN"]
+phmd = ["phmd"]
+
+
+# If your package lives under src/, replace with:
+# [tool.setuptools.packages.find]
+# where = ["src"]
+
+[tool.numpydoc_validation]
+# Relax strict checks: Examples, See Also, extended summary not required
+checks = ["all", "EX01", "SA01", "ES01"]
+# __repr__ and __init__ follow class-level docstring convention
+# Lightning callback hooks inherit parameter contracts from the framework
+exclude = ['__repr__$', '__init__$', 'resource_tracker\.ResourceTracker\.']
+
+[tool.pytest.ini_options]
+# When run from repo root with `uv run pytest`, basetemp stays outside `test/` and out of the source-test tree
+addopts = "--basetemp=.pytest_tmp"
+norecursedirs = ["_archive"]
+# Default focused local runs should omit timing/benchmark checks unless you ask for them explicitly, e.g.:
+#   uv run pytest test -q -m "not benchmark and not slow"
+# To run only benchmark/slow timing tests: -m benchmark (or -m slow)
+# Add --cov=picid --cov-fail-under=95 when running coverage (e.g. pytest test/ --cov=picid --cov-fail-under=95)
+markers = [
+    "unit: isolated unit tests with minimal dependencies",
+    "optional_dep: needs optional dependencies, extras, or non-default environment",
+    "integration: crosses subsystem boundaries (I/O, full pipeline slices, external services)",
+    "tutorial: tutorial-style or walkthrough tests (often heavier or narrative)",
+    "benchmark: timing or throughput checks (not correctness-only)",
+    "slow: slow tests (e.g. __getitem__ timing); exclude from focused runs with -m 'not benchmark and not slow'",
+    "requires_snapshots: verification-only against committed snapshot fixtures; skip when fixtures are missing and do not regenerate snapshots from test runs",
+    "real_data: requires real datasets on disk; never runs in CI — local only",
+]
+
+[tool.pylint."messages control"]
+disable = ["logging-fstring-interpolation"]
+
+[tool.ruff]
+src = ["picid"]
+exclude = ["local_packages", "scripts", "_archive", "**/*.ipynb"]
+
+[tool.ruff.lint.per-file-ignores]
+# E402: module-level import not at top (needed for env setup, lazy imports, etc.)
+"picid/__init__.py" = ["E402"]
+"picid/baselines/spacetimeformer_model/nn/attn.py" = ["E402"]
+"picid/data/cache/file_lock.py" = ["E402"]
+"picid/data/split_strategies/time_splitter.py" = ["E402"]
+"picid/model/wrappers/tabpfn_wrapper.py" = ["E402"]
+"picid/run.py" = ["E402"]
+"picid/simplified_run_objects.py" = ["E402"]
+# Test files: conftests need late imports; some tests need class before imports
+"test/**/conftest.py" = ["E402"]
+"test/data/data_objects/test_property_based_utils.py" = ["E402"]
+"test/baselines/test_timeseries_transformer_model.py" = ["E402"]
+
+[tool.mypy]
+packages = ["picid"]
+exclude = ["picid/data/datasources/picasso/", "_archive"]
+# This is the "magic" setting: it ignores errors from libraries that don't have types
+ignore_missing_imports = true
+follow_imports = "silent"
+# Don't check the body of functions that don't have type hints
+check_untyped_defs = false
+# If a function doesn't have a return type, Mypy stays quiet
+disallow_untyped_defs = false
+
+[tool.coverage.run]
+# Only measure coverage for your own code
+source = ["picid"]
+omit = [
+    "_archive/*",
+    "*/_archive/*",
+    "local_packages/*",
+    "*/local_packages/*",
+    "picid/data/datasources/picasso/time_series_datamodule.py",
+    "picid/data/datasources/picasso/picasso_datasource.py",
+    "picid/data/datasources/unibo/loader.py",
+    "picid/__init__.py",
+    # CLI/entry and demo modules
+    "picid/run.py",
+    "picid/simplified_run.py",
+    "picid/simplified_run_objects.py",
+    "picid/verify_environment.py",
+    "picid/data/datasources/toy_example.py",
+    "picid/data/datasources/airbus_helicopter.py",
+    "picid/transforms/visualization/features_target_plotter.py",
+    "picid/data/datasources/concepts_n_cmapss.py",
+    # PHMD datasources; low-coverage integration paths
+    "picid/data/datasources/phmd_phme20.py",
+    "picid/data/datasources/phmd_pubd16.py",
+    "picid/data/datasources/phmd_n_cmapss.py",
+    "picid/data/datasources/phmd_xjtu_sy.py",
+    "picid/data/datasources/phmd_cbmv3.py",
+    "picid/data/datasources/phmd_pronostia.py",
+    "picid/data/datasources/phmd_hsf15.py",
+    "picid/data/datasources/agtf30k.py",
+    "picid/data/datasources/nb14/loader.py",
+    "scripts/*",
+]
+
+[tool.coverage.report]
+# Exclude local_packages from reports
+omit = [
+    "_archive/*",
+    "*/_archive/*",
+    "local_packages/*",
+    "*/local_packages/*",
+    "picid/data/datasources/picasso/time_series_datamodule.py",
+    "picid/data/datasources/picasso/picasso_datasource.py",
+    "picid/data/datasources/unibo/loader.py",
+    "picid/__init__.py",
+    # CLI/entry and demo modules
+    "picid/run.py",
+    "picid/simplified_run.py",
+    "picid/simplified_run_objects.py",
+    "picid/verify_environment.py",
+    "picid/data/datasources/toy_example.py",
+    "picid/data/datasources/airbus_helicopter.py",
+    "picid/transforms/visualization/features_target_plotter.py",
+    "picid/data/datasources/concepts_n_cmapss.py",
+    # PHMD datasources; low-coverage integration paths
+    "picid/data/datasources/phmd_phme20.py",
+    "picid/data/datasources/phmd_pubd16.py",
+    "picid/data/datasources/phmd_n_cmapss.py",
+    "picid/data/datasources/phmd_xjtu_sy.py",
+    "picid/data/datasources/phmd_cbmv3.py",
+    "picid/data/datasources/phmd_pronostia.py",
+    "picid/data/datasources/phmd_hsf15.py",
+    "picid/data/datasources/agtf30k.py",
+    "picid/data/datasources/nb14/loader.py",
+]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
+
+[tool.uv.sources]
+TabPFN = { git = "https://github.com/picid-research/picid-tabpfn.git", group = "tabfm" }
+tabdpt = { git = "https://github.com/layer6ai-labs/TabDPT.git", group = "tabfm" }
+carte-ai = { git = "https://github.com/soda-inria/carte.git", group = "tabfm" }
+phmd = { git = "https://github.com/picid-research/picid-phmd.git", group = "phmd" }
+# obsolete: rul-datasets = { path = "./local_packages/rul-datasets", editable = true }
+# obsolete: uni2ts = { path = "./local_packages/uni2ts", editable = true }
+
+torch = [
+    { index = "pytorch-cpu", marker = "sys_platform != 'linux'" },
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux'" },
+]
+torchvision = [
+    { index = "pytorch-cpu", marker = "sys_platform != 'linux'" },
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux'" },
+]
+chronosx = { git = "https://github.com/amazon-science/chronos-forecasting.git", rev = "chronosx" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true

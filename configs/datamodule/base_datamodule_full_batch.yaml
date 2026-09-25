@@ -1,0 +1,8 @@
+defaults:
+  - base_datamodule_default
+
+# No need to shuffle train as as the whole batch is passed in one iteration
+
+train_batch_size: full
+val_batch_size: full
+test_batch_size: full

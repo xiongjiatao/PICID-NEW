@@ -1,0 +1,5 @@
+_target_: picid.data.datasources.phmd_pubd16.Pubd16Loader
+fold: 0
+data_name: PUBD16
+task_mode: fault
+cache_dir: ${paths.data_dir}/phmd_cache

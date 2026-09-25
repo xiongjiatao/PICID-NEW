@@ -1,0 +1,25 @@
+_evaluator_defaults: &evaluator_defaults
+  _target_: picid.evaluator.multiunit.MultiUnitEvaluator
+  metric_names: ["phm_score", "mae", "mse", "rmse"] # 'rmse', 'mape', 'mspe' , 'mae_railway', 'mse_railway'
+
+  apply_inverse_scaling: False
+  inverse_transform_name: null
+  save_predictions: False
+  log_image: True
+  # Some models predict always a multivariate time-series but then at evaluation we have to evaluate on one particular variable, hence here is a proposition how to tackle such cases
+  task_mode: ${datasource.task_mode} # univariate/multivariate
+  paths: ${paths}
+  hooks:
+    - _target_: picid.evaluator.hooks.unit_trend_plot.UnitTrendPlotHook
+      enable_subsampling: True
+      subsample_threshold: 1000
+      subsample_factor: 10
+    - _target_: picid.evaluator.hooks.save_predictions.SavePredictionsHook
+      dims: ["sample", "time", "feature"]
+
+
+train: *evaluator_defaults
+val: *evaluator_defaults
+test:
+  <<: *evaluator_defaults
+  save_predictions: True

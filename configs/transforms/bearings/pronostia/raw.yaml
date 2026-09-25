@@ -1,0 +1,42 @@
+reshape_y:
+  transform:
+    _target_: picid.transforms.base_transforms.reshaping.ReshapeTransform
+    pattern: "a b c -> (a b) c"
+  metadata:
+    apply_to: target
+    assign_to: target
+
+# as features have 1st var dim then we first have to regularize then use reshape_x
+ragged2regularragged:
+  transform:
+    _target_: picid.transforms.base_transforms.shape_manipulations.RegularizeRaggedDataTransform
+
+  metadata:
+    apply_to: "features"
+
+scaler_target:
+  transform:
+    _target_: picid.transforms.bearings.health_index.HealthIndexTransform
+    runtime_key: target
+    unit_key: unit_id
+    dataset_name: PRONOSTIA
+
+  metadata:
+    apply_to: ["target", "unit_id"]
+    assign_to: rul
+
+reshape_x:
+  transform:
+    _target_: picid.transforms.base_transforms.reshaping.ReshapeTransform
+    pattern: "a b c -> (a b) c"
+  metadata:
+    apply_to: features
+    assign_to: features
+
+scaler_features:
+  transform:
+    _target_: picid.transforms.base_transforms.scaler.StandardScalerSklearn
+
+  metadata:
+    apply_to: features
+    fit_on: train
