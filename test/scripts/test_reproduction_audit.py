@@ -72,3 +72,10 @@ def test_released_aggregation_runtime_counterexample():
     ]
     np.testing.assert_allclose(actual, [[5.0]])
     np.testing.assert_allclose(desired, [[10.0]])
+
+
+def test_source_dataset_modules_are_hashed(tmp_path):
+    source = tmp_path / "picid" / "data" / "datasets"
+    source.mkdir(parents=True)
+    (source / "base.py").write_text("source")
+    assert "picid/data/datasets/base.py" in audit.snapshot(tmp_path)

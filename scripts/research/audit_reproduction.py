@@ -27,19 +27,17 @@ SKIP = {
     "research_outputs",
     ".pytest_cache",
     ".ruff_cache",
-    "datasets",
-    "checkpoints",
-    "logs",
-    "results",
     ".model_cache",
     ".nox",
 }
+ROOT_SKIP = {"datasets", "checkpoints", "logs", "results"}
 
 
 def snapshot(root):
     records = {}
     for folder, directories, files in os.walk(root):
-        directories[:] = sorted(d for d in directories if d not in SKIP)
+        ignored = SKIP | ROOT_SKIP if Path(folder) == root else SKIP
+        directories[:] = sorted(d for d in directories if d not in ignored)
         for filename in sorted(files):
             if filename in SKIP:
                 continue
