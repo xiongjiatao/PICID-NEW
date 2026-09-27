@@ -44,6 +44,7 @@ N-CMAPSS 的 NC-P 是 DS01/04/05/07 多源预后任务，每源 units 1–5 训�
 | N-CMAPSS 缩放 | TFM 附录 C.2.3、PICID 附录 F.3 称固定标准 scaler；PICID 称常量 benchmark-defined、非当前 split 拟合 | `N_CMAPSSFeaturesScaler` / `N_CMAPSSDescriptorsScaler` 中硬编码 1457 常量 | 按标准固定 scaler 复现；统计量最初的单位/文件来源未披露，已新增按 NC-P 训练 units 1–5 流式计算并对照的 CPU 审计。TFM 附录 A.3 的“min-max”与详尽 schema/代码冲突，后两者一致，复现以详尽 schema+代码为准并报告冲突 |
 | XJTU 分割 | TFM-PHM PHMD split 8/3/4；PICID infrastructure fold-1 9/3/3 | 两套配置均存在 | 主复现固定 TFM 论文 PHMD split；另一个 split 只作为独立验证，结果分别命名 |
 | NC-P 复现入口 | NC-P 是四源多源预后 | 原 `fit_predict.sh` 清单只列 `concepts_n_cmapss` 和 DS02，没有 `concepts_n_cmapss_multi` | 用已有 `concepts_n_cmapss_multi/prognostics/*` 配置显式生成实验；不把单源/DS02冒称 NC-P |
+| XGBoost 基线实现 | TFM-PHM 正文/附录明确将该基线描述为 XGBoost（正则化决策树梯度提升） | `xgboost_fit_predict` 指向 `FitPredictXGBoostWrapper`，但 wrapper 实际构造 `sklearn.ensemble.GradientBoostingRegressor/Classifier`，并非 `xgboost.XGBRegressor/XGBClassifier`；锁文件也没有 xgboost 依赖 | 发布代码路径只能称为 sklearn GradientBoosting 的 code-faithful control，不能声称复现论文的 XGBoost。正式论文对照需另行实现真实 XGBoost 并记录参数/调参规则；两者结果分开报告 |
 
 ## 对后续研究主张的边界
 

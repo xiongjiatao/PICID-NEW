@@ -12,7 +12,13 @@ directory is read-only. This repository is an academic research derivative of
 PICID; the original LICENSE.txt and authorship are retained. Initial import is
 a local source snapshot, not a reconstruction of upstream Git history.
 
-Targeted reproduction models: TabPFN, TabDPT, XGBoost, and LSTM. The main task is
+Targeted reproduction models: TabPFN, TabDPT, the paper-reported XGBoost baseline,
+and LSTM. A source audit found that the released `xgboost_fit_predict` path
+currently instantiates scikit-learn `GradientBoostingRegressor/Classifier`, not
+`xgboost.XGBRegressor/XGBClassifier`; therefore its output will be named a
+code-faithful GradientBoosting control, not an XGBoost reproduction. A true
+XGBoost comparison needs a separate implementation/configuration and explicit
+hyperparameter mapping before it can count as paper-faithful. The main task is
 N-CMAPSS NC-P over DS01/04/05/07. XJTU-SY is reproduced separately with the
 TFM-PHM paper's PHMD split (8/3/4); its existing leave-condition evaluation is a
 separate generalization result. These are independently fitted tasks, not
