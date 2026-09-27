@@ -20,7 +20,7 @@
   dataset/model configurations without fitting. All select the requested splits,
   and the two aggregation modes resolve as expected.
 - Installed test/lint checks for protocol, cache, metric, XGBoost and test-gate
-  fixes: 155 targeted tests pass and Ruff reports no issues.
+  fixes: 283 targeted tests pass and Ruff reports no issues.
 - Completed one full XJTU-SY PHMD-split LSTM run for seed 72 after recovering
   the feature boundary cache. This is a single-seed pilot, not the paper's
   five-seed reproduction or a performance conclusion; other models, N-CMAPSS,
@@ -39,6 +39,15 @@
   now skips both final test evaluation and best-checkpoint test reruns, with
   focused regression tests. Re-run all context/stride candidates after this
   fix and select using validation only.
+- The first clean validation-only 1/1 rerun correctly skipped test, but exposed a
+  second selection defect: fit-predict's `val/loss` was hard-coded to 1.0, as
+  documented by an existing `picid_report` test. The validation metrics from
+  that attempt are excluded from selection. The copy now computes configured
+  regression loss on validation/test predictions while retaining the dummy
+  training loss; report-analysis tests now guard that validation loss varies.
+  Focused pipeline/report tests pass after this change; the next 1/1 validation
+  rerun must verify a nonconstant `val/loss` before the other four candidates
+  are run.
 
 ## Data state and current gate
 

@@ -7,6 +7,7 @@ from lightning import LightningModule
 
 from picid.evaluator.base import AbstractEvaluator
 from picid.model.adapters.base import AbstractFitPredictWrapper
+from picid.model.definitions import REGRESSION_TASKS
 
 import logging
 
@@ -505,11 +506,13 @@ class FitPredictWrapperLightningModule(CustomEvaluatorLightningModule):
         self,
         backbone: AbstractFitPredictWrapper,
         evaluators: dict[str, AbstractEvaluator],
+        loss: Callable | None = None,
         predict_after_training: bool = False,
         debug: bool = False,
         **kwargs,
     ) -> None:
         super().__init__(evaluators=evaluators)
+        self.loss_fn = loss
         self.predict_after_training = predict_after_training
         self.debug = debug
         if self.debug:
@@ -519,7 +522,7 @@ class FitPredictWrapperLightningModule(CustomEvaluatorLightningModule):
 
         # This line allows to access init params with 'self.hparams' attribute
         # also ensures init params will be stored in ckpt
-        self.save_hyperparameters(logger=False, ignore=["backbone"])
+        self.save_hyperparameters(logger=False, ignore=["backbone", "loss"])
         self.backbone = backbone
 
     def __repr__(self) -> str:
@@ -651,9 +654,21 @@ class FitPredictWrapperLightningModule(CustomEvaluatorLightningModule):
             "targets": y.unsqueeze(1),
         }
 
-        # Add a dummy loss
-        model_out["loss"] = torch.tensor([1])
-        return model_out
+        # Fit-predict models do not optimize weights, so the training loss is a
+        # placeholder. Validation/test selection for regression must still use
+        # the configured loss rather than the old constant placeholder.
+        if (
+            self.loss_fn is None
+            or getattr(self.backbone, "task_type", None) not in REGRESSION_TASKS
+        ):
+            model_out["loss"] = torch.tensor(
+                [1], device=model_out["predictions"].device
+            )
+            return model_out
+
+        loss_batch = dict(batch)
+        loss_batch["targets"] = model_out["targets"]
+        return self.loss_fn(model_out=model_out, batch=loss_batch)
 
     @override
     def training_step(self, batch, batch_idx, _evaluate: bool = True):

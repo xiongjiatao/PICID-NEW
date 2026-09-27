@@ -20,6 +20,7 @@ from picid.pipeline.base import (
     ConstantLossLightningModule,
     TrainingLightningModule,
 )
+from picid.loss.default import MSELoss
 
 
 # -----------------------------------------------------------------------------
@@ -483,6 +484,23 @@ class TestFitPredictWrapperLightningModule:
         assert out["predictions"].ndim == 3
         assert out["targets"].ndim == 3
         assert out["loss"].item() == 1
+
+    def test_model_step_predict_uses_configured_loss_for_regression(
+        self, mock_evaluators, mock_fit_predict_backbone, phm_fit_predict_batch
+    ):
+        mock_fit_predict_backbone.task_type = "rul"
+        module = FitPredictWrapperLightningModule(
+            backbone=mock_fit_predict_backbone,
+            evaluators=mock_evaluators,
+            loss=MSELoss(),
+        )
+        module.model_step_fit(phm_fit_predict_batch)
+        out = module.model_step_predict(phm_fit_predict_batch)
+
+        expected = torch.nn.functional.mse_loss(
+            out["predictions"], out["targets"]
+        )
+        torch.testing.assert_close(out["loss"], expected)
 
     def test_model_step_predict_multi_target_loads_per_target(
         self,

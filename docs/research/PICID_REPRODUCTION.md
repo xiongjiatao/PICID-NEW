@@ -50,7 +50,13 @@ Validation-only context/stride selection depends on the top-level `test=false`
 flag. The imported runner ignored that flag and still called `trainer.test`; the
 copy now enforces it and has a regression test. One XGBoost 1/1 candidate ran
 before the fix and emitted test metrics despite the override, so that run is
-excluded from selection and recorded as protocol-invalid.
+excluded from selection and recorded as protocol-invalid. A subsequent clean
+validation-only run confirmed test was skipped, but found the fit-predict
+Lightning module also hard-coded regression `val/loss=1.0`. The copy now passes
+the configured loss to the fit-predict module and computes it on validation
+predictions (the train-step placeholder remains, since these models do not
+optimize weights). The earlier clean run is also excluded from candidate
+selection; no test metrics were accessed in that run.
 
 All runtime artifacts belong in ignored `artifacts/`. Record command, commit,
 resolved configuration, dependency versions, data/checkpoint digests, GPU mapping,
