@@ -42,11 +42,15 @@
   one header plus 32,768 rows, acquisition counts match the PHMD lifetime lookup,
   and the 8/3/4 split plus reversed-index RUL formula pass. The first full
   object-materialization attempt read all files but did not yield an audit
-  artifact; the streaming audit replaced it. A full seed-72 PHMD-split LSTM run
-  is now in progress. The official time-domain feature transform is processing
-  the 2,538 acquisitions from Bearing3_1 at about 1.2–1.3 acquisitions/second;
-  model fitting, validation, test metrics and cache completion are still
-  pending. Its run directory is
+  artifact; the streaming audit replaced it. The first full seed-72 PHMD-split
+  LSTM attempt processed all XJTU units and completed both feature transforms,
+  but failed before model fit while serializing a boundary cache: a local lambda
+  stored by `WindowedAggregationTransform` is not picklable. Time statistics
+  took 7,195.99 seconds; spectral features took 1,045.47 seconds. No model
+  metrics were produced. The lambda has been removed without changing first/last
+  aggregation semantics, and a recovery utility is being validated against the
+  fully written 65 MiB boundary `DatasetContainer`; the 3.4 GiB load/split cache
+  remains available. Its run directory is
   `artifacts/picid_seed72_xjtu_lstm/runs/picid_seed72_xjtu_lstm+xjtu_sy+prognostics+phmd_split+combined+lstm/2026-09-27_11-34-53`.
 
 ## Important protocol decisions

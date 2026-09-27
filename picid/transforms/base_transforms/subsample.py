@@ -105,11 +105,12 @@ class WindowedAggregationTransform(NoFitPerSegmentMixin, DenseTransform):
             "max": np.max,
             "median": np.median,
             "std": np.std,
-            "first": lambda x: x,  # Handled separately
-            "last": lambda x: x,  # Handled separately
         }.get(resolved_agg)
 
-        if self._agg_func is None:
+        # ``first`` and ``last`` are handled with ``np.take`` below. Do not
+        # store lambdas here: transform instances are serialized in the
+        # preprocessing boundary cache, and local lambdas cannot be pickled.
+        if self.agg not in {"first", "last"} and self._agg_func is None:
             raise ValueError(f"Unsupported aggregation: {resolved_agg}")
 
     @check_transform_output_consistency

@@ -1,5 +1,7 @@
 """Comprehensive tests for subsample.py transforms."""
 
+import pickle
+
 import numpy as np
 import pytest
 from picid.data.data_objects import NamedTransformInput
@@ -126,6 +128,21 @@ class TestWindowedAggregationTransform:
 
         np.testing.assert_array_equal(result["target"], [[10.0]])
         assert transform.agg == "last"
+
+    @pytest.mark.parametrize(
+        "aggregation",
+        ["mean", "sum", "min", "max", "median", "std", "first", "last"],
+    )
+    def test_transform_instances_are_pickleable_for_boundary_cache(self, aggregation):
+        transform = WindowedAggregationTransform(
+            window_size=3,
+            step=3,
+            agg=aggregation,
+        )
+
+        restored = pickle.loads(pickle.dumps(transform))
+
+        assert restored.agg == aggregation
 
     def test_conflicting_aggregation_names_fail_fast(self):
         with pytest.raises(ValueError, match="Conflicting aggregation values"):

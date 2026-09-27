@@ -40,10 +40,14 @@ Five random seeds quantify algorithm randomness, not independent asset evidence.
 All runtime artifacts belong in ignored `artifacts/`. Record command, commit,
 resolved configuration, dependency versions, data/checkpoint digests, GPU mapping,
 concurrent processes, exit code, and final status. Archive validation and
-configuration preflight passed. The first full XJTU seed-72 LSTM run is active on
-physical GPU0 (`CUDA_VISIBLE_DEVICES=0`, logical `cuda:0`); at the current status
-snapshot it is generating `time_domain_features` for Bearing3_1, so model fitting
-and performance metrics remain pending.
+configuration preflight passed. The first full XJTU seed-72 attempt ran on
+physical GPU0 (`CUDA_VISIBLE_DEVICES=0`, logical `cuda:0`), completed
+`time_domain_features` (7,195.99 s) and `spectral_domain_features` (1,045.47 s),
+then failed while saving the preprocessor boundary because a local lambda in
+`WindowedAggregationTransform` could not be pickled. No model fit or metrics were
+produced. A serialization-only fix and boundary-cache recovery are being tested;
+the 3.4 GiB source load/split cache and complete 65 MiB boundary data payload are
+preserved for the retry.
 
 ## Resolved findings and remaining evidence
 
