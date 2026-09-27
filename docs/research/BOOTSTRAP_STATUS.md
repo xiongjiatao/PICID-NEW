@@ -112,6 +112,17 @@
 - The mislabeled sklearn GradientBoosting control was stopped at the user's
   request before completion: 92/1,000 trees after 2m16s, with about 22m still
   estimated. No metrics were saved or used.
+- Corrected XGBoost 3.1.3 seed-72 XJTU validation candidates all completed
+  without test metrics. The lowest configured validation MSE was at context /
+  train-stride (50, 50): 0.07709; the other four losses were 0.09630, 0.09254,
+  0.08754, and 0.09615 for (1,1), (5,1), (10,5), and (20,5). The selected
+  50/50 test run gave device-macro normalized-HI MAE 0.21063 (21.06%), RMSE
+  0.26145 (26.14%), and PHM score 0.23328. The paper's Table 15 reports
+  XGBoost normalized MAE 19.20±0.00%; Table 16 reports PHM score 20.14±0.00.
+  The differences are not attributable yet: this is one seed, our tree grid is
+  under-specified relative to the paper, and an earlier runner bug exposed the
+  same test set on an unselected 1/1 attempt. Treat this result as exploratory,
+  not confirmatory or an exact reproduction.
 
 ## Important protocol decisions
 

@@ -87,6 +87,22 @@ The successful retry metrics are in
 
 ## Resolved findings and remaining evidence
 
+### XGBoost seed-72 PHMD pilot
+
+Using the corrected XGBoost 3.1.3 adapter, context/stride was selected using
+only the repaired validation `val/loss` (configured MSE). The five losses were
+0.09630 (1,1), 0.09254 (5,1), 0.08754 (10,5), 0.09615 (20,5), and 0.07709
+(50,50); therefore 50/50 was evaluated once on the PHMD test bearings. Its
+device-macro normalized-HI MAE/RMSE were 21.06%/26.14%, and PHM score was
+0.23328. For comparison, the paper's Appendix Table 15 gives XGBoost normalized
+MAE 19.20±0.00%, and Table 16 gives PHM score 20.14±0.00. This is not an exact
+reproduction: the paper does not expose the XGBoost tree search grid, the
+improved copy uses the pinned library defaults (with 1,000 rounds and seed 42
+retained from the released wrapper), only seed 72 is run, and the PHMD test set
+was accidentally evaluated on one unselected 1/1 run before the test gate fix.
+No test values were used to choose 50/50, but the test is not fully blind, so
+these metrics are exploratory pending a clean external/independent evaluation.
+
 - The transform now accepts both aggregation parameter names and rejects
   disagreement. The audit writes explicit `agg` values. The old default-mean
   execution remains a named comparison, not the primary paper-intent protocol.
