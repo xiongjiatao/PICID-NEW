@@ -24,7 +24,7 @@ their bibliographies.
 | datasource | MultiSourceLoader DS01/04/05/07; XJTU_SYLoader PHMD split | Raw HDF5 files missing locally; filename variants and split IDs need census |
 | transform | Shared N-CMAPSS aggregation and XJTU descriptors | Alias bug fixed; intent and pre-fix mean behavior get distinct audit protocol names |
 | sequencer | Original five window/stride candidates | Actual query timestamps and prefix-only access still require runtime tests |
-| model | Locked TabPFN fork, TabDPT, paper-reported XGBoost, LSTM wrappers | `xgboost_fit_predict` currently resolves to sklearn GradientBoosting, not `xgboost.XGBRegressor`; keep code-faithful and paper-faithful baselines separate. Real checkpoint/runtime checks are not evidence of PHM performance |
+| model | Locked TabPFN fork, TabDPT, paper-reported XGBoost, LSTM wrappers | Imported upstream mislabeled the sklearn GradientBoosting control as XGBoost; the improved copy now calls locked XGBoost 3.1.3. It retains 1,000 rounds/seed 42 but uses library defaults for undisclosed tree settings. Keep this assumption visible; runtime checks alone are not PHM evidence |
 | evaluator | RUL/per-unit evaluators | Report normalized HI and inverse acquisition-minute per-unit metrics separately; full model/runtime replay remains outstanding |
 
 Explicit assumptions: seed 72 is the first smoke run (execution ordering, not a

@@ -13,12 +13,15 @@ PICID; the original LICENSE.txt and authorship are retained. Initial import is
 a local source snapshot, not a reconstruction of upstream Git history.
 
 Targeted reproduction models: TabPFN, TabDPT, the paper-reported XGBoost baseline,
-and LSTM. A source audit found that the released `xgboost_fit_predict` path
-currently instantiates scikit-learn `GradientBoostingRegressor/Classifier`, not
-`xgboost.XGBRegressor/XGBClassifier`; therefore its output will be named a
-code-faithful GradientBoosting control, not an XGBoost reproduction. A true
-XGBoost comparison needs a separate implementation/configuration and explicit
-hyperparameter mapping before it can count as paper-faithful. The main task is
+and LSTM. The imported/upstream `xgboost_fit_predict` wrapper actually
+instantiated scikit-learn GradientBoosting rather than XGBoost. This research
+copy now invokes the `xgboost` 3.1.3 package; it preserves the prior wrapper's
+explicit 1,000 boosting rounds and seed 42, while all other tree settings use
+the locked library defaults. This corrects model identity but is not an exact
+recovery of the paper's undisclosed tree parameter search. Table 9 supplies
+five context/stride pairs, while the paper's generic tuning statement does not
+specify XGBoost's tree-specific search ranges. These defaults are therefore
+declared reproduction assumptions, not exact paper hyperparameters. The main task is
 N-CMAPSS NC-P over DS01/04/05/07. XJTU-SY is reproduced separately with the
 TFM-PHM paper's PHMD split (8/3/4); its existing leave-condition evaluation is a
 separate generalization result. These are independently fitted tasks, not

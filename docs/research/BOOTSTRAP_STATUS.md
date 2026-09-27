@@ -25,6 +25,13 @@
   the feature boundary cache. This is a single-seed pilot, not the paper's
   five-seed reproduction or a performance conclusion; other models, N-CMAPSS,
   and the remaining seeds are pending.
+- Audited and corrected the XGBoost identity mismatch in this copy: the
+  imported wrapper constructed sklearn GradientBoosting despite its XGBoost
+  name. The corrected wrapper now uses locked XGBoost 3.1.3, preserves the
+  released 1,000-round / seed-42 defaults, and keeps tree-parameter assumptions
+  explicit because the paper does not list them. Ten wrapper tests pass and
+  Ruff passes; lock-file validation is pending because offline `uv lock`
+  attempts to fetch the pinned PHMD Git source.
 
 ## Data state and current gate
 
@@ -79,6 +86,16 @@
   `np.where` branch; logged per-device and macro scores were finite. The metric
   now evaluates only the selected branch, preserving the score equation, and an
   extreme-error regression test confirms no overflow warning.
+- The official TabPFN v2 regression weight was retrieved from the Zenodo v2
+  archive; its archive MD5 and extracted file SHA-256 match the official
+  metadata. The seed-72 1/1 TabPFN run reached the fit stage but OOMed on GPU0
+  while building the 8-estimator cached context from 6,557×460 training rows:
+  it had 5.00 GiB free and requested another 5.41 GiB. No TabPFN metrics were
+  produced. The current executor builds this KV cache in one forward pass;
+  a cache-free single-step path is being tested without changing the data.
+- The mislabeled sklearn GradientBoosting control was stopped at the user's
+  request before completion: 92/1,000 trees after 2m16s, with about 22m still
+  estimated. No metrics were saved or used.
 
 ## Important protocol decisions
 

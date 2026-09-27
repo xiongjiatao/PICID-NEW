@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 import torch
 import pytest
+from xgboost import XGBClassifier, XGBRegressor
 
 from picid.model.estimators.xgboost.wrapper import FitPredictXGBoostWrapper
 
@@ -19,6 +20,21 @@ def test_xgboost_wrapper_reports_canonical_module():
         FitPredictXGBoostWrapper.__module__
         == "picid.model.estimators.xgboost.wrapper"
     )
+
+
+def test_wrapper_uses_the_xgboost_regressor_not_sklearn_gradient_boosting():
+    wrapper = FitPredictXGBoostWrapper(
+        task_type="regression",
+        n_estimators=5,
+        random_state=0,
+        n_jobs=1,
+        max_depth=2,
+        learning_rate=0.05,
+    )
+
+    assert isinstance(wrapper.backbone, XGBRegressor)
+    assert wrapper.backbone.get_params()["max_depth"] == 2
+    assert wrapper.backbone.get_params()["learning_rate"] == 0.05
 
 
 def test_regression_predict_output_is_two_dimensional():
@@ -43,8 +59,11 @@ def test_classification_predict_proba_sums_to_one():
         task_type="classification",
         n_estimators=5,
         random_state=0,
+        n_jobs=1,
         num_classes=2,
     )
+
+    assert isinstance(wrapper.backbone, XGBClassifier)
 
     wrapper.fit(X, y)
     probabilities = wrapper.predict(X)
