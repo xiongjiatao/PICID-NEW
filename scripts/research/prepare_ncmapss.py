@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 import shutil
 import sys
+import tempfile
 import time
 import zipfile
 
@@ -31,14 +32,24 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data-root", type=Path, required=True)
     parser.add_argument("--status", type=Path, required=True)
+    parser.add_argument(
+        "--archive",
+        type=Path,
+        help="Use a complete local archive; this mode never contacts NASA.",
+    )
     args = parser.parse_args()
     args.data_root.mkdir(parents=True, exist_ok=True)
     args.status.parent.mkdir(parents=True, exist_ok=True)
-    archive = args.data_root / "NASA_N-CMAPSS.zip"
-    partial = archive.with_suffix(".zip.part")
+    archive = (
+        args.archive.expanduser().resolve()
+        if args.archive is not None
+        else args.data_root / "NASA_N-CMAPSS.zip"
+    )
+    partial = archive.with_suffix(archive.suffix + ".part")
     state = {
-        "url": URL,
-        "source": SOURCE,
+        "url": URL if args.archive is None else None,
+        "source": SOURCE if args.archive is None else "user-supplied archive",
+        "archive_path": str(archive),
         "command": sys.argv,
         "python": sys.executable,
         "cwd": os.getcwd(),
@@ -58,65 +69,78 @@ def main():
 
     try:
         save()
-        with requests.Session() as session:
-            head = session.head(URL, timeout=30)
-            head.raise_for_status()
-            size = int(head.headers["Content-Length"])
-            etag = head.headers.get("ETag")
-            state.update(total_bytes=size, etag=etag)
-            if shutil.disk_usage(args.data_root).free < 3 * size:
-                raise RuntimeError(
-                    "Insufficient disk headroom for archive and selected raw sources"
-                )
-            if not archive.exists():
-                offset = partial.stat().st_size if partial.exists() else 0
-                meta = partial.with_suffix(".metadata.json")
-                if offset and (
-                    not meta.exists()
-                    or json.loads(meta.read_text()).get("etag") != etag
-                ):
+        if args.archive is None:
+            with requests.Session() as session:
+                head = session.head(URL, timeout=30)
+                head.raise_for_status()
+                size = int(head.headers["Content-Length"])
+                etag = head.headers.get("ETag")
+                state.update(total_bytes=size, etag=etag)
+                if shutil.disk_usage(args.data_root).free < 3 * size:
                     raise RuntimeError(
-                        "Partial download provenance differs; refusing unsafe resume"
+                        "Insufficient disk headroom for archive and selected raw sources"
                     )
-                meta.write_text(json.dumps({"url": URL, "etag": etag, "size": size}))
-                headers = {"Range": f"bytes={offset}-"} if offset else {}
-                with session.get(
-                    URL, headers=headers, stream=True, timeout=(30, 120)
-                ) as response:
-                    response.raise_for_status()
+                if not archive.exists():
+                    offset = partial.stat().st_size if partial.exists() else 0
+                    meta = partial.with_suffix(".metadata.json")
                     if offset and (
-                        response.status_code != 206
-                        or not response.headers.get("Content-Range", "").startswith(
-                            f"bytes {offset}-"
-                        )
+                        not meta.exists()
+                        or json.loads(meta.read_text()).get("etag") != etag
                     ):
                         raise RuntimeError(
-                            "Server did not honor requested resume offset"
+                            "Partial download provenance differs; refusing unsafe resume"
                         )
-                    state.update(status="DOWNLOADING", downloaded_bytes=offset)
-                    save()
-                    with partial.open("ab" if offset else "wb") as stream:
-                        checkpoint = offset
-                        for chunk in response.iter_content(1024 * 1024):
-                            stream.write(chunk)
-                            offset += len(chunk)
-                            if offset - checkpoint >= 64 * 1024 * 1024:
-                                state["downloaded_bytes"] = offset
-                                save()
-                                checkpoint = offset
-                if partial.stat().st_size != size:
-                    raise RuntimeError(
-                        "Downloaded archive size differs from remote size"
+                    meta.write_text(
+                        json.dumps({"url": URL, "etag": etag, "size": size})
                     )
-                partial.replace(archive)
-            elif archive.stat().st_size != size:
-                raise RuntimeError("Existing archive size mismatch")
-        state.update(status="EXTRACTING", downloaded_bytes=size)
+                    headers = {"Range": f"bytes={offset}-"} if offset else {}
+                    with session.get(
+                        URL, headers=headers, stream=True, timeout=(30, 120)
+                    ) as response:
+                        response.raise_for_status()
+                        if offset and (
+                            response.status_code != 206
+                            or not response.headers.get("Content-Range", "").startswith(
+                                f"bytes {offset}-"
+                            )
+                        ):
+                            raise RuntimeError(
+                                "Server did not honor requested resume offset"
+                            )
+                        state.update(status="DOWNLOADING", downloaded_bytes=offset)
+                        save()
+                        with partial.open("ab" if offset else "wb") as stream:
+                            checkpoint = offset
+                            for chunk in response.iter_content(1024 * 1024):
+                                stream.write(chunk)
+                                offset += len(chunk)
+                                if offset - checkpoint >= 64 * 1024 * 1024:
+                                    state["downloaded_bytes"] = offset
+                                    save()
+                                    checkpoint = offset
+                    if partial.stat().st_size != size:
+                        raise RuntimeError(
+                            "Downloaded archive size differs from remote size"
+                        )
+                    partial.replace(archive)
+                elif archive.stat().st_size != size:
+                    raise RuntimeError("Existing archive size mismatch")
+        elif not archive.is_file():
+            raise FileNotFoundError(f"Supplied archive not found: {archive}")
+
+        size = archive.stat().st_size
+        state.update(
+            status="EXTRACTING",
+            archive_bytes=size,
+            archive_mtime_ns=archive.stat().st_mtime_ns,
+            downloaded_bytes=size if args.archive is None else None,
+        )
         save()
         target_dir = args.data_root / "N-CMAPSS"
         target_dir.mkdir(exist_ok=True)
         seen = set()
-        with zipfile.ZipFile(archive) as source:
+
+        def extract_members(source, prefix=""):
             for member in source.infolist():
                 original = Path(member.filename).name
                 if original not in NAMES:
@@ -140,13 +164,60 @@ def main():
                 temp.replace(target)
                 state["files"].append(
                     {
-                        "archive_member": member.filename,
+                        "archive_member": prefix + member.filename,
                         "local_name": target_name,
                         "bytes": target.stat().st_size,
                         "sha256": digest.hexdigest(),
                     }
                 )
                 save()
+
+        with zipfile.ZipFile(archive) as outer:
+            outer_members = outer.infolist()
+            direct_members = [
+                member
+                for member in outer_members
+                if Path(member.filename).name in NAMES
+            ]
+            if direct_members:
+                extract_members(outer)
+            else:
+                nested_archives = [
+                    member
+                    for member in outer_members
+                    if Path(member.filename).suffix.lower() == ".zip"
+                ]
+                if len(nested_archives) != 1:
+                    raise RuntimeError(
+                        "Archive must contain the expected HDF5 files directly or one nested ZIP; "
+                        f"found {len(nested_archives)} nested ZIP entries."
+                    )
+                nested_member = nested_archives[0]
+                state.update(
+                    status="STAGING_NESTED_ARCHIVE",
+                    nested_archive_member=nested_member.filename,
+                    nested_archive_bytes=nested_member.file_size,
+                    nested_archive_copied_bytes=0,
+                )
+                save()
+                with tempfile.TemporaryFile(dir=args.data_root) as nested_file:
+                    with outer.open(nested_member) as nested_stream:
+                        copied = 0
+                        checkpoint = 0
+                        while chunk := nested_stream.read(8 * 1024 * 1024):
+                            nested_file.write(chunk)
+                            copied += len(chunk)
+                            if copied - checkpoint >= 64 * 1024 * 1024:
+                                state["nested_archive_copied_bytes"] = copied
+                                save()
+                                checkpoint = copied
+                    if copied != nested_member.file_size:
+                        raise RuntimeError(
+                            "Nested ZIP length differs from its outer directory record"
+                        )
+                    nested_file.seek(0)
+                    with zipfile.ZipFile(nested_file) as inner:
+                        extract_members(inner, prefix=nested_member.filename + "!/")
         if seen != set(NAMES.values()):
             raise RuntimeError(
                 f"Archive does not contain expected sources: {set(NAMES.values()) - seen}"

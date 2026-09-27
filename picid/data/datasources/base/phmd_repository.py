@@ -10,9 +10,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 import pickle
 from pathlib import Path
+from threading import RLock
 from typing import Any
 
 from phmd import datasets
+
+_PHMD_DOWNLOAD_LOCK = RLock()
 
 
 @dataclass(slots=True)
@@ -56,12 +59,19 @@ class PHMDRepository:
         fold: int,
         task_mode: str,
         auxiliary_tasks: list[str] | None = None,
+        download_policy: str = "auto",
     ) -> None:
         self.data_name = data_name
         self.cache_dir = str(Path(cache_dir).expanduser())
         self.fold = fold
         self.task_mode = task_mode
         self.auxiliary_tasks = list(auxiliary_tasks or [])
+        if download_policy not in {"auto", "local_only"}:
+            raise ValueError(
+                "download_policy must be either 'auto' or 'local_only', "
+                f"got {download_policy!r}."
+            )
+        self.download_policy = download_policy
 
         cache_path = Path(self.cache_dir)
         if not cache_path.exists():
@@ -82,6 +92,43 @@ class PHMDRepository:
             The selected fold payloads plus metadata from the primary task.
         """
 
+        if self.download_policy == "local_only":
+            self._require_local_sources()
+            with _PHMD_DOWNLOAD_LOCK:
+                original_download = datasets.download
+
+                def skip_download(dataset_name, cache_dir=None, **kwargs):
+                    if dataset_name == self.data_name:
+                        return True
+                    return original_download(
+                        dataset_name, cache_dir=cache_dir, **kwargs
+                    )
+
+                datasets.download = skip_download
+                try:
+                    return self._load_task_bundle(task_names)
+                finally:
+                    datasets.download = original_download
+
+        return self._load_task_bundle(task_names)
+
+    def _require_local_sources(self) -> None:
+        """Fail closed unless all PHMD-unpacked paths already exist locally."""
+        metadata = datasets.read_meta(self.data_name)
+        data_root = Path(datasets.get_storage_dir(self.cache_dir))
+        missing = [
+            str(data_root / file_meta["unzipped_dir"])
+            for file_meta in metadata.get("files", [])
+            if not (data_root / file_meta.get("unzipped_dir", "")).is_dir()
+        ]
+        if missing:
+            raise FileNotFoundError(
+                "PHMD download_policy='local_only' requires these extracted "
+                f"dataset paths; no network download was attempted: {missing}"
+            )
+
+    def _load_task_bundle(self, task_names: list[str]) -> PHMDFoldBundle:
+        """Load requested tasks after source availability is established."""
         ds = datasets.Dataset(self.data_name, cache_dir=self.cache_dir)
 
         task_folds: dict[str, Any] = {}

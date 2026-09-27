@@ -1,6 +1,7 @@
 """Verify selective extraction, source-name mapping and overwrite protection."""
 
 import importlib.util
+from io import BytesIO
 import json
 from pathlib import Path
 import sys
@@ -15,9 +16,10 @@ prepare = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(prepare)
 
 
-def fixture_archive(tmp_path, monkeypatch):
+def fixture_archive(tmp_path, monkeypatch, nested=False):
     archive = tmp_path / "NASA_N-CMAPSS.zip"
-    with zipfile.ZipFile(archive, "w") as zipped:
+    members = BytesIO()
+    with zipfile.ZipFile(members, "w") as zipped:
         for name in (
             "N-CMAPSS_DS01-005.h5",
             "N-CMAPSS_DS04.h5",
@@ -26,24 +28,12 @@ def fixture_archive(tmp_path, monkeypatch):
         ):
             zipped.writestr("data/" + name, b"fixture")
         zipped.writestr("../../ignored.txt", b"must not extract")
+    with zipfile.ZipFile(archive, "w") as zipped:
+        if nested:
+            zipped.writestr("17. Turbofan/data_set.zip", members.getvalue())
+        else:
+            zipped.writestr("data_set.zip", members.getvalue())
 
-    class Response:
-        headers = {"Content-Length": str(archive.stat().st_size), "ETag": "fixture"}
-
-        def raise_for_status(self):
-            pass
-
-    class Session:
-        def __enter__(self):
-            return self
-
-        def __exit__(self, *_):
-            pass
-
-        def head(self, *_args, **_kwargs):
-            return Response()
-
-    monkeypatch.setattr(prepare.requests, "Session", Session)
     monkeypatch.setattr(
         sys,
         "argv",
@@ -53,18 +43,25 @@ def fixture_archive(tmp_path, monkeypatch):
             str(tmp_path),
             "--status",
             str(tmp_path / "status.json"),
+            "--archive",
+            str(archive),
         ],
     )
 
 
 def test_extracts_exact_sources_and_records_original_names(tmp_path, monkeypatch):
-    fixture_archive(tmp_path, monkeypatch)
+    fixture_archive(tmp_path, monkeypatch, nested=True)
     prepare.main()
     status = json.loads((tmp_path / "status.json").read_text())
     assert status["status"] == "DATA_READY_PROTOCOL_AUDIT_STILL_REQUIRED"
     assert len(status["files"]) == 4
     assert (tmp_path / "N-CMAPSS" / "N-CMAPSS_DS01.h5").read_bytes() == b"fixture"
     assert not (tmp_path / "ignored.txt").exists()
+    assert status["nested_archive_member"] == "17. Turbofan/data_set.zip"
+    assert all(
+        item["archive_member"].startswith("17. Turbofan/data_set.zip!/")
+        for item in status["files"]
+    )
 
 
 def test_existing_dataset_is_preserved(tmp_path, monkeypatch):

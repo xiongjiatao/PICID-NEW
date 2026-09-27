@@ -70,6 +70,7 @@ class PHMDMultiSourceLoader(PredefinedSplitLoaderBase, ABC):
         self.cache_dir: str = kwargs["cache_dir"]
         self.auxiliary_tasks: list = kwargs.get("auxiliary_tasks", [])
         self.use_ragged: bool = kwargs.get("use_ragged", False)
+        self.download_policy: str = kwargs.get("download_policy", "auto")
 
         cache_path = Path(self.cache_dir).expanduser()
         if not cache_path.exists():
@@ -82,6 +83,7 @@ class PHMDMultiSourceLoader(PredefinedSplitLoaderBase, ABC):
             fold=self.fold,
             task_mode=self.task_mode,
             auxiliary_tasks=self.auxiliary_tasks,
+            download_policy=self.download_policy,
         )
         raw_pc = kwargs.get("payload_cache_path")
         self._payload_cache_path: str | None = (

@@ -34,7 +34,7 @@ reshape_target:
 scaler_target:
   transform:
     _target_: picid.transforms.bearings.health_index.HealthIndexTransform
-    runtime_key: target
+    rul_key: target
     unit_key: unit_id
     dataset_name: PRONOSTIA
 

@@ -2,19 +2,21 @@
 
 ## Scope and provenance
 
-The three mandatory references and their distinct roles are recorded in
-[REQUIRED_REFERENCES.md](REQUIRED_REFERENCES.md). That evidence contract governs
-the execution and scientific reporting described here.
+The three mandatory papers have been cross-reviewed in full in
+[FULL_TEXT_CROSS_REVIEW.md](FULL_TEXT_CROSS_REVIEW.md). This protocol follows
+the target TFM-PHM paper and treats the PICID infrastructure paper as the
+framework specification.
 
 The unmodified source snapshot is commit `d9d93ee`. The sibling `picid-release`
 directory is read-only. This repository is an academic research derivative of
 PICID; the original LICENSE.txt and authorship are retained. Initial import is
 a local source snapshot, not a reconstruction of upstream Git history.
 
-First-stage models: TabPFN, TabDPT, XGBoost, LSTM. Main data: N-CMAPSS sources
-DS01/04/05/07; bearing validation: XJTU-SY, first with the paper PHMD split,
-then the existing held-out-condition protocol. These are independently fitted
-dataset experiments, not zero-shot transfer between turbofans and bearings.
+Targeted reproduction models: TabPFN, TabDPT, XGBoost, and LSTM. The main task is
+N-CMAPSS NC-P over DS01/04/05/07. XJTU-SY is reproduced separately with the
+TFM-PHM paper's PHMD split (8/3/4); its existing leave-condition evaluation is a
+separate generalization result. These are independently fitted tasks, not
+zero-shot transfer between turbofans and bearings.
 
 Paper seeds: 72, 88, 101, 666, 226688. First smoke seed: 72. Fit-predict
 window/stride candidates: (1,1), (5,1), (10,5), (20,5), (50,50).
@@ -26,47 +28,62 @@ Five random seeds quantify algorithm randomness, not independent asset evidence.
    worktree for every subsequent source change.
 2. Install the original `uv.lock`, including the paper-specific TabPFN Git fork.
    A generic PyPI TabPFN substitute does not establish exact reproduction.
-3. Compose all eight model/dataset configurations; audit split IDs, target
-   semantics, scaling, aggregation, and data availability before fitting.
-4. Test input causality, train-only preprocessing, context membership, aligned
-   labels, cache equality, and model checkpoints. Composition alone is not a pass.
-5. Run seed 72 end-to-end; measure elapsed time and peak GPU memory before a
-   multi-seed queue. Use only physical GPUs 0/1/2, explicit CUDA_VISIBLE_DEVICES,
-   and record logical cuda:0 separately. Never stop unrelated workloads.
+3. Compose all eight model/dataset configurations and materialize two named
+   aggregation policies: `paper_intent_fixed` honors YAML `last/mean`; the
+   historical-behavior control reproduces the old swallowed-key mean default.
+4. Test XJTU's locked PHMD RUL-to-HI equation, inverse units, fit-on-train feature
+   scalers, training-only ICL contexts, label/window alignment and cache equality.
+5. After complete source files pass archive/CRC checks, run seed 72 and record
+   time/peak memory; then repeat the paper's five seeds. Use only physical GPUs
+   0/1/2 with explicit CUDA_VISIBLE_DEVICES and record logical cuda:0 separately.
 
 All runtime artifacts belong in ignored `artifacts/`. Record command, commit,
 resolved configuration, dependency versions, data/checkpoint digests, GPU mapping,
-concurrent processes, exit code, and final status. No automatic experiment launch
-is permitted after a blocked protocol audit. No performance results exist yet.
+concurrent processes, exit code, and final status. Archive validation and
+configuration preflight passed. The first full XJTU seed-72 LSTM run is active on
+physical GPU0 (`CUDA_VISIBLE_DEVICES=0`, logical `cuda:0`); at the current status
+snapshot it is generating `time_domain_features` for Bearing3_1, so model fitting
+and performance metrics remain pending.
 
-## Source-level findings requiring verification
+## Resolved findings and remaining evidence
 
-- `WindowedAggregationTransform` accepts `agg`, while several original configs
-  specify `aggregation`. Because **kwargs absorbs the latter, requested `last`
-  can silently run as the default `mean`. This affects timestamps/targets and
-  potentially the XJTU descriptor sequence. Preserve this as released-code
-  evidence; a corrected protocol must have a separate identity.
-  `audit_reproduction.py --protocol aggregation_corrected` emits separate
-  configs with explicit `agg=last` overrides; it does not edit original transforms
-  or declare the remaining provenance/data/runtime gates passed.
-- Old paper shell scripts reference experiment paths absent from the current
-  tree. Compose the explicit current paths rather than launching old scripts.
-- XJTU PHMD membership is 8 training, 3 validation, 4 test bearings; current
-  in-domain defaults are different and require the explicit split override.
-- The XJTU target is HI. The current HealthIndexTransform documents runtime /
-  total lifetime, with inverse scaling by lifetime. Reported inverse-scaled
-  metrics must be reconciled with the manuscript's HI metric wording before
-  comparing numbers. Total lifetime may define offline labels, never model input
-  or an operational RUL conversion using a held-out device's future lifetime.
-- Existing XJTU domain_shift folds all hold out condition 3; they are not three
-  independent held-out-condition evaluations.
-- N-CMAPSS uses precomputed standard scalers; their training provenance must be
-  checked, rather than assuming fit-on-train from the generic pipeline.
+- The transform now accepts both aggregation parameter names and rejects
+  disagreement. The audit writes explicit `agg` values. The old default-mean
+  execution remains a named comparison, not the primary paper-intent protocol.
+- The copied paper runner does not list the NC-P multi-source configuration;
+  the reproduction audit now uses `concepts_n_cmapss_multi/prognostics/*`.
+- The supplied XJTU payload contains 9,216 acquisition CSVs across all 15
+  bearings. A bounded-memory audit found 32,769 physical lines in every file:
+  one header plus 32,768 vibration rows, matching the locked PHMD reader's
+  `pandas.read_csv` and 32,768-row RUL period. Each bearing's acquisition count
+  matches its lifetime-table entry, and PHMD's reversed index formula yields
+  `N-1, ..., 0` RUL at the acquisitions. The fixed 8/3/4 PHMD-paper split and
+  all 15 membership assignments pass; see the ignored local report
+  `artifacts/xjtu_phmd_payload_audit.json`.
+- The transform now names the input `rul_key` (keeping `runtime_key` as a
+  compatibility alias) and computes `HI=RUL/N`. For XJTU, RUL begins at `N-1`
+  because failure is the final indexed acquisition. This equals
+  `1 - elapsed/N` with one-based elapsed acquisition time; against zero-based
+  elapsed indices it differs by one acquisition interval. Inverse metrics are
+  RUL acquisition-minutes; normalized HI and inverse-minute errors will be
+  reported separately.
+- The TFM-PHM paper uses XJTU PHMD split 8/3/4; the PICID infrastructure paper's
+  in-domain fold-1 is 9/3/3. Their results must remain separate.
+- N-CMAPSS fixed standard scalers are benchmark constants, not fitted per run.
+  Their original derivation population is undocumented. The main reproduction
+  retains them. A streaming comparison on 15,922,221 NC-P training rows found
+  maximum fixed-mean difference 0.0522 train standard deviations and fixed/train
+  standard-deviation ratios 0.9832–1.0085. This supports consistency with the
+  train distribution but does not identify the constants' original source
+  population. TFM Appendix A.3 says min-max, but detailed Appendix C.2.3, PICID
+  Appendix F.3, and code say fixed standard scaling.
+- The historical `domain_shift` fold table always tests condition 3. It is one
+  held-condition scenario with five split variants, not five independent domains.
 
 ## Warning study preregistration (design only)
 
-N-CMAPSS warning labels use remaining flight cycles. XJTU warning labels use
-elapsed operating time and the recorded terminal time, separately from HI.
+N-CMAPSS warning labels use remaining flight cycles. XJTU warning labels derive
+from the PHMD remaining-acquisition RUL sequence, separately from normalized HI.
 Candidate horizons are 5%, 10%, 20% of training-device median lifetime, computed
 per dataset/split in native units. Do not estimate horizons from test lifetimes.
 Dataset terminal time is an operational endpoint proxy, not proof of a field

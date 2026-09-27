@@ -56,8 +56,12 @@ class WindowedAggregationTransform(NoFitPerSegmentMixin, DenseTransform):
         Window size or ``"full"`` to aggregate over the entire axis.
     step : int
         Sliding step between windows.
-    agg : str, default="mean"
-        Aggregation method.
+    agg : str, optional
+        Canonical aggregation method. Defaults to ``"mean"`` when neither
+        aggregation name is supplied.
+    aggregation : str, optional
+        Backward-compatible configuration alias for ``agg``. If both names are
+        supplied, they must agree.
     dim : int, default=0
         Axis along which to build windows.
     **kwargs
@@ -68,11 +72,21 @@ class WindowedAggregationTransform(NoFitPerSegmentMixin, DenseTransform):
         self,
         window_size: int | str,
         step: int,
-        agg: str = "mean",
+        agg: str | None = None,
         dim: int = 0,
+        aggregation: str | None = None,
         **kwargs,
     ):
         super().__init__()
+        if agg is not None and aggregation is not None and agg != aggregation:
+            raise ValueError(
+                "Conflicting aggregation values: "
+                f"agg={agg!r}, aggregation={aggregation!r}."
+            )
+        resolved_agg = agg if agg is not None else aggregation
+        if resolved_agg is None:
+            resolved_agg = "mean"
+
         if isinstance(window_size, int):
             assert window_size > 0, "window_size must be a positive integer."
         elif isinstance(window_size, str):
@@ -80,7 +94,7 @@ class WindowedAggregationTransform(NoFitPerSegmentMixin, DenseTransform):
 
         self.window_size = window_size
         self.step = step
-        self.agg = agg
+        self.agg = resolved_agg
         self.dim = dim
 
         # Map string to numpy aggregation function
@@ -93,10 +107,10 @@ class WindowedAggregationTransform(NoFitPerSegmentMixin, DenseTransform):
             "std": np.std,
             "first": lambda x: x,  # Handled separately
             "last": lambda x: x,  # Handled separately
-        }.get(agg)
+        }.get(resolved_agg)
 
         if self._agg_func is None:
-            raise ValueError(f"Unsupported aggregation: {agg}")
+            raise ValueError(f"Unsupported aggregation: {resolved_agg}")
 
     @check_transform_output_consistency
     def transform_data(self, data: NamedTransformInput, metadata: Dict) -> Any:

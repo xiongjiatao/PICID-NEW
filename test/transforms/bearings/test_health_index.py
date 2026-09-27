@@ -5,18 +5,19 @@ which is a fundamental component of bearing prognostics and health management.
 
 PHM Context:
 -----------
-Health Index is a normalized metric representing the current health state of
-a bearing relative to its total expected life:
+This transform receives remaining-life/RUL values from the PHMD bearing task.
+It converts them to a normalized health trajectory:
 
-    HI = Runtime / Total_Life
+    HI = RUL / Total_Life = 1 - one_based_elapsed / Total_Life
 
 Where:
-- HI ranges from 0.0 (start of life) to 1.0 (end of life)
-- Runtime is the accumulated operating time
+- HI starts one acquisition interval below 1.0 for the PHMD XJTU target and
+  decreases to 0.0 at failure
+- RUL is remaining operating time in the dataset's native unit
 - Total_Life is the known or estimated total life for the specific unit
 
 The Health Index is critical for:
-1. **Prognostics**: Predicting Remaining Useful Life (RUL = (1 - HI) * Total_Life)
+1. **Prognostics**: Recovering RUL as ``HI * Total_Life``
 2. **Condition Monitoring**: Tracking degradation progression
 3. **Maintenance Planning**: Scheduling interventions before failure
 
@@ -28,7 +29,7 @@ Test Coverage Strategy:
 ----------------------
 1. **Initialization Tests**: Parameter validation, lookup table configuration
 2. **Nominal Calculation Tests**: Correct HI computation for known inputs
-3. **Inverse Transform Tests**: Verifying Runtime reconstruction
+3. **Inverse Transform Tests**: Verifying remaining-life/RUL reconstruction
 4. **Multi-Unit Tests**: Handling vectorized unit_id inputs
 5. **Error Handling Tests**: Invalid inputs, missing metadata, range violations
 6. **Integration Tests**: Full pipeline with SplitDatasetContainer
@@ -36,8 +37,8 @@ Test Coverage Strategy:
 Physical Validation:
 -------------------
 - HI must be in [0.0, 1.0] range (normalized metric)
-- HI must be monotonically increasing over time (damage accumulation)
-- Inverse transform must reconstruct original runtime values
+- HI must be monotonically decreasing over time for run-to-failure RUL labels
+- Inverse transform must reconstruct original remaining-life/RUL values
 """
 
 import numpy as np
@@ -64,12 +65,12 @@ def pronostia_unit_1_1():
     a complete run-to-failure dataset under Condition 1 (1800 rpm, 4000 N load).
 
     Returns:
-        Dict with runtime, expected HI, and unit metadata
+        Dict with legacy-keyed RUL values, expected HI, and unit metadata
     """
     total_life = 28020.0
     n_samples = 100
-    # Runtime increases from 0 to total_life
-    runtime = np.linspace(0, total_life, n_samples)
+    # Remaining life decreases from total_life to failure.
+    runtime = np.linspace(total_life, 0, n_samples)
     expected_hi = runtime / total_life
 
     return {
@@ -90,7 +91,7 @@ def pronostia_unit_2_1():
     """
     total_life = 9100.0
     n_samples = 50
-    runtime = np.linspace(0, total_life, n_samples)
+    runtime = np.linspace(total_life, 0, n_samples)
     expected_hi = runtime / total_life
 
     return {
@@ -112,11 +113,13 @@ def xjtu_sy_unit_1_1():
     """
     total_life = 123.0
     n_samples = 50
-    runtime = np.linspace(0, total_life, n_samples)
+    # The PHMD reader's RUL begins one acquisition interval below total life.
+    runtime = np.linspace(total_life - 1, 0, n_samples)
     expected_hi = runtime / total_life
 
     return {
         "runtime": runtime.reshape(-1, 1),
+        "rul": runtime.reshape(-1, 1),
         "unit_id": np.array([[1, 1]] * n_samples),
         "expected_hi": expected_hi.reshape(-1, 1),
         "total_life": total_life,
@@ -277,16 +280,16 @@ class TestHealthIndexTransformInitialization:
 class TestHealthIndexCalculation:
     """Tests for Health Index calculation.
 
-    Validates correct HI computation: HI = Runtime / Total_Life
+    Validates correct HI computation: HI = remaining RUL / Total_Life
     """
 
     def test_calculate_hi_pronostia_unit_1_1(self, pronostia_unit_1_1):
         """Test HI calculation for PRONOSTIA Condition 1, Bearing 1.
 
-        **PHM Logic**: HI = Runtime / Total_Life should produce values
-        from 0.0 (start) to 1.0 (end of life) for this bearing.
+        **PHM Logic**: HI = remaining RUL / Total_Life decreases from
+        approximately 1.0 at start of life to 0.0 at failure.
 
-        **Methodology**: Transform runtime sequence and compare to expected HI.
+        **Methodology**: Transform an RUL sequence and compare to expected HI.
 
         **Expected**: Computed HI matches expected within tolerance.
 
@@ -319,10 +322,10 @@ class TestHealthIndexCalculation:
         """Test that different units with different total_life produce different HI.
 
         **PHM Logic**: Bearings under different conditions have different
-        total life. Same runtime should produce different HI values for
+        total life. Same RUL should produce different normalized HI values for
         different units.
 
-        **Methodology**: Compare HI for same runtime but different units.
+        **Methodology**: Compare HI for the same RUL but different units.
 
         **Expected**: HI values differ proportionally to total_life ratio.
 
@@ -333,7 +336,7 @@ class TestHealthIndexCalculation:
         )
 
         # Use same runtime for both units
-        common_runtime = np.array([[5000.0]])
+        common_runtime = np.array([[5000.0]])  # Same remaining life for both units.
 
         # Unit 1,1 with total_life=28020
         data_1_1 = NamedTransformInput(runtime=common_runtime, unit_id=np.array([1, 1]))
@@ -343,7 +346,7 @@ class TestHealthIndexCalculation:
         data_2_1 = NamedTransformInput(runtime=common_runtime, unit_id=np.array([2, 1]))
         hi_2_1 = transform.transform_data(data_2_1, metadata={})
 
-        # Unit 2,1 should have higher HI (shorter total_life)
+        # Unit 2,1 should have higher normalized remaining life.
         assert hi_2_1[0, 0] > hi_1_1[0, 0]
 
         # Verify proportionality: HI_2_1 / HI_1_1 ≈ TL_1_1 / TL_2_1
@@ -357,8 +360,8 @@ class TestHealthIndexCalculation:
         """Test HI calculation at boundary conditions.
 
         **PHM Logic**:
-        - At runtime=0: HI should be 0.0 (start of life)
-        - At runtime=total_life: HI should be 1.0 (end of life)
+        - At RUL=0: HI should be 0.0 (failure)
+        - At RUL=total_life: HI should be 1.0 (start of life)
 
         **Methodology**: Test at exact boundary values.
 
@@ -371,26 +374,26 @@ class TestHealthIndexCalculation:
             runtime_key="runtime", unit_key="unit_id", dataset_name="PRONOSTIA"
         )
 
-        # Test at start of life (runtime=0)
+        # Test at failure (RUL=0).
         data_start = NamedTransformInput(
             runtime=np.array([[0.0]]), unit_id=np.array([1, 1])
         )
         hi_start = transform.transform_data(data_start, metadata={})
-        assert abs(hi_start[0, 0] - 0.0) < 1e-10, "HI at runtime=0 should be 0.0"
+        assert abs(hi_start[0, 0] - 0.0) < 1e-10, "HI at RUL=0 should be 0.0"
 
-        # Test at end of life (runtime=total_life)
+        # Test at start of life (RUL=total_life).
         data_end = NamedTransformInput(
             runtime=np.array([[total_life]]), unit_id=np.array([1, 1])
         )
         hi_end = transform.transform_data(data_end, metadata={})
-        assert abs(hi_end[0, 0] - 1.0) < 1e-10, "HI at runtime=total_life should be 1.0"
+        assert abs(hi_end[0, 0] - 1.0) < 1e-10, "HI at RUL=total_life should be 1.0"
 
     def test_calculate_hi_xjtu_sy_dataset(self, xjtu_sy_unit_1_1):
-        """Test HI calculation for XJTU-SY dataset.
+        """Test the PHMD XJTU-SY remaining-life-to-HI conversion.
 
-        **PHM Logic**: XJTU-SY has different total_life values and uses
-        different units (minutes vs seconds for PRONOSTIA). Verify
-        dataset-specific lookup works correctly.
+        **PHM Logic**: PHMD assigns each of the 32,768-sample acquisitions a
+        remaining-life value in minutes. The total-life table converts it to
+        a decreasing normalized health trajectory.
 
         **Methodology**: Transform XJTU-SY data and verify against expected.
 
@@ -399,16 +402,44 @@ class TestHealthIndexCalculation:
         Validates: Requirement HI-2.4 - Multi-dataset support
         """
         transform = HealthIndexTransform(
-            runtime_key="runtime", unit_key="unit_id", dataset_name="XJTU-SY"
+            rul_key="rul", unit_key="unit_id", dataset_name="XJTU-SY"
         )
 
         data = NamedTransformInput(
-            runtime=xjtu_sy_unit_1_1["runtime"], unit_id=xjtu_sy_unit_1_1["unit_id"][0]
+            rul=xjtu_sy_unit_1_1["rul"], unit_id=xjtu_sy_unit_1_1["unit_id"][0]
         )
 
         result = transform.transform_data(data, metadata={})
 
         np.testing.assert_allclose(result, xjtu_sy_unit_1_1["expected_hi"], rtol=1e-6)
+
+    def test_xjtu_rul_formula_matches_one_based_elapsed_equation(self):
+        total_life = 123.0
+        rul = np.array([[122.0], [61.0], [0.0]])
+        elapsed = total_life - rul
+        transform = HealthIndexTransform(
+            rul_key="rul", unit_key="unit_id", dataset_name="XJTU-SY"
+        )
+
+        result = transform.transform_data(
+            NamedTransformInput(rul=rul, unit_id=np.array([1, 1])), metadata={}
+        )
+        expected = 1.0 - elapsed / total_life
+
+        np.testing.assert_allclose(result, expected, rtol=1e-7)
+        restored_rul = transform.inverse_transform(
+            NamedTransformInput(hi=result), metadata={"unit_id": (1, 1)}
+        )
+        np.testing.assert_allclose(restored_rul, rul, rtol=1e-7)
+
+    def test_conflicting_legacy_and_canonical_keys_fail_fast(self):
+        with pytest.raises(ValueError, match="Conflicting RUL input keys"):
+            HealthIndexTransform(
+                runtime_key="elapsed",
+                rul_key="rul",
+                unit_key="unit_id",
+                dataset_name="XJTU-SY",
+            )
 
 
 # =============================================================================
@@ -419,18 +450,18 @@ class TestHealthIndexCalculation:
 class TestHealthIndexInverseTransform:
     """Tests for inverse Health Index transformation.
 
-    Validates: Runtime = HI * Total_Life
+    Validates: RUL = HI * Total_Life
     """
 
     def test_inverse_transform_basic(self, pronostia_unit_1_1):
-        """Test basic inverse transform recovers original runtime.
+        """Test inverse transform recovers original remaining-life values.
 
         **PHM Logic**: The inverse transform should recover the original
-        runtime values from HI: Runtime = HI * Total_Life
+        remaining-life values from HI: RUL = HI * Total_Life
 
-        **Methodology**: Transform runtime to HI, then inverse back to runtime.
+        **Methodology**: Transform remaining-life values to HI and back.
 
-        **Expected**: Recovered runtime matches original within tolerance.
+        **Expected**: Recovered RUL matches original within tolerance.
 
         Validates: Requirement HI-3.1 - Inverse transform accuracy
         """
@@ -438,14 +469,14 @@ class TestHealthIndexInverseTransform:
             runtime_key="runtime", unit_key="unit_id", dataset_name="PRONOSTIA"
         )
 
-        # Forward transform: Runtime -> HI
+        # Forward transform: RUL -> HI
         data = NamedTransformInput(
             runtime=pronostia_unit_1_1["runtime"],
             unit_id=pronostia_unit_1_1["unit_id"][0],
         )
         hi = transform.transform_data(data, metadata={})
 
-        # Inverse transform: HI -> Runtime
+        # Inverse transform: HI -> RUL
         inverse_data = NamedTransformInput(features=hi)
         metadata = {"unit_id": pronostia_unit_1_1["unit_id"][0]}
         recovered_runtime = transform.inverse_transform(inverse_data, metadata)
@@ -574,12 +605,12 @@ class TestHealthIndexErrorHandling:
     """
 
     def test_missing_runtime_key_raises_error(self):
-        """Test missing runtime_key in data raises KeyError.
+        """Test missing RUL input key raises KeyError.
 
-        **PHM Logic**: Runtime data is required for HI calculation. Missing
+        **PHM Logic**: Remaining-life/RUL data is required for HI calculation. Missing
         key indicates data pipeline misconfiguration.
 
-        **Methodology**: Provide data without the expected runtime_key.
+        **Methodology**: Provide data without the expected RUL key.
 
         **Expected**: KeyError raised with descriptive message.
 
@@ -589,12 +620,12 @@ class TestHealthIndexErrorHandling:
             runtime_key="runtime", unit_key="unit_id", dataset_name="PRONOSTIA"
         )
 
-        # Data missing 'runtime' key
+        # Data missing the legacy 'runtime' key.
         data = NamedTransformInput(
             features=np.array([[1.0], [2.0]]), unit_id=np.array([1, 1])
         )
 
-        with pytest.raises(KeyError, match="runtime"):
+        with pytest.raises(KeyError, match="rul_key"):
             transform.transform_data(data, metadata={})
 
     def test_unknown_unit_id_raises_error(self):
@@ -622,12 +653,12 @@ class TestHealthIndexErrorHandling:
             transform.transform_data(data, metadata={})
 
     def test_infinite_runtime_raises_error(self):
-        """Test infinite runtime values raise ValueError.
+        """Test infinite RUL values raise ValueError.
 
-        **PHM Logic**: Infinite runtime indicates sensor/data corruption.
+        **PHM Logic**: Infinite RUL indicates target/data corruption.
         Must be detected before producing invalid HI values.
 
-        **Methodology**: Provide runtime with np.inf value.
+        **Methodology**: Provide remaining life with np.inf value.
 
         **Expected**: ValueError raised about infinite values.
 
@@ -647,11 +678,10 @@ class TestHealthIndexErrorHandling:
     def test_hi_exceeds_one_raises_error(self):
         """Test HI > 1.0 raises ValueError.
 
-        **PHM Logic**: HI > 1.0 means runtime exceeds total_life, which
-        is physically impossible for run-to-failure data. This indicates
-        either wrong total_life or incorrect runtime values.
+        **PHM Logic**: HI > 1.0 means RUL exceeds total_life, indicating a
+        wrong lifetime lookup or target values.
 
-        **Methodology**: Provide runtime exceeding total_life.
+        **Methodology**: Provide RUL exceeding total_life.
 
         **Expected**: ValueError raised about HI range.
 
@@ -661,7 +691,7 @@ class TestHealthIndexErrorHandling:
             runtime_key="runtime", unit_key="unit_id", dataset_name="PRONOSTIA"
         )
 
-        # Runtime exceeds total_life (28020)
+        # RUL exceeds total_life (28020).
         data = NamedTransformInput(
             runtime=np.array([[30000.0]]), unit_id=np.array([1, 1])
         )
@@ -669,13 +699,13 @@ class TestHealthIndexErrorHandling:
         with pytest.raises(ValueError, match="outside"):
             transform.transform_data(data, metadata={})
 
-    def test_negative_runtime_produces_negative_hi_raises_error(self):
-        """Test negative runtime produces negative HI which raises error.
+    def test_negative_rul_produces_negative_hi_raises_error(self):
+        """Test negative RUL produces negative HI and raises an error.
 
-        **PHM Logic**: Negative runtime is physically impossible and would
+        **PHM Logic**: Negative remaining life is physically invalid and would
         produce negative HI. Must be detected and rejected.
 
-        **Methodology**: Provide negative runtime value.
+        **Methodology**: Provide a negative RUL value.
 
         **Expected**: ValueError raised about HI range (negative).
 
@@ -770,16 +800,17 @@ class TestHealthIndexMonotonicity:
     """Tests for monotonicity validation in HI calculation.
 
     The transform validates that computed HI values are monotonically
-    increasing (or non-decreasing) over time, as damage can only accumulate.
+    decreasing over time because the PHMD RUL target decreases toward failure.
     """
 
-    def test_monotonic_runtime_produces_monotonic_hi(self):
-        """Test that monotonically increasing runtime produces monotonic HI.
+    def test_monotonic_rul_produces_decreasing_hi(self):
+        """Test that monotonically decreasing RUL produces decreasing HI.
 
-        **PHM Logic**: If runtime increases monotonically (as it should for
-        run-to-failure data), HI should also increase monotonically.
+        **PHM Logic**: RUL is constant within each raw vibration record and
+        decreases once per acquisition interval. HI must follow the same trend.
 
-        **Methodology**: Provide strictly increasing runtime sequence.
+        **Methodology**: Repeat decreasing RUL values for one full raw
+        acquisition interval, matching the PHMD reader's sample layout.
 
         **Expected**: Transform succeeds and produces monotonic HI.
 
@@ -789,34 +820,32 @@ class TestHealthIndexMonotonicity:
             runtime_key="runtime", unit_key="unit_id", dataset_name="PRONOSTIA"
         )
 
-        # Strictly increasing runtime (step = DECREASE_PERIOD for PRONOSTIA)
-        n_steps = 10
         step = DECREASE_PERIOD["PRONOSTIA"]
-        runtime = np.arange(0, n_steps * step, step).astype(float)
+        total_life = DEFAULT_TOTAL_LIFE_LOOKUP["PRONOSTIA"][(1, 1)]
+        rul_by_record = np.linspace(total_life - 1, 0, 10)
+        remaining_life = np.repeat(rul_by_record, step)
 
         data = NamedTransformInput(
-            runtime=runtime.reshape(-1, 1), unit_id=np.array([1, 1])
+            runtime=remaining_life.reshape(-1, 1), unit_id=np.array([1, 1])
         )
 
         result = transform.transform_data(data, metadata={})
 
         # Verify monotonicity
         for i in range(1, len(result)):
-            assert (
-                result[i, 0] >= result[i - 1, 0]
-            ), f"HI not monotonic at index {i}: {result[i-1, 0]:.4f} -> {result[i, 0]:.4f}"
+            assert result[i, 0] <= result[i - 1, 0], (
+                f"HI not decreasing at index {i}: {result[i - 1, 0]:.4f} -> {result[i, 0]:.4f}"
+            )
 
-    def test_non_monotonic_runtime_accepted(self):
-        """Test that non-monotonic runtime sequence is accepted.
+    def test_non_monotonic_rul_fails_validation(self):
+        """Test that a rising RUL step fails the monotonicity check.
 
-        **PHM Logic**: The transform doesn't enforce strict monotonicity
-        by default - it allows non-monotonic runtime sequences and still
-        computes HI values. This is useful for data that may have been
-        re-ordered or contains partial segments.
+        **PHM Logic**: The run-to-failure target must not increase as the
+        acquisition index advances.
 
-        **Methodology**: Provide runtime that decreases at some point.
+        **Methodology**: Introduce one increase between acquisition records.
 
-        **Expected**: Transform processes successfully (no error raised).
+        **Expected**: Transform rejects the inconsistent trajectory.
 
         Validates: Requirement HI-8.2 - Non-monotonic handling
         """
@@ -824,32 +853,20 @@ class TestHealthIndexMonotonicity:
             runtime_key="runtime", unit_key="unit_id", dataset_name="PRONOSTIA"
         )
 
-        # Non-monotonic runtime (decrease at step 5)
+        # RUL rises from 6 to 7 at the sixth acquisition.
         step = DECREASE_PERIOD["PRONOSTIA"]
-        runtime = np.array(
-            [
-                0,
-                step,
-                2 * step,
-                3 * step,
-                4 * step,
-                3 * step,  # Decrease here
-                6 * step,
-                7 * step,
-            ]
-        ).astype(float)
+        total_life = DEFAULT_TOTAL_LIFE_LOOKUP["PRONOSTIA"][(1, 1)]
+        rul_by_record = np.array([9, 8, 7, 6, 5, 6, 3, 2], dtype=float) * (
+            total_life / 10
+        )
+        remaining_life = np.repeat(rul_by_record, step)
 
         data = NamedTransformInput(
-            runtime=runtime.reshape(-1, 1), unit_id=np.array([1, 1])
+            runtime=remaining_life.reshape(-1, 1), unit_id=np.array([1, 1])
         )
 
-        # Transform should process without error
-        result = transform.transform_data(data, metadata={})
-
-        # Verify output shape is correct
-        assert result.shape == (len(runtime), 1)
-        # Verify HI values are in valid range
-        assert np.all(result >= 0.0) and np.all(result <= 1.0)
+        with pytest.raises(ValueError, match="monotonically decreasing"):
+            transform.transform_data(data, metadata={})
 
 
 # =============================================================================
@@ -863,13 +880,13 @@ class TestHealthIndexIntegration:
     def test_full_bearing_lifecycle(self, pronostia_unit_1_1):
         """Test HI calculation over complete bearing lifecycle.
 
-        **PHM Logic**: A bearing's lifecycle goes from HI=0 (healthy) to
-        HI=1 (failure). This test verifies the transform correctly captures
+        **PHM Logic**: A normalized remaining-life trajectory goes from HI≈1
+        (healthy) to HI=0 (failure). This test verifies the transform captures
         this entire progression.
 
-        **Methodology**: Transform full runtime sequence from start to failure.
+        **Methodology**: Transform full RUL sequence from start to failure.
 
-        **Expected**: HI progresses from ~0 to ~1 smoothly.
+        **Expected**: HI decreases from ~1 to ~0 smoothly.
 
         Validates: Requirement HI-9.1 - Full lifecycle handling
         """
@@ -885,19 +902,19 @@ class TestHealthIndexIntegration:
         result = transform.transform_data(data, metadata={})
 
         # Verify lifecycle progression
-        assert result[0, 0] < 0.1, "Initial HI should be near 0"
-        assert result[-1, 0] > 0.9, "Final HI should be near 1"
-        assert result[-1, 0] > result[0, 0], "HI should increase over life"
+        assert result[0, 0] > 0.9, "Initial HI should be near 1"
+        assert result[-1, 0] < 0.1, "Final HI should be near 0"
+        assert result[-1, 0] < result[0, 0], "HI should decrease over life"
 
     def test_round_trip_transform(self, pronostia_unit_1_1):
-        """Test round-trip transform/inverse_transform.
+        """Test round-trip remaining-life transform/inverse_transform.
 
         **PHM Logic**: Forward and inverse transforms should be exact inverses.
         This is critical for RUL estimation and prognostics.
 
-        **Methodology**: Transform -> Inverse -> Compare to original.
+        **Methodology**: Transform RUL -> inverse -> compare with original RUL.
 
-        **Expected**: Recovered runtime equals original within tolerance.
+        **Expected**: Recovered RUL equals original within tolerance.
 
         Validates: Requirement HI-9.2 - Transform invertibility
         """

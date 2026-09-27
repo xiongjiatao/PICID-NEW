@@ -5,3 +5,4 @@ defaults:
 
 datasource:
   split_mode: phmd_split
+  download_policy: local_only

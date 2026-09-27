@@ -94,16 +94,23 @@ def diff_at_step_n(vector, n):
 
 class HealthIndexTransform(NoFitPerSegmentMixin, InverseTransformMixin, DenseTransform):
     """
-    Convert a runtime channel into a unit-specific health index.
+    Convert a remaining-life/RUL channel into a unit-specific health index.
 
-    The transform uses a dataset/unit lifetime lookup to map runtime values
-    into a normalized health index and exposes the inverse mapping for
-    downstream inspection or reconstruction.
+    ``runtime_key`` is retained for configuration compatibility, but its input
+    must be remaining operating life (RUL), not elapsed runtime. The transform
+    computes ``HI = RUL / total_life``. For the PHMD XJTU sequence with
+    ``N`` acquisitions, its RUL is ``N-1, ..., 0``; this equals
+    ``1 - elapsed / N`` when elapsed uses one-based acquisition time
+    ``1, ..., N``. With zero-based elapsed indices, the two differ by one
+    acquisition interval (``1/N``). The inverse returns RUL in the dataset's
+    native time unit.
 
     Parameters
     ----------
     runtime_key : str
-        Key used to read the runtime vector from ``data``.
+        Legacy-named key used to read remaining-life/RUL values from ``data``.
+    rul_key : str, optional
+        Preferred explicit name for the remaining-life/RUL input key.
     unit_key : str
         Key used to read the unit identifier from ``metadata``.
     dataset_name : str
@@ -115,27 +122,31 @@ class HealthIndexTransform(NoFitPerSegmentMixin, InverseTransformMixin, DenseTra
 
     Notes
     -----
-    The forward mapping is ``HI = Runtime / Total_Life`` and the inverse
-    mapping implemented here is ``Runtime = HI * Total_Life``. The transform
+    The forward mapping is ``HI = RUL / Total_Life`` and the inverse mapping
+    implemented here is ``RUL = HI * Total_Life``. The transform
     emits a single-column array of shape ``(n_rows, 1)`` and validates that
     the computed health index stays within the ``[0, 1]`` range.
     """
 
     def __init__(
         self,
-        runtime_key: str,
-        unit_key: str,
-        dataset_name: str,
+        runtime_key: str | None = None,
+        unit_key: str | None = None,
+        dataset_name: str | None = None,
         total_life_lookup: Optional[DatasetLifeLookup] = None,
+        rul_key: str | None = None,
         **kwargs,
     ):
         """
-        Initialize the lifetime lookup and runtime key mapping.
+        Initialize the lifetime lookup and remaining-life key mapping.
 
         Parameters
         ----------
-        runtime_key : str
-            Key used to read the runtime vector from ``data``.
+        runtime_key : str, optional
+            Legacy alias for ``rul_key``. The selected data field must contain
+            remaining-life/RUL values, not elapsed runtime.
+        rul_key : str, optional
+            Preferred key used to read remaining-life/RUL values from ``data``.
         unit_key : str
             Key used to read the unit identifier from ``metadata``.
         dataset_name : str
@@ -145,8 +156,23 @@ class HealthIndexTransform(NoFitPerSegmentMixin, InverseTransformMixin, DenseTra
         **kwargs
             Additional keyword arguments forwarded to the base transform.
         """
+        if runtime_key is not None and rul_key is not None and runtime_key != rul_key:
+            raise ValueError(
+                f"Conflicting RUL input keys: runtime_key={runtime_key!r}, "
+                f"rul_key={rul_key!r}."
+            )
+        resolved_rul_key = rul_key if rul_key is not None else runtime_key
+        if resolved_rul_key is None:
+            raise ValueError(
+                "HealthIndexTransform requires rul_key (or legacy runtime_key)."
+            )
+        if unit_key is None or dataset_name is None:
+            raise ValueError("HealthIndexTransform requires unit_key and dataset_name.")
+
         super().__init__(**kwargs)
-        self.runtime_key = runtime_key
+        self.rul_key = resolved_rul_key
+        # Keep this attribute for callers that inspect the legacy API.
+        self.runtime_key = resolved_rul_key
         self.unit_key = unit_key
         self.dataset_name = dataset_name
 
@@ -168,7 +194,7 @@ class HealthIndexTransform(NoFitPerSegmentMixin, InverseTransformMixin, DenseTra
 
         logger.debug(
             f"HealthIndexTransform initialized: "
-            f"runtime_key='{self.runtime_key}', "
+            f"rul_key='{self.rul_key}', "
             f"unit_key='{self.unit_key}' (in metadata), "
             f"dataset_name='{self.dataset_name}'"
         )
@@ -256,12 +282,13 @@ class HealthIndexTransform(NoFitPerSegmentMixin, InverseTransformMixin, DenseTra
     @override
     def transform_data(self, data: NamedTransformInput, metadata: Dict) -> np.ndarray:
         """
-        Map the runtime channel to a column vector of health index values.
+        Map remaining-life/RUL values to a column vector of health-index values.
 
         Parameters
         ----------
         data : NamedTransformInput
-            Container holding the runtime vector.
+            Container holding remaining-life/RUL values under ``rul_key`` or
+            its legacy ``runtime_key`` alias.
         metadata : dict
             Metadata that identifies the unit being processed.
 
@@ -270,39 +297,42 @@ class HealthIndexTransform(NoFitPerSegmentMixin, InverseTransformMixin, DenseTra
         numpy.ndarray
             Two-dimensional array with shape ``(n_rows, 1)``.
         """
-        # 1. Get Runtime vector from data
-        if self.runtime_key not in data:
+        # 1. Read remaining-life (RUL) values. The configuration key retains
+        # its legacy name, but this is not elapsed operating time.
+        if self.rul_key not in data:
             raise KeyError(
-                f"runtime_key '{self.runtime_key}' not found in data. "
+                f"rul_key '{self.rul_key}' not found in data. "
                 f"Available data keys: {data.keys()}"
             )
-        runtime = data[self.runtime_key]
-        init_shape = runtime.shape
-        runtime_vector = convert_to_numpy(runtime).flatten()
+        remaining_life = data[self.rul_key]
+        init_shape = remaining_life.shape
+        remaining_life_vector = convert_to_numpy(remaining_life).flatten()
 
-        if runtime_vector.ndim != 1:
+        if remaining_life_vector.ndim != 1:
             raise ValueError(
-                f"data['{self.runtime_key}'] must be a 1D vector, "
-                f"but has shape {runtime_vector.shape}"
+                f"data['{self.rul_key}'] (remaining life/RUL) must be a 1D vector, "
+                f"but has shape {remaining_life_vector.shape}"
             )
-        if np.any(np.isinf(runtime_vector)):
-            raise ValueError(f"Infinite values found in '{self.runtime_key}'")
+        if np.any(np.isinf(remaining_life_vector)):
+            raise ValueError(
+                f"Infinite remaining-life/RUL values found in '{self.rul_key}'"
+            )
 
         # 2. Get Total_Life from metadata
         unit_id = data.get(self.unit_key)  # For error message
         total_life = self._get_total_life_from_metadata(unit_id)
 
-        # 3. Calculate Health Index vector
-        # HI = 1 - (Runtime / Total_Life)
-        # As the Runtime goes from Total_Life left to 0 then we use (Runtime / Total_Life), hence HI goes from 1 to 0 as expected
-        health_index_vector = runtime_vector / (total_life)
+        # 3. The PHMD XJTU-SY target is remaining acquisitions N-1,...,0.
+        # Dividing by N matches 1 - one_based_elapsed/N. Under zero-based
+        # elapsed indices there is a one-acquisition discretization offset.
+        health_index_vector = remaining_life_vector / total_life
 
         # 4. Validate the HI is within the [0.0, 1.0] range
         min_hi = np.nanmin(health_index_vector)
         max_hi = np.nanmax(health_index_vector)
 
-        min_hi_init = np.nanmin(runtime_vector)
-        max_hi_init = np.nanmax(runtime_vector)
+        min_rul = np.nanmin(remaining_life_vector)
+        max_rul = np.nanmax(remaining_life_vector)
 
         # Find indexes of min and max values for health_index_vector
         agrmin = np.argmin(health_index_vector)
@@ -317,22 +347,23 @@ class HealthIndexTransform(NoFitPerSegmentMixin, InverseTransformMixin, DenseTra
         if not np.all(step_decrease <= 0):
             raise ValueError(
                 f"Calculated HI for unit '{unit_id}' is not a monotonically "
-                f"decreasing function. Check the runtime data in "
-                f"'{self.runtime_key}'."
+                f"decreasing function. Check the remaining-life/RUL data in "
+                f"'{self.rul_key}'."
             )
 
         logger.info(
             f"Unit {unit_id} HI Validation: "
             f"Range=[{np.round(min_hi, 3)}, {np.round(max_hi, 3)}]. "
             f"Min HI at index {agrmin}, Max HI at index {argmax}. "
-            f"Original runtime range=[{min_hi_init}, {max_hi_init}]."
+            f"Input RUL range=[{min_rul}, {max_rul}] in native time units."
         )
 
         if min_hi < 0.0 or max_hi > 1.0:
             raise ValueError(
                 f"Calculated HI for unit '{unit_id}' is outside the valid "
                 f"[0.0, 1.0] range. Found min={min_hi}, max={max_hi}. "
-                f"Check if runtime data in '{self.runtime_key}' (max={np.nanmax(runtime_vector)}) "
+                f"Check if remaining-life data in '{self.rul_key}' "
+                f"(max={np.nanmax(remaining_life_vector)}) "
                 f"exceeds Total_Life ({total_life}) or is negative."
             )
 
@@ -344,9 +375,9 @@ class HealthIndexTransform(NoFitPerSegmentMixin, InverseTransformMixin, DenseTra
             f"(Unit: {unit_id}, Total_Life: {total_life})"
         )
         #
-        assert (
-            init_shape == hi_column.shape
-        ), f"Shapes of initial {self.runtime_key} do not match after transform"
+        assert init_shape == hi_column.shape, (
+            f"Shapes of initial RUL key {self.rul_key} do not match after transform"
+        )
 
         return hi_column
 
@@ -357,9 +388,9 @@ class HealthIndexTransform(NoFitPerSegmentMixin, InverseTransformMixin, DenseTra
         metadata: dict = None,
     ) -> np.ndarray:
         """
-        Reconstruct runtime values from the health index output.
+        Reconstruct remaining-life/RUL values from the health-index output.
 
-        The inverse mapping is ``Runtime = HI * Total_Life``.
+        The inverse mapping is ``RUL = HI * Total_Life``.
 
         Parameters
         ----------
@@ -371,7 +402,7 @@ class HealthIndexTransform(NoFitPerSegmentMixin, InverseTransformMixin, DenseTra
         Returns
         -------
         numpy.ndarray
-            Reconstructed runtime as a two-dimensional column vector.
+            Reconstructed RUL as a two-dimensional column vector.
         """
         if self.unit_key not in metadata:
             raise ValueError(
@@ -394,18 +425,16 @@ class HealthIndexTransform(NoFitPerSegmentMixin, InverseTransformMixin, DenseTra
 
         if hi_vector.ndim != 1:
             raise ValueError(
-                f"Input HI data must be a 1D vector, "
-                f"but has shape {hi_vector.shape}"
+                f"Input HI data must be a 1D vector, but has shape {hi_vector.shape}"
             )
 
-        # 3. Calculate Runtime
-        # Runtime = HI * Total_Life
-        runtime_vector = hi_vector * total_life
+        # 3. Restore RUL in the dataset's native time unit.
+        remaining_life_vector = hi_vector * total_life
 
         # 4. Reshape to (n_rows, 1)
-        runtime_column = runtime_vector.reshape(-1, 1)
+        rul_column = remaining_life_vector.reshape(-1, 1)
 
-        return runtime_column
+        return rul_column
 
     def __call__(self, data: Dict, metadata: Dict) -> np.ndarray:
         return self.transform_data(data, metadata)
@@ -428,4 +457,4 @@ class HealthIndexTransform(NoFitPerSegmentMixin, InverseTransformMixin, DenseTra
         list[str]
             Generated output feature name.
         """
-        return [f"HI_ds_{self.dataset_name}_from_{self.runtime_key}"]
+        return [f"HI_ds_{self.dataset_name}_from_{self.rul_key}"]

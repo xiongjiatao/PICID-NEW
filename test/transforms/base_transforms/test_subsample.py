@@ -116,6 +116,23 @@ class TestWindowedAggregationTransform:
         assert transform.agg == "mean"
         assert transform.dim == 0
 
+    def test_legacy_aggregation_alias_is_applied(self):
+        transform = WindowedAggregationTransform(
+            window_size=3, step=3, aggregation="last"
+        )
+        data = NamedTransformInput(target=np.array([[1.0], [4.0], [10.0]]))
+
+        result = transform.transform_data(data, {})
+
+        np.testing.assert_array_equal(result["target"], [[10.0]])
+        assert transform.agg == "last"
+
+    def test_conflicting_aggregation_names_fail_fast(self):
+        with pytest.raises(ValueError, match="Conflicting aggregation values"):
+            WindowedAggregationTransform(
+                window_size=3, step=3, agg="mean", aggregation="last"
+            )
+
     def test_init_full_window(self):
         """Test initialization with full window."""
         transform = WindowedAggregationTransform(window_size="full", step=1, agg="mean")
