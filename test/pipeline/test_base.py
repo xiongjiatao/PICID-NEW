@@ -502,6 +502,27 @@ class TestFitPredictWrapperLightningModule:
         )
         torch.testing.assert_close(out["loss"], expected)
 
+    @pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA is unavailable")
+    def test_validation_loss_aligns_gpu_targets_with_cpu_predictions(
+        self, mock_evaluators, mock_fit_predict_backbone, phm_fit_predict_batch
+    ):
+        mock_fit_predict_backbone.task_type = "rul"
+        batch = dict(phm_fit_predict_batch)
+        batch["context"] = batch["context"].cuda()
+        batch["target"] = batch["target"].cuda()
+        module = FitPredictWrapperLightningModule(
+            backbone=mock_fit_predict_backbone,
+            evaluators=mock_evaluators,
+            loss=MSELoss(),
+        )
+
+        module.model_step_fit(batch)
+        model_out = module.model_step_predict(batch)
+
+        assert model_out["predictions"].device.type == "cpu"
+        assert model_out["targets"].device == model_out["predictions"].device
+        assert torch.isfinite(model_out["loss"])
+
     def test_model_step_predict_multi_target_loads_per_target(
         self,
         mock_evaluators,

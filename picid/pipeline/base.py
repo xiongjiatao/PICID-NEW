@@ -651,7 +651,7 @@ class FitPredictWrapperLightningModule(CustomEvaluatorLightningModule):
         model_out = {
             # Add task dimension back to predictions and targets
             "predictions": outputs.unsqueeze(1),
-            "targets": y.unsqueeze(1),
+            "targets": y.unsqueeze(1).to(device=outputs.device),
         }
 
         # Fit-predict models do not optimize weights, so the training loss is a
