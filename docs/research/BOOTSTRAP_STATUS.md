@@ -104,11 +104,23 @@
   extreme-error regression test confirms no overflow warning.
 - The official TabPFN v2 regression weight was retrieved from the Zenodo v2
   archive; its archive MD5 and extracted file SHA-256 match the official
-  metadata. The seed-72 1/1 TabPFN run reached the fit stage but OOMed on GPU0
-  while building the 8-estimator cached context from 6,557×460 training rows:
-  it had 5.00 GiB free and requested another 5.41 GiB. No TabPFN metrics were
-  produced. The current executor builds this KV cache in one forward pass;
-  a cache-free single-step path is being tested without changing the data.
+  metadata. The original full-context KV-cache mode OOMed on seed-72 1/1, and
+  cache-free single-query inference was too slow. Switching only the inference
+  execution mode to `fit_preprocessors` allowed all five paper-listed XJTU
+  context/stride candidates to complete validation with all training rows and
+  eight estimators preserved. Their configured validation MSEs were 0.10049,
+  0.12052, 0.11767, 0.10240, and 0.04189 for (1,1), (5,1), (10,5), (20,5),
+  and (50,50), respectively. The apparent 50/50 validation advantage is a
+  severe feature-count extrapolation: 23,000 flattened columns versus TabPFN
+  v2's 500-feature pretraining limit (`ignore_pretraining_limits=true`). It is
+  only a validation-selected single-seed pilot, not evidence of generalization.
+  Test evaluation of the selected candidate OOMed when the full 2,261-query
+  trajectory was passed at once (requested 4.93 GiB with 3.20 GiB free). A
+  cache-reusing test-only attempt with 32-query wrapper chunks then ran for
+  30m59s without writing metrics and was stopped. No TabPFN test metric exists;
+  the test split is considered touched and further retries are not planned.
+  Per-run manifests record both the successful validation candidates and failed
+  test attempts under their ignored `artifacts/` directories.
 - The mislabeled sklearn GradientBoosting control was stopped at the user's
   request before completion: 92/1,000 trees after 2m16s, with about 22m still
   estimated. No metrics were saved or used.

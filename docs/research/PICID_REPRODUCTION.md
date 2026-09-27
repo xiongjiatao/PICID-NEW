@@ -103,6 +103,43 @@ was accidentally evaluated on one unselected 1/1 run before the test gate fix.
 No test values were used to choose 50/50, but the test is not fully blind, so
 these metrics are exploratory pending a clean external/independent evaluation.
 
+### TabPFN seed-72 PHMD validation pilot
+
+The official TabPFN v2 regressor checkpoint was verified by archive MD5 and
+checkpoint SHA-256. The paper-listed context/stride candidates were then run
+validation-only with the locked TabPFN 2.2.1 package, eight estimators, all
+training rows, and `fit_mode=fit_preprocessors`; `test=false` was confirmed by
+the runner log and zero populated test fields. The selection metric is the
+configured normalized window-weighted MSE. Device-macro validation metrics
+were:
+
+| Context / stride | Validation MSE | Normalized-HI MAE | Normalized-HI RMSE | PHM score |
+|---|---:|---:|---:|---:|
+| (1,1) | 0.10049 | 26.55% | 31.16% | 0.20396 |
+| (5,1) | 0.12052 | 29.31% | 33.99% | 0.17041 |
+| (10,5) | 0.11767 | 28.60% | 33.11% | 0.18834 |
+| (20,5) | 0.10240 | 25.85% | 30.76% | 0.23136 |
+| (50,50) | **0.04189** | **18.00%** | **20.39%** | **0.25869** |
+
+Validation therefore selects 50/50 for this one split/seed. Do not interpret
+the unusually large gap as reliable evidence: 50/50 creates 23,000 flattened
+features, 46 times TabPFN v2's 500-feature pretraining limit. The wrapper's
+`ignore_pretraining_limits=true` permits the run but does not make this
+feature-count extrapolation in-distribution. This is a single-seed
+validation-only pilot, not a five-seed reproduction.
+
+The selected full test attempt OOMed while predicting all 2,261 test queries at
+once: it requested another 4.93 GiB with only 3.20 GiB free. It completed
+validation but produced no test metrics. A follow-up test-only run reused the
+serialized fitted model and enabled the existing PICID query-yield wrapper at
+32 queries per call; after 30m59s without test metrics it was stopped. The
+initial full-batch attempt had already accessed the test input, and the XGBoost
+pilot had also evaluated this PHMD test split, so no subsequent result on this
+split can be described as blind confirmation. There is no TabPFN test result
+to compare with the XGBoost/LSTM pilots, and no further 50/50 test retry is
+planned. The failed and validation-only runs have per-run manifests under their
+ignored `artifacts/` experiment directories.
+
 - The transform now accepts both aggregation parameter names and rejects
   disagreement. The audit writes explicit `agg` values. The old default-mean
   execution remains a named comparison, not the primary paper-intent protocol.
