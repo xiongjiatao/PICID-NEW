@@ -19,8 +19,8 @@
 - Added two deterministic config-audit modes. Both compose all eight selected
   dataset/model configurations without fitting. All select the requested splits,
   and the two aggregation modes resolve as expected.
-- Installed test/lint checks for protocol, cache and metric fixes: 141 targeted
-  tests pass and Ruff reports no issues.
+- Installed test/lint checks for protocol, cache, metric, XGBoost and test-gate
+  fixes: 155 targeted tests pass and Ruff reports no issues.
 - Completed one full XJTU-SY PHMD-split LSTM run for seed 72 after recovering
   the feature boundary cache. This is a single-seed pilot, not the paper's
   five-seed reproduction or a performance conclusion; other models, N-CMAPSS,
@@ -32,6 +32,13 @@
   explicit because the paper does not list them. Ten wrapper tests pass and
   Ruff passes; lock-file validation is pending because offline `uv lock`
   attempts to fetch the pinned PHMD Git source.
+- Fixed a runner protocol defect: `picid.run` ignored top-level `test=false` and
+  always called `trainer.test`. A seed-72 XGBoost 1/1 candidate therefore
+  exposed test metrics despite test being disabled. That attempt is marked
+  ineligible for validation selection; its metrics are not used. The test gate
+  now skips both final test evaluation and best-checkpoint test reruns, with
+  focused regression tests. Re-run all context/stride candidates after this
+  fix and select using validation only.
 
 ## Data state and current gate
 

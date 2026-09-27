@@ -823,6 +823,7 @@ def rerun_best_model_checkpoint(
 
 
 from picid.model.tabfm_guard import check_tabfm_available as _check_tabfm_available
+from picid.run_test_stage import run_test_stage as _run_test_stage
 
 
 @task_wrapper
@@ -1169,21 +1170,19 @@ def run(cfg: DictConfig) -> tuple[dict[str, Any], dict[str, Any]]:
             datamodule=datamodule,
         )
 
-    if cfg.trainer.max_epochs > 1:
-        # Intention is to reload all deep-learning trained models from checkpoint
-        test_results = trainer.test(ckpt_path="best", datamodule=datamodule)
-    else:
-        # If max epochs is 1, there is no checkpoint to load from
-        # So we just test the model as is
-        log.info("Starting testing without training (used for pre-trained models)!")
-        test_results = trainer.test(model=model, datamodule=datamodule)
+    test_results = _run_test_stage(
+        cfg=cfg,
+        trainer=trainer,
+        model=model,
+        datamodule=datamodule,
+    )
 
     if test_results:
         _write_metrics_to_eval_details(cfg, "best_epoch", "test", test_results[0])
 
     # We want to avoid running this for pfn models where there is no training
     # and thus no checkpoint and rerunning pfn model would take significant time.
-    if cfg.task_definition.get("requires_training", False) and (
+    if cfg.get("test", True) and cfg.task_definition.get("requires_training", False) and (
         cfg.trainer.max_epochs > 1
     ):
         time.sleep(1.5)

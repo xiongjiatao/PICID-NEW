@@ -46,6 +46,12 @@ Five random seeds quantify algorithm randomness, not independent asset evidence.
    time/peak memory; then repeat the paper's five seeds. Use only physical GPUs
    0/1/2 with explicit CUDA_VISIBLE_DEVICES and record logical cuda:0 separately.
 
+Validation-only context/stride selection depends on the top-level `test=false`
+flag. The imported runner ignored that flag and still called `trainer.test`; the
+copy now enforces it and has a regression test. One XGBoost 1/1 candidate ran
+before the fix and emitted test metrics despite the override, so that run is
+excluded from selection and recorded as protocol-invalid.
+
 All runtime artifacts belong in ignored `artifacts/`. Record command, commit,
 resolved configuration, dependency versions, data/checkpoint digests, GPU mapping,
 concurrent processes, exit code, and final status. Archive validation and
