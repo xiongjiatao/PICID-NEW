@@ -19,8 +19,12 @@
 - Added two deterministic config-audit modes. Both compose all eight selected
   dataset/model configurations without fitting. All select the requested splits,
   and the two aggregation modes resolve as expected.
-- Installed test/lint checks for both fixes: 61 targeted tests pass and Ruff
-  reports no issues. This does not constitute a PHM performance reproduction.
+- Installed test/lint checks for protocol, cache and metric fixes: 141 targeted
+  tests pass and Ruff reports no issues.
+- Completed one full XJTU-SY PHMD-split LSTM run for seed 72 after recovering
+  the feature boundary cache. This is a single-seed pilot, not the paper's
+  five-seed reproduction or a performance conclusion; other models, N-CMAPSS,
+  and the remaining seeds are pending.
 
 ## Data state and current gate
 
@@ -48,10 +52,33 @@
   stored by `WindowedAggregationTransform` is not picklable. Time statistics
   took 7,195.99 seconds; spectral features took 1,045.47 seconds. No model
   metrics were produced. The lambda has been removed without changing first/last
-  aggregation semantics, and a recovery utility is being validated against the
-  fully written 65 MiB boundary `DatasetContainer`; the 3.4 GiB load/split cache
-  remains available. Its run directory is
+  aggregation semantics. A recovery utility re-keyed the fully written boundary
+  `DatasetContainer` under the new source hash; source/recovered logical pickle
+  fingerprints match exactly. A CPU-only preflight then restored that boundary
+  with zero transforms remaining and wrote the complete ~65 MiB preprocessed
+  cache. The preflight hit a sandbox-only local-socket permission error when its
+  CPU DataLoader workers started, before model fit; its exact process and worker
+  group were stopped, without touching other users. The successful GPU0 retry
+  loaded the preprocessed cache, trained LSTM for 27 epochs, selected checkpoint
+  epoch 1 by validation loss, and produced test metrics. The 3.4 GiB load/split cache remains
+  available as well. Recovery evidence is in the failed attempt's ignored
+  `artifacts/.../cache_recovery_report.json`; preflight evidence is in
+  `artifacts/picid_seed72_xjtu_lstm/runs/cache_preflight_2026-09-27/experiment_manifest.json`.
+  The first-attempt run directory is
   `artifacts/picid_seed72_xjtu_lstm/runs/picid_seed72_xjtu_lstm+xjtu_sy+prognostics+phmd_split+combined+lstm/2026-09-27_11-34-53`.
+
+- The seed-72 LSTM selected epoch 1 (validation loss 0.07829). Test device-macro
+  normalized-HI MAE/RMSE were 0.20298 / 0.24632 (20.30% / 24.63%), and the
+  device-macro PHM score was 0.23196. Window-weighted values were 0.24640 / 0.30896. The inverse
+  RUL-acquisition-minute device-macro MAE/RMSE were 139.28 / 171.08; these use
+  per-bearing full-life metadata and are offline benchmark metrics, not online
+  deployable RUL. Scores vary substantially by test bearing, so this one seed
+  cannot stand in for the paper's five-seed result. See the local retry manifest
+  and `csv_logs/version_0/metrics.csv` under its run directory.
+- The first fit emitted an overflow warning from the *unselected* PHMScore
+  `np.where` branch; logged per-device and macro scores were finite. The metric
+  now evaluates only the selected branch, preserving the score equation, and an
+  extreme-error regression test confirms no overflow warning.
 
 ## Important protocol decisions
 

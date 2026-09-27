@@ -45,9 +45,24 @@ physical GPU0 (`CUDA_VISIBLE_DEVICES=0`, logical `cuda:0`), completed
 `time_domain_features` (7,195.99 s) and `spectral_domain_features` (1,045.47 s),
 then failed while saving the preprocessor boundary because a local lambda in
 `WindowedAggregationTransform` could not be pickled. No model fit or metrics were
-produced. A serialization-only fix and boundary-cache recovery are being tested;
-the 3.4 GiB source load/split cache and complete 65 MiB boundary data payload are
-preserved for the retry.
+produced. The lambda has been removed without changing aggregation behavior.
+`recover_xjtu_preprocessed_boundary.py` re-keyed the fully written boundary under
+the updated source hash, and the source/recovered DatasetContainer fingerprints
+match exactly. The 3.4 GiB load/split cache and 65 MiB boundary payload are
+preserved. A CPU-only cache preflight restored the boundary with zero transforms
+remaining and wrote a 65 MiB final preprocessed cache. It then encountered a
+sandbox-only multiprocessing socket permission error during CPU DataLoader
+worker setup, before model fit; only this agent-launched preflight was stopped.
+The real GPU0 retry loaded the completed cache, trained the configured LSTM for
+27 epochs, selected epoch 1 by validation loss, and evaluated the PHMD test
+devices. Seed-72 device-macro test normalized-HI MAE/RMSE were 0.20298/0.24632
+(20.30%/24.63%); inverse RUL acquisition-minute MAE/RMSE were 139.28/171.08.
+This is a single-seed pilot, not the paper's five-seed reproduction or a
+comparative result. The recovery report is in the failed run's ignored
+`artifacts/.../cache_recovery_report.json`; the CPU preflight command and status
+are in `artifacts/picid_seed72_xjtu_lstm/runs/cache_preflight_2026-09-27/experiment_manifest.json`.
+The successful retry metrics are in
+`artifacts/picid_seed72_xjtu_lstm_retry1/runs/picid_seed72_xjtu_lstm_retry1+xjtu_sy+prognostics+phmd_split+combined+lstm/2026-09-27_14-58-48/csv_logs/version_0/metrics.csv`.
 
 ## Resolved findings and remaining evidence
 

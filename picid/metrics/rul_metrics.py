@@ -105,11 +105,17 @@ class PHMScoreMetric(AbstractMetric):
         percent_errors = 100 * (targets - predictions) / (targets + epsilon)
 
         # Step 2: Calculate A_i for each sample using the asymmetric formula
-        late_prediction_scores = np.exp(-self._ln_half * (percent_errors / 5.0))
-        early_prediction_scores = np.exp(self._ln_half * (percent_errors / 20.0))
-
-        A_i_batch = np.where(
-            percent_errors <= 0, late_prediction_scores, early_prediction_scores
+        # Compute only the selected branch. ``np.where`` evaluates both inputs
+        # eagerly, so the unused branch can overflow for extreme percentage
+        # errors even though the selected PHM score is finite.
+        late_mask = percent_errors <= 0
+        A_i_batch = np.empty_like(percent_errors, dtype=np.float64)
+        A_i_batch[late_mask] = np.exp(
+            -self._ln_half * (percent_errors[late_mask] / 5.0)
+        )
+        early_mask = ~late_mask
+        A_i_batch[early_mask] = np.exp(
+            self._ln_half * (percent_errors[early_mask] / 20.0)
         )
 
         # Step 3: Accumulate the sum of A_i scores and the sample count

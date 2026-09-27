@@ -1,3 +1,5 @@
+import warnings
+
 import pytest
 import numpy as np
 import pandas as pd
@@ -280,6 +282,19 @@ def test_phm_score_metric():
 
     metric.update(p, t)
     assert np.isclose(metric.compute(), expected)
+
+
+def test_phm_score_extreme_errors_do_not_evaluate_unselected_overflow_branch():
+    metric = PHMScoreMetric()
+    targets = np.array([1e-9, 1e-9])
+    predictions = np.array([-1e100, 1e100])
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        metric.update(predictions, targets)
+
+    assert not [warning for warning in caught if "overflow" in str(warning.message)]
+    assert metric.compute() == 0.0
 
 
 def test_normalized_mae_railway(mock_railway_csv):
