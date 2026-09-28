@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from picid.research.chunks import predict_chunks
-from picid.research.protocol import candidates, freeze_selection
+from picid.research.protocol import PHYSICAL_GPUS, candidates, freeze_selection
 
 
 def test_full_grid_and_no_candidate_test_access():
@@ -12,6 +12,10 @@ def test_full_grid_and_no_candidate_test_access():
     assert all("test=false" in c.overrides() for c in grid)
     xgb_pairs = {(c.window, c.stride) for c in grid if c.dataset == "nc_p" and c.model == "xgboost"}
     assert xgb_pairs == {(1, 1), (5, 1), (10, 5), (20, 5), (50, 50)}
+
+
+def test_formal_runner_accepts_the_currently_authorized_physical_gpus():
+    assert PHYSICAL_GPUS == (0, 1, 2, 3)
 
 
 def test_selection_rejects_missing_failed_or_test_accessed_results():

@@ -19,6 +19,7 @@ from picid.research.monitoring import (
     progress_from_log,
     progress_rate,
 )
+from picid.research.protocol import PHYSICAL_GPUS
 
 
 def source_snapshot(root):
@@ -71,7 +72,7 @@ def gpu_snapshot():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--gpu", type=int, choices=(0, 1, 2))
+    parser.add_argument("--gpu", type=int, choices=PHYSICAL_GPUS)
     parser.add_argument("--expected-peak-mib", type=int)
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--stage", required=True)

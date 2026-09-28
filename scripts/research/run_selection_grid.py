@@ -50,13 +50,13 @@ def parse_validation_metrics(run_log):
 def main():
     sys.path.insert(0, str(ROOT))
     from picid.research.chunks import atomic_json
-    from picid.research.protocol import Candidate, freeze_selection
+    from picid.research.protocol import Candidate, PHYSICAL_GPUS, freeze_selection
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", choices=("nc_p", "xjtu"), required=True)
     parser.add_argument("--model", choices=("lstm", "tabdpt", "tabdpt130", "tabpfn", "xgboost"), required=True)
     device_group = parser.add_mutually_exclusive_group(required=True)
-    device_group.add_argument("--gpu", type=int, choices=(0, 1, 2))
+    device_group.add_argument("--gpu", type=int, choices=PHYSICAL_GPUS)
     device_group.add_argument("--cpu", action="store_true")
     parser.add_argument("--expected-peak-mib", type=int)
     parser.add_argument("--runtime-python", type=Path)
