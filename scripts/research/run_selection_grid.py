@@ -83,6 +83,7 @@ def main():
         candidate_metrics = parse_validation_metrics(run_dir / "stdout.log")
         records[key] = {"status": "success", "seed": 72, "test_enabled": False,
                         **candidate_metrics, "output": str(run_dir),
+                        "selection_overrides": list(args.override),
                         "physical_gpu": manifest["physical_gpus"][0]
                         if manifest["physical_gpus"] else None,
                         "logical_device": manifest["logical_device"],
@@ -127,11 +128,13 @@ def main():
                 if process.returncode != 0 or manifest["exit_code"] != 0:
                     records[candidate.key] = {"status": "failed", "seed": 72,
                                               "exit_code": manifest.get("exit_code"),
+                                              "selection_overrides": list(args.override),
                                               "output": str(output)}
                 else:
                     metrics = parse_validation_metrics(output / "stdout.log")
                     records[candidate.key] = {"status": "success", "seed": 72,
                                               "test_enabled": False, **metrics,
+                                              "selection_overrides": list(args.override),
                                               "output": str(output),
                                               "physical_gpu": args.gpu,
                                               "logical_device": "cpu" if args.cpu else "cuda:0"}
@@ -145,7 +148,7 @@ def main():
                     raise RuntimeError(f"Candidate failed: {candidate.key}")
     if set(records) != expected:
         raise RuntimeError(f"Selection grid incomplete: missing={sorted(expected - set(records))}")
-    frozen = freeze_selection(grid, records)
+    frozen = freeze_selection(grid, records, execution_overrides=args.override)
     atomic_json(ROOT / f"artifacts/formal/{args.dataset}_{args.model}_frozen_seed72.json", frozen)
     atomic_json(ROOT / f"artifacts/formal/{args.dataset}_{args.model}_selection_progress.json",
                 {"updated_utc": datetime.now(timezone.utc).isoformat(),

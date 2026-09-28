@@ -23,6 +23,8 @@ def test_selection_rejects_missing_failed_or_test_accessed_results():
     results = {c.key: dict(status="success", seed=72, test_enabled=False,
                           test_metrics_present=False, val_loss=float(i)) for i, c in enumerate(grid)}
     assert freeze_selection(grid, results)["candidate"]["window"] == 1
+    frozen = freeze_selection(grid, results, execution_overrides=["model.fit_mode=low_memory"])
+    assert frozen["execution_overrides"] == ["model.fit_mode=low_memory"]
     results[grid[0].key]["test_metrics_present"] = True
     with pytest.raises(ValueError):
         freeze_selection(grid, results)

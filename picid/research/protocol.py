@@ -60,7 +60,7 @@ def candidates():
                     yield Candidate(dataset, model, window, stride)
 
 
-def freeze_selection(grid, results):
+def freeze_selection(grid, results, execution_overrides=()):
     """Fail closed on missing/failed candidates or accidental test evaluation."""
     expected = {c.key: c for c in grid}
     if set(results) != set(expected) or not expected:
@@ -77,5 +77,7 @@ def freeze_selection(grid, results):
         results[key].get("val_loss", results[key].get("best_val_loss", math.inf)), key
     ))
     payload = {"protocol": "three_seed_fixed_configuration", "seeds": SEEDS,
-               "candidate": asdict(expected[winner]), "selection_results": results}
+               "candidate": asdict(expected[winner]),
+               "execution_overrides": list(execution_overrides),
+               "selection_results": results}
     return {**payload, "sha256": digest(payload)}
