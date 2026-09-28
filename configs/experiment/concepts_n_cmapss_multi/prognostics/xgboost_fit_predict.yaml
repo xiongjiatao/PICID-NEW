@@ -4,3 +4,8 @@ defaults:
   - concepts_n_cmapss_multi/prognostics/base
   - /model_configs/prognostics/xgboost_fit_predict
   - override /transforms: concepts_n_cmapss_multi/depater2023_fit_predict_history
+
+# XGBoost is CPU-only in the frozen baseline protocol.
+trainer:
+  accelerator: cpu
+  devices: 1

@@ -9,9 +9,9 @@ pred_len: ${task_definition.pred_len}    # prediction size
 features_mode: no_feature_mode
 
 # The source paper reports context/stride tuning but does not enumerate the
-# tree-specific search grid. Keep the released wrapper's 1,000-stage and seed
-# defaults; make CPU execution and the pinned XGBoost version explicit.
+# tree-specific search grid. Retain 1,000 rounds; align seed with the run.
+# Historical fixed-seed42 runs remain exploratory provenance.
 n_estimators: 1000
-random_state: 42
+random_state: ${seed}
 n_jobs: 8
 device: cpu

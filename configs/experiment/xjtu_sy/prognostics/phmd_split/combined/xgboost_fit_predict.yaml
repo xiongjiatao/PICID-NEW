@@ -12,3 +12,8 @@ task_definition:
         - features
         - rul
         - unit_id
+
+# XGBoost is CPU-only in the frozen baseline protocol.
+trainer:
+  accelerator: cpu
+  devices: 1
