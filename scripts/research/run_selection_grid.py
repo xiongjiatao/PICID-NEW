@@ -59,6 +59,7 @@ def main():
     device_group.add_argument("--gpu", type=int, choices=PHYSICAL_GPUS)
     device_group.add_argument("--cpu", action="store_true")
     parser.add_argument("--expected-peak-mib", type=int)
+    parser.add_argument("--reserve-mib", type=int, default=1024)
     parser.add_argument("--runtime-python", type=Path)
     parser.add_argument("--run-tag", default="")
     parser.add_argument("--cache-base", type=Path,
@@ -109,7 +110,8 @@ def main():
                 run = [str(tracker_python), "scripts/research/run_tracked.py", "--output", str(output),
                        "--seed", "72", "--stage", "validation_only_selection"]
                 if args.gpu is not None:
-                    run += ["--gpu", str(args.gpu), "--expected-peak-mib", str(args.expected_peak_mib)]
+                    run += ["--gpu", str(args.gpu), "--expected-peak-mib", str(args.expected_peak_mib),
+                            "--reserve-mib", str(args.reserve_mib)]
                 run += ["--", str(runtime_python), "picid/run.py",
                         *candidate.overrides(seed=72, test=False),
                         f"experiment_group=formal_{run_name.replace('.', 'p')}_seed72_selection",

@@ -103,6 +103,18 @@ def gpu_memory_for_process(gpu_rows: str, process_rows: str, pid: int) -> dict[i
     return memory_by_gpu
 
 
+def assert_gpu_memory_budget(free_mib: int, expected_peak_mib: int, reserve_mib: int = 1024):
+    """Require the measured free memory to cover a task estimate and explicit reserve."""
+    if free_mib < 0 or expected_peak_mib < 1 or reserve_mib < 0:
+        raise ValueError("GPU memory values must be nonnegative and peak must be positive")
+    required_mib = expected_peak_mib + reserve_mib
+    if free_mib < required_mib:
+        raise RuntimeError(
+            f"Insufficient free GPU memory: need {required_mib} MiB, have {free_mib} MiB"
+        )
+    return required_mib
+
+
 def progress_from_log(path: Path, tail_bytes: int = 65536, max_epochs: int | None = None):
     """Read the latest tqdm epoch or ensemble marker without loading full logs."""
     try:

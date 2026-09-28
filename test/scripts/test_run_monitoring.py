@@ -1,12 +1,20 @@
 import os
+import pytest
 
 from picid.research.monitoring import (
+    assert_gpu_memory_budget,
     eta_seconds,
     gpu_memory_for_process,
     process_tree_stats,
     progress_from_log,
     progress_rate,
 )
+
+
+def test_gpu_admission_uses_the_configured_memory_reserve():
+    assert assert_gpu_memory_budget(23992, 23736, 256) == 23992
+    with pytest.raises(RuntimeError, match="need 23993 MiB"):
+        assert_gpu_memory_budget(23992, 23736, 257)
 
 
 def test_gpu_memory_sampler_attributes_only_the_tracked_process():

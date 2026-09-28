@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from picid.research.chunks import atomic_json
 from picid.research.monitoring import (
+    assert_gpu_memory_budget,
     eta_seconds,
     gpu_memory_for_process,
     process_tree_stats,
@@ -75,6 +76,8 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--gpu", type=int, choices=PHYSICAL_GPUS)
     parser.add_argument("--expected-peak-mib", type=int)
+    parser.add_argument("--reserve-mib", type=int, default=1024,
+                        help="Free VRAM to keep beyond the estimated peak (default: 1024)")
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--stage", required=True)
     parser.add_argument("command", nargs=argparse.REMAINDER)
@@ -104,6 +107,7 @@ def main():
             "logical_device": "cpu" if args.gpu is None else "cuda:0",
             "cuda_visible_devices": "" if args.gpu is None else str(args.gpu),
             "expected_peak_mib": args.expected_peak_mib,
+            "memory_reserve_mib": None if args.gpu is None else args.reserve_mib,
             "initial_gpu_snapshot_error": str(exc),
             "exit_code": None,
             "started_utc": datetime.now(timezone.utc).isoformat(),
@@ -115,12 +119,11 @@ def main():
         atomic_json(args.output / "manifest.json", failure)
         raise RuntimeError("GPU occupancy preflight failed; model command was not launched") from exc
     if args.gpu is not None:
-        if not args.expected_peak_mib or args.expected_peak_mib < 1:
+        if not args.expected_peak_mib or args.expected_peak_mib < 1 or args.reserve_mib < 0:
             parser.error("GPU task requires an expected peak estimate")
         free = {int(row.split(",")[0].strip()): int(row.split(",")[2].strip())
                 for row in initial["gpus"].splitlines()}
-        if free[args.gpu] < args.expected_peak_mib + 1024:
-            raise RuntimeError("Insufficient free GPU memory plus 1 GiB reserve")
+        assert_gpu_memory_budget(free[args.gpu], args.expected_peak_mib, args.reserve_mib)
     env = dict(os.environ, CUDA_VISIBLE_DEVICES="" if args.gpu is None else str(args.gpu))
     manifest = {"command": command, "shell_command": shlex.join(command), "cwd": str(Path.cwd()),
                 "seed": args.seed, "stage": args.stage, "status": "running",
@@ -128,7 +131,9 @@ def main():
                 "gpu_assignment": "cpu_only" if args.gpu is None else "single_physical_gpu",
                 "logical_device": "cpu" if args.gpu is None else "cuda:0",
                 "cuda_visible_devices": env["CUDA_VISIBLE_DEVICES"],
-                "expected_peak_mib": args.expected_peak_mib, "initial_gpu_snapshot": initial,
+                "expected_peak_mib": args.expected_peak_mib,
+                "memory_reserve_mib": None if args.gpu is None else args.reserve_mib,
+                "initial_gpu_snapshot": initial,
                 "started_utc": datetime.now(timezone.utc).isoformat(),
                 "git_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
                 "git_dirty": subprocess.check_output(["git", "status", "--porcelain"], text=True),
