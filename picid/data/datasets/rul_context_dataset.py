@@ -7,6 +7,7 @@ from numpy import ndarray
 
 from picid.data.datasets.collate_functions import collate_key_value_batch
 from picid.data.datasets.context_dataset import ContextBatchDataset
+from picid.data.datasets.sliding_window_batch_dataset import SlidingWindowBatchDataset
 
 
 class RULContextBatchDataset(ContextBatchDataset):
@@ -110,8 +111,13 @@ class RULContextBatchDataset(ContextBatchDataset):
         self.meta_data_dict = kwargs["meta_data_dict"]
 
         self.get_unit_id = get_unit_id
-        # Inject the unit name/id extraction functions into the meta_data_dict
-        if self.get_unit_id:
+        self.unit_id_sequence_dataset = None
+        self.unit_id_data = data_dict.get("unit_id") if self.get_unit_id else None
+        # Prefer the row-aligned identifier created by preprocessing. This keeps
+        # composite source/unit IDs aligned with ragged engine sequences and
+        # avoids relying on datasource metadata that may not describe derived IDs.
+        if self.get_unit_id and self.unit_id_data is None:
+            # Compatibility path for datasets that still expose IDs only as metadata.
             self.unid_id = self.extract_unit_id()
             self.unid_name = self.extract_unit_name()
 
@@ -129,6 +135,24 @@ class RULContextBatchDataset(ContextBatchDataset):
             subset_blocks=subset_blocks,
             **kwargs,
         )
+
+        if self.unit_id_data is not None:
+            self.unit_id_sequence_dataset = SlidingWindowBatchDataset(
+                data_dict={"unit_id": self.unit_id_data},
+                seq_len=seq_len,
+                label_len=label_len,
+                pred_len=0,
+                stride=stride,
+                padding_left_flag=padding_left_flag,
+                warmup_steps=warmup_steps,
+                subset_ratio=subset_ratio,
+                subset_seed=subset_seed,
+                subset_blocks=subset_blocks,
+            )
+            if len(self.unit_id_sequence_dataset) != len(self):
+                raise ValueError(
+                    "Row-aligned unit_id windows do not match the RUL sequence count"
+                )
 
     def extract_unit_id(self):
         return self.meta_data_dict["unit_ids"][
@@ -159,10 +183,16 @@ class RULContextBatchDataset(ContextBatchDataset):
         )
 
         if self.get_unit_id:
-            # (B,F)
-            d["unit_id"] = torch.tensor([self.unid_id] * len(batch_idx))
-            # How can we actually collate strings?
-            # "unit_name": (self.unid_name),
+            if self.unit_id_sequence_dataset is not None:
+                unit_id_seq = self.unit_id_sequence_dataset.__getitem__(batch_idx)[
+                    "unit_id_seq_x"
+                ]
+                d["unit_id"] = unit_id_seq[:, -1]
+            else:
+                # Compatibility path for scalar or composite per-dataset IDs.
+                d["unit_id"] = torch.as_tensor(
+                    [self.unid_id] * len(batch_idx)
+                )
         return AttributeDict(d)
 
     def get_collate_fn(self):
