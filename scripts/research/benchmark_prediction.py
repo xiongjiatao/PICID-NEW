@@ -6,11 +6,17 @@ from importlib.metadata import version
 import json
 import os
 from pathlib import Path
+import sys
 import time
 import traceback
 
 import numpy as np
 import torch
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+
+from picid.research.protocol import PHYSICAL_GPUS  # noqa: E402
 
 
 def _predict_batches(model, queries, batch_size):
@@ -42,8 +48,8 @@ def main():
     parser.add_argument("--batches", type=int, nargs="+", default=[32, 64, 128, 256, 512])
     args = parser.parse_args()
     visible = os.environ.get("CUDA_VISIBLE_DEVICES")
-    if visible not in {"0", "1", "2"}:
-        raise ValueError("Explicit single allowed physical GPU required")
+    if visible is None or not visible.isdigit() or int(visible) not in PHYSICAL_GPUS:
+        raise ValueError(f"Explicit single allowed physical GPU required: {PHYSICAL_GPUS}")
     torch.set_num_threads(8)
     rng = np.random.default_rng(72)
     if args.inputs:
