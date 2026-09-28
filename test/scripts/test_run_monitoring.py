@@ -2,10 +2,18 @@ import os
 
 from picid.research.monitoring import (
     eta_seconds,
+    gpu_memory_for_process,
     process_tree_stats,
     progress_from_log,
     progress_rate,
 )
+
+
+def test_gpu_memory_sampler_attributes_only_the_tracked_process():
+    gpu_rows = "0, GPU-a, 20000, 4000, 80\n3, GPU-d, 24000, 500, 5"
+    process_rows = "123, GPU-a, 4000\n456, GPU-a, 700\n123, GPU-d, 250"
+
+    assert gpu_memory_for_process(gpu_rows, process_rows, 123) == {0: 4000, 3: 250}
 
 
 def test_progress_parser_reads_latest_ensemble_and_epoch_markers(tmp_path):

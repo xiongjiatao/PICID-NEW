@@ -76,6 +76,33 @@ def process_tree_stats(root_pid: int) -> dict:
     }
 
 
+def gpu_memory_for_process(gpu_rows: str, process_rows: str, pid: int) -> dict[int, int]:
+    """Return sampled VRAM for one process, keyed by physical GPU index."""
+    uuid_to_index = {}
+    for row in gpu_rows.splitlines():
+        fields = [value.strip() for value in row.split(",")]
+        if len(fields) >= 2:
+            try:
+                uuid_to_index[fields[1]] = int(fields[0])
+            except ValueError:
+                continue
+
+    memory_by_gpu = {}
+    for row in process_rows.splitlines():
+        fields = [value.strip() for value in row.split(",")]
+        if len(fields) != 3 or fields[1] not in uuid_to_index:
+            continue
+        try:
+            row_pid = int(fields[0])
+            memory_mib = int(fields[2])
+        except ValueError:
+            continue
+        if row_pid == pid:
+            physical_gpu = uuid_to_index[fields[1]]
+            memory_by_gpu[physical_gpu] = max(memory_by_gpu.get(physical_gpu, 0), memory_mib)
+    return memory_by_gpu
+
+
 def progress_from_log(path: Path, tail_bytes: int = 65536, max_epochs: int | None = None):
     """Read the latest tqdm epoch or ensemble marker without loading full logs."""
     try:

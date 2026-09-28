@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from picid.research.chunks import atomic_json
 from picid.research.monitoring import (
     eta_seconds,
+    gpu_memory_for_process,
     process_tree_stats,
     progress_from_log,
     progress_rate,
@@ -137,6 +138,7 @@ def main():
     atomic_json(path, manifest)
     started = time.monotonic()
     peaks = {}
+    tracked_process_peaks = {}
     peak_process_tree_rss = 0.0
     peak_process_tree_hwm_sum = 0.0
     last_progress = None
@@ -179,6 +181,14 @@ def main():
                     progress["steps_per_second"] = last_progress.get("steps_per_second")
             try:
                 event.update(gpu_snapshot())
+                tracked_memory = gpu_memory_for_process(
+                    event["gpus"], event["processes"], process.pid
+                )
+                event["tracked_process_gpu_memory_mib"] = tracked_memory
+                for gpu, memory in tracked_memory.items():
+                    tracked_process_peaks[str(gpu)] = max(
+                        tracked_process_peaks.get(str(gpu), 0), memory
+                    )
                 if args.gpu is not None:
                     for gpu, memory in event.get("observed_process_memory_mib_by_physical_gpu", {}).items():
                         peaks[gpu] = max(peaks.get(gpu, 0), memory)
@@ -190,6 +200,7 @@ def main():
             time.sleep(10)
     manifest.update(exit_code=process.returncode, elapsed_seconds=time.monotonic() - started,
                     observed_peak_process_memory_mib_by_physical_gpu=peaks,
+                    observed_peak_tracked_process_gpu_memory_mib_by_physical_gpu=tracked_process_peaks,
                     observed_peak_process_tree_rss_mib=peak_process_tree_rss,
                     observed_peak_process_tree_vm_hwm_sum_mib=peak_process_tree_hwm_sum,
                     status="process_success_requires_result_audit" if process.returncode == 0 else "failed")
