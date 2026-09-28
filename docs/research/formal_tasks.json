@@ -1226,7 +1226,7 @@
       ],
       "cost_estimate": null,
       "cost_status": "not_measured_on_candidate_exact_context_and_features",
-      "status": "pending_execution_mode_equivalence"
+      "status": "pending_separate_low_memory_protocol_grid"
     },
     {
       "dataset": "xjtu",
@@ -1249,7 +1249,7 @@
       ],
       "cost_estimate": null,
       "cost_status": "not_measured_on_candidate_exact_context_and_features",
-      "status": "pending_execution_mode_equivalence"
+      "status": "pending_separate_low_memory_protocol_grid"
     },
     {
       "dataset": "xjtu",
@@ -1272,7 +1272,7 @@
       ],
       "cost_estimate": null,
       "cost_status": "not_measured_on_candidate_exact_context_and_features",
-      "status": "pending_execution_mode_equivalence"
+      "status": "pending_separate_low_memory_protocol_grid"
     },
     {
       "dataset": "xjtu",
@@ -1295,7 +1295,7 @@
       ],
       "cost_estimate": null,
       "cost_status": "not_measured_on_candidate_exact_context_and_features",
-      "status": "pending_execution_mode_equivalence"
+      "status": "pending_separate_low_memory_protocol_grid"
     },
     {
       "dataset": "xjtu",
@@ -2082,7 +2082,7 @@
       "status": "completed_device_macro_public_test_history_disclosed"
     }
   ],
-  "updated_utc": "2026-09-28T14:02:06.156439+00:00",
+  "updated_utc": "2026-09-28T14:25:14.082997+00:00",
   "analysis": {
     "xjtu_warning_horizons": {
       "status": "derived_from_train_devices_only",
@@ -2117,13 +2117,27 @@
       "device_metrics": "artifacts/formal/results/xjtu_tabdpt11_three_seed_summary.json"
     },
     "xjtu_tabpfn": {
-      "status": "blocked_pending_execution_mode_equivalence",
+      "status": "default_cached_mode_oom; low_memory_is_separate_non_equivalent_protocol",
+      "default_fit_mode": "fit_with_cache_single_step_inference",
+      "low_memory_mode": "low_memory",
       "default_fit_mode_failed_manifest": "artifacts/formal/selection_runs/xjtu_tabpfn_w1_s1_lrNone_formal_awkw29_gpu2/manifest.json",
-      "default_fit_mode_failure": "validation fit OOM; 6557 training rows x 460 features; no test metrics",
-      "low_memory_validation_manifest": "artifacts/formal/selection_runs/xjtu_tabpfn_w1_low_memory_retry2_gpu2/manifest.json",
-      "low_memory_validation_loss": 0.09925265610218048,
-      "test_metrics_accessed": false,
-      "execution_mode_benchmark_manifest": "artifacts/formal/tabpfn_xjtu_fit_mode_lowmem_preflight/manifest.json"
+      "default_fit_mode_failure": "validation fitting OOM on 6557x460 training matrix; no test metrics",
+      "low_memory_full_validation_manifest": "artifacts/formal/selection_runs/xjtu_tabpfn_w1_low_memory_retry2_gpu2/manifest.json",
+      "low_memory_full_validation_loss": 0.09925265610218048,
+      "matched_execution_mode_report": "artifacts/formal/results/xjtu_tabpfn_execution_mode_comparison.json",
+      "matched_slice": {
+        "training_rows": 2049,
+        "validation_queries": 398,
+        "features": 460
+      },
+      "max_abs_prediction_difference": 0.10085779428482056,
+      "mean_abs_prediction_difference": 0.010147196240723133,
+      "equivalence_atol": 0.0001,
+      "equivalence_rtol": 0.0001,
+      "equivalent": false,
+      "low_memory_selection_protocol": "pending; use fit_mode=low_memory and yield_batch_size=32; freeze execution overrides",
+      "additional_query_batch_preflight": "pending GPU2 availability",
+      "test_metrics_accessed": false
     }
   }
 }

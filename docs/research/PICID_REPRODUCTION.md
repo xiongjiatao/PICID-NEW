@@ -550,7 +550,11 @@ was not used. Manifests distinguish physical IDs from `cuda:0`. NC-P TabDPT
 incomplete. Its NC-P full-context validation failed with a CUDA kernel error;
 the XJTU default cached fit mode OOMed during validation fitting at 6,557 rows
 and 460 features. A full XJTU window-1 validation run using `low_memory`
-completed with `test=false` and `val/loss=0.09925`, but a matched real-slice
-prediction-equivalence benchmark against the default cache mode is still
-running. Until that passes `atol=1e-4, rtol=1e-4`, the execution paths remain
-separate; no XJTU TabPFN selection or final test score is reported.
+completed with `test=false` and `val/loss=0.09925`. On a matched 2,049-row by
+460-feature training slice and 398 validation queries, cached and low-memory
+predictions differed by at most 0.10086 (mean absolute difference 0.01015),
+above `atol=1e-4, rtol=1e-4`; each path replayed deterministically on its own.
+They remain separate execution protocols. The low-memory candidate grid with
+32-query chunks has not been completed, and no XJTU TabPFN test score is
+reported. The comparison report is
+`artifacts/formal/results/xjtu_tabpfn_execution_mode_comparison.json`.
