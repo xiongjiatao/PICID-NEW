@@ -13,7 +13,12 @@ import time
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from picid.research.chunks import atomic_json
-from picid.research.monitoring import eta_seconds, process_tree_stats, progress_from_log
+from picid.research.monitoring import (
+    eta_seconds,
+    process_tree_stats,
+    progress_from_log,
+    progress_rate,
+)
 
 
 def source_snapshot(root):
@@ -134,6 +139,11 @@ def main():
     peak_process_tree_rss = 0.0
     peak_process_tree_hwm_sum = 0.0
     last_progress = None
+    max_epochs = next(
+        (int(value.split("=", 1)[1]) for value in command
+         if value.startswith("trainer.max_epochs=")),
+        None,
+    )
     with (args.output / "stdout.log").open("w") as log, (args.output / "telemetry.jsonl").open("w") as telemetry:
         process = subprocess.Popen(command, env=env, stdout=log, stderr=subprocess.STDOUT)
         manifest["pid"] = process.pid
@@ -147,11 +157,25 @@ def main():
             peak_process_tree_hwm_sum = max(
                 peak_process_tree_hwm_sum, process_stats.get("sum_vm_hwm_mib", 0.0)
             )
-            progress = progress_from_log(args.output / "stdout.log")
+            progress = progress_from_log(args.output / "stdout.log", max_epochs=max_epochs)
             if progress is not None:
-                progress["eta_seconds"] = eta_seconds(progress, last_progress)
+                now_progress = time.monotonic()
+                progress["steps_per_second"] = progress_rate(progress, last_progress, now_progress)
+                progress["eta_seconds"] = eta_seconds(progress, last_progress, now_progress)
                 event["stage_progress"] = progress
-                last_progress = {**progress, "monotonic": time.monotonic()}
+                if (last_progress is None or last_progress["key"] != progress["key"]
+                        or progress["completed"] > last_progress["completed"]):
+                    last_progress = {
+                        "key": progress["key"],
+                        "completed": progress["completed"],
+                        "total": progress["total"],
+                        "monotonic": now_progress,
+                        "eta_seconds": progress["eta_seconds"],
+                        "steps_per_second": progress["steps_per_second"],
+                    }
+                else:
+                    progress["eta_seconds"] = last_progress.get("eta_seconds")
+                    progress["steps_per_second"] = last_progress.get("steps_per_second")
             try:
                 event.update(gpu_snapshot())
                 if args.gpu is not None:

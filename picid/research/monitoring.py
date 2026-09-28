@@ -76,7 +76,7 @@ def process_tree_stats(root_pid: int) -> dict:
     }
 
 
-def progress_from_log(path: Path, tail_bytes: int = 65536):
+def progress_from_log(path: Path, tail_bytes: int = 65536, max_epochs: int | None = None):
     """Read the latest tqdm epoch or ensemble marker without loading full logs."""
     try:
         with path.open("rb") as stream:
@@ -98,6 +98,16 @@ def progress_from_log(path: Path, tail_bytes: int = 65536):
             match = matches[-1]
             if stage == "epoch":
                 epoch, completed, total = (int(value) for value in match)
+                if max_epochs is not None:
+                    return {
+                        "stage": "training",
+                        "key": "training_epochs",
+                        "epoch": epoch,
+                        "batch_completed": completed,
+                        "steps_per_epoch": total,
+                        "completed": epoch * total + completed,
+                        "total": max_epochs * total,
+                    }
                 key = f"epoch_{epoch}"
             else:
                 completed, total = (int(value) for value in match)
@@ -107,6 +117,18 @@ def progress_from_log(path: Path, tail_bytes: int = 65536):
     return None
 
 
+def progress_rate(progress: dict, previous: dict | None, now: float | None = None):
+    """Estimate completed progress steps per second from the last increment."""
+    now = time.monotonic() if now is None else now
+    if not previous or previous["key"] != progress["key"]:
+        return None
+    steps = progress["completed"] - previous["completed"]
+    elapsed = now - previous["monotonic"]
+    if steps <= 0 or elapsed <= 0:
+        return previous.get("steps_per_second")
+    return steps / elapsed
+
+
 def eta_seconds(progress: dict, previous: dict | None, now: float | None = None):
     """Estimate remaining time from the latest observed progress increment."""
     now = time.monotonic() if now is None else now
@@ -114,9 +136,7 @@ def eta_seconds(progress: dict, previous: dict | None, now: float | None = None)
         return 0.0
     if not previous or previous["key"] != progress["key"]:
         return None
-    steps = progress["completed"] - previous["completed"]
-    elapsed = now - previous["monotonic"]
-    if steps <= 0 or elapsed <= 0:
+    rate = progress_rate(progress, previous, now)
+    if rate is None or rate <= 0:
         return previous.get("eta_seconds")
-    seconds_per_step = elapsed / steps
-    return (progress["total"] - progress["completed"]) * seconds_per_step
+    return (progress["total"] - progress["completed"]) / rate
