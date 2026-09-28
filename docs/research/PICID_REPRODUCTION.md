@@ -464,22 +464,27 @@ must not be read as a direct ranking across domains.
 | NC-P / XGBoost 3.1.3 | 0.12336 (0.00000) | 0.15471 (0.00000) | 0.29329 (0.00000) | 6.33798 (0.00000) | 0.08525 / 0.08959 / 0.09745 |
 | NC-P / LSTM | 0.07529 (0.00362) | 0.09789 (0.00432) | 0.39981 (0.01060) | 1.56450 (0.17237) | 0.02325 / 0.02237 / 0.02557 |
 | XJTU-SY PHMD / LSTM | 0.18348 (0.00145) | 0.22039 (0.00075) | 0.28087 (0.00542) | n/a | not computed |
+| XJTU-SY PHMD / TabDPT 1.1.13 | 0.20130 (0.00375) | 0.23907 (0.00494) | 0.25581 (0.00201) | n/a | not computed |
 | XJTU-SY PHMD / XGBoost 3.1.3 | 0.21063 (0.00000) | 0.26145 (0.00000) | 0.23328 (0.00000) | n/a | not computed |
+| XJTU-SY PHMD / TabDPT 1.3.0 | 0.22060 (0.00523) | 0.25744 (0.00799) | 0.24110 (0.00286) | n/a | not computed |
 
 Both XGBoost rows have zero seed deviation and identical prediction-file
 SHA-256 values across all three executions. They establish deterministic replay
 under each configuration, not independent stochastic-seed evidence. XJTU
 inverse-RUL errors are 122.56 (0.47) MAE and 144.92 (0.41) RMSE acquisition
-minutes for LSTM, and 133.53 (0.00) / 167.32 (0.00) for XGBoost. They are
-offline inverse-transform metrics using benchmark lifetimes. Existing access
-to the public XJTU test history is disclosed above.
+minutes for LSTM; 133.13 (3.79) / 163.97 (4.52) for TabDPT 1.1.13; 133.53
+(0.00) / 167.32 (0.00) for XGBoost; and 147.89 (5.86) / 173.07 (7.35) for
+TabDPT 1.3.0. They are offline inverse-transform metrics using benchmark
+lifetimes. Existing access to the public XJTU test history is disclosed above.
 
 The frozen configurations and audited tables are retained in
 `artifacts/formal/results/nc_p_tabdpt130_three_seed_summary.json`,
 `artifacts/formal/results/nc_p_xgboost_three_seed_summary.json`, and
 `artifacts/formal/results/nc_p_lstm_three_seed_summary.json`,
 `artifacts/formal/results/xjtu_lstm_three_seed_summary.json`, and
-`artifacts/formal/results/xjtu_xgboost_three_seed_summary.json`.
+`artifacts/formal/results/xjtu_xgboost_three_seed_summary.json`,
+`artifacts/formal/results/xjtu_tabdpt11_three_seed_summary.json`, and
+`artifacts/formal/results/xjtu_tabdpt130_three_seed_summary.json`.
 
 For NC-P LSTM, the normalized-MAE engine bootstrap interval is 0.06666–0.08381
 and RMSE interval is 0.08806–0.10712; they resample test engines within source
@@ -505,6 +510,30 @@ CPU; each of the three final CPU runs took about 61.5 seconds. All four test
 bearings and 2,261 prediction rows passed the per-device metrics audit at
 `atol=1e-4, rtol=1e-6`.
 
+XJTU TabDPT 1.3.0 selected window 50 / stride 50 on seed-72 validation; the
+five candidate validation losses were 0.09717, 0.10706, 0.10025, 0.11349, and
+0.05753. The three final runs took 30.6–40.9 seconds and sampled 1,282 MiB of
+PID-attributed VRAM each. All three prediction files passed the four-bearing
+metric audit at `atol=1e-4, rtol=1e-6`. Normalized MAE/RMSE have four-bearing
+bootstrap intervals 0.17171–0.27177 / 0.20920–0.31733; the small bearing count
+limits interpretation. Inverse-RUL errors remain offline transforms using
+benchmark lifetimes, and prior public-test access is disclosed above.
+
+XJTU TabDPT 1.1.13 also selected window 50 / stride 50. Its validation losses
+for the same ordered candidates were 0.09662, 0.10136, 0.10035, 0.09896, and
+0.06447. Its three final runs took about 30.7 seconds each and peaked at
+1,430 MiB PID-attributed VRAM. The normalized-MAE/RMSE bearing-bootstrap
+intervals were 0.14372–0.24540 / 0.17306–0.30321. Both TabDPT versions used
+window-50 contexts, but their native context and reduction mechanisms differ;
+the test results cannot isolate a version effect.
+
+The first XJTU TabDPT 1.3.0 validation attempt failed before loader creation
+because the isolated environment lacked the PHMD reader. The selected Git
+revision and its declared compatibility pins were installed, the full
+environment lock was regenerated, `uv pip check` passed, and all five
+validation-only candidates then completed. The failed run remains in its
+manifest and is excluded from candidate selection.
+
 The PHMD split's eight XJTU training bearings have median maximum RUL 354
 acquisition intervals. Their frozen 5%, 10%, and 20% warning horizons are
 17.7, 35.4, and 70.8 acquisition intervals. The derivation counts ordered raw
@@ -517,6 +546,11 @@ used to turn an HI prediction into online remaining time.
 The NC-P LSTM seeds completed on physical GPUs 0, 3, and 2. During these runs,
 the current user authorization allowed GPUs 0–3; GPU 1 remained occupied and
 was not used. Manifests distinguish physical IDs from `cuda:0`. NC-P TabDPT
-1.1.13 window-20/50 validation candidates remain running. TabPFN has no full
-NC-P score because its full-context CUDA preflight failed and remains under
-diagnosis.
+1.1.13 window-20/50 validation candidates remain running. TabPFN remains
+incomplete. Its NC-P full-context validation failed with a CUDA kernel error;
+the XJTU default cached fit mode OOMed during validation fitting at 6,557 rows
+and 460 features. A full XJTU window-1 validation run using `low_memory`
+completed with `test=false` and `val/loss=0.09925`, but a matched real-slice
+prediction-equivalence benchmark against the default cache mode is still
+running. Until that passes `atol=1e-4, rtol=1e-4`, the execution paths remain
+separate; no XJTU TabPFN selection or final test score is reported.

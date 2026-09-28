@@ -901,7 +901,14 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_tabdpt_w1_s1_lrNone_formal_awkw29_tabdpt11_gpu2",
+      "physical_gpu": 2,
+      "logical_device": "cuda:0",
+      "best_val_loss": 0.09662428498268127,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false
     },
     {
       "dataset": "xjtu",
@@ -923,7 +930,14 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.10135648399591446,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_tabdpt_w5_s1_lrNone_formal_awkw29_tabdpt11_gpu2",
+      "physical_gpu": 2,
+      "logical_device": "cuda:0"
     },
     {
       "dataset": "xjtu",
@@ -945,7 +959,14 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.10034859925508499,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_tabdpt_w10_s5_lrNone_formal_awkw29_tabdpt11_gpu2",
+      "physical_gpu": 2,
+      "logical_device": "cuda:0"
     },
     {
       "dataset": "xjtu",
@@ -967,7 +988,14 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.09895744174718857,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_tabdpt_w20_s5_lrNone_formal_awkw29_tabdpt11_gpu2",
+      "physical_gpu": 2,
+      "logical_device": "cuda:0"
     },
     {
       "dataset": "xjtu",
@@ -989,7 +1017,16 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.06446626037359238,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_tabdpt_w50_s50_lrNone_formal_awkw29_tabdpt11_gpu2",
+      "physical_gpu": 2,
+      "logical_device": "cuda:0",
+      "selection_decision": "selected_by_seed72_validation_loss",
+      "frozen_config_sha256": "2954c618a51d9f3a4ae7b405aec0fe185d2aa6efeed4d0cf6c240ebe74e2bd27"
     },
     {
       "dataset": "xjtu",
@@ -1012,7 +1049,14 @@
         "model=tabdpt130_fit_predict"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.09716605395078659,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_tabdpt130_w1_s1_lrNone_formal_awkw29_phmd_pinned_gpu2",
+      "physical_gpu": 2,
+      "logical_device": "cuda:0"
     },
     {
       "dataset": "xjtu",
@@ -1035,7 +1079,14 @@
         "model=tabdpt130_fit_predict"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.10706303268671036,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_tabdpt130_w5_s1_lrNone_formal_awkw29_phmd_pinned_gpu2",
+      "physical_gpu": 2,
+      "logical_device": "cuda:0"
     },
     {
       "dataset": "xjtu",
@@ -1058,7 +1109,14 @@
         "model=tabdpt130_fit_predict"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.10025297850370407,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_tabdpt130_w10_s5_lrNone_formal_awkw29_phmd_pinned_gpu2",
+      "physical_gpu": 2,
+      "logical_device": "cuda:0"
     },
     {
       "dataset": "xjtu",
@@ -1081,7 +1139,14 @@
         "model=tabdpt130_fit_predict"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.11348646134138107,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_tabdpt130_w20_s5_lrNone_formal_awkw29_phmd_pinned_gpu2",
+      "physical_gpu": 2,
+      "logical_device": "cuda:0"
     },
     {
       "dataset": "xjtu",
@@ -1104,7 +1169,16 @@
         "model=tabdpt130_fit_predict"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.05752740800380707,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_tabdpt130_w50_s50_lrNone_formal_awkw29_phmd_pinned_gpu2",
+      "physical_gpu": 2,
+      "logical_device": "cuda:0",
+      "selection_decision": "selected_by_seed72_validation_loss",
+      "frozen_config_sha256": "58b6f93fa130d6d5da16d42f7cd40fcb96fd8d2abcf807b87bd11f17d12bbfb3"
     },
     {
       "dataset": "xjtu",
@@ -1126,7 +1200,10 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "failed_validation_oom_default_cached_fit",
+      "failure_output": "artifacts/formal/selection_runs/xjtu_tabpfn_w1_s1_lrNone_formal_awkw29_gpu2",
+      "validation_metrics_present": false
     },
     {
       "dataset": "xjtu",
@@ -1148,7 +1225,8 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "pending_execution_mode_equivalence"
     },
     {
       "dataset": "xjtu",
@@ -1170,7 +1248,8 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "pending_execution_mode_equivalence"
     },
     {
       "dataset": "xjtu",
@@ -1192,7 +1271,8 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "pending_execution_mode_equivalence"
     },
     {
       "dataset": "xjtu",
@@ -1214,7 +1294,8 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "pending_execution_mode_equivalence"
     },
     {
       "dataset": "xjtu",
@@ -1825,42 +1906,99 @@
       "model": "tabdpt",
       "seed": 72,
       "stage": "final",
-      "status": "blocked_on_validation_freeze_and_execution_equivalence"
+      "status": "completed_device_macro_public_test_history_disclosed",
+      "physical_gpus": [
+        2
+      ],
+      "logical_device": "cuda:0",
+      "elapsed_seconds": 30.683030392974615,
+      "result": "artifacts/formal/results/xjtu_tabdpt11_device_metrics_seed72.json",
+      "prediction_audit": "artifacts/formal/results/xjtu_tabdpt11_prediction_audit_seed72.json",
+      "frozen_config_sha256": "2954c618a51d9f3a4ae7b405aec0fe185d2aa6efeed4d0cf6c240ebe74e2bd27"
     },
     {
       "dataset": "xjtu",
       "model": "tabdpt",
       "seed": 88,
       "stage": "final",
-      "status": "blocked_on_validation_freeze_and_execution_equivalence"
+      "status": "completed_device_macro_public_test_history_disclosed",
+      "physical_gpus": [
+        0
+      ],
+      "logical_device": "cuda:0",
+      "elapsed_seconds": 30.689326772466302,
+      "result": "artifacts/formal/results/xjtu_tabdpt11_device_metrics_seed88.json",
+      "prediction_audit": "artifacts/formal/results/xjtu_tabdpt11_prediction_audit_seed88.json",
+      "frozen_config_sha256": "2954c618a51d9f3a4ae7b405aec0fe185d2aa6efeed4d0cf6c240ebe74e2bd27"
     },
     {
       "dataset": "xjtu",
       "model": "tabdpt",
       "seed": 101,
       "stage": "final",
-      "status": "blocked_on_validation_freeze_and_execution_equivalence"
+      "status": "completed_device_macro_public_test_history_disclosed",
+      "physical_gpus": [
+        3
+      ],
+      "logical_device": "cuda:0",
+      "elapsed_seconds": 30.647011576220393,
+      "result": "artifacts/formal/results/xjtu_tabdpt11_device_metrics_seed101.json",
+      "prediction_audit": "artifacts/formal/results/xjtu_tabdpt11_prediction_audit_seed101.json",
+      "frozen_config_sha256": "2954c618a51d9f3a4ae7b405aec0fe185d2aa6efeed4d0cf6c240ebe74e2bd27"
     },
     {
       "dataset": "xjtu",
       "model": "tabdpt130",
       "seed": 72,
       "stage": "final",
-      "status": "blocked_on_validation_freeze_and_execution_equivalence"
+      "status": "completed_device_macro_public_test_history_disclosed",
+      "physical_gpus": [
+        2
+      ],
+      "logical_device": "cuda:0",
+      "elapsed_seconds": 30.62178043834865,
+      "result": "artifacts/formal/results/xjtu_tabdpt130_device_metrics_seed72.json",
+      "prediction_audit": "artifacts/formal/results/xjtu_tabdpt130_prediction_audit_seed72.json",
+      "frozen_config_sha256": "58b6f93fa130d6d5da16d42f7cd40fcb96fd8d2abcf807b87bd11f17d12bbfb3",
+      "peak_tracked_process_gpu_memory_mib_by_physical_gpu": {
+        "2": 1282
+      }
     },
     {
       "dataset": "xjtu",
       "model": "tabdpt130",
       "seed": 88,
       "stage": "final",
-      "status": "blocked_on_validation_freeze_and_execution_equivalence"
+      "status": "completed_device_macro_public_test_history_disclosed",
+      "physical_gpus": [
+        0
+      ],
+      "logical_device": "cuda:0",
+      "elapsed_seconds": 40.84953877143562,
+      "result": "artifacts/formal/results/xjtu_tabdpt130_device_metrics_seed88.json",
+      "prediction_audit": "artifacts/formal/results/xjtu_tabdpt130_prediction_audit_seed88.json",
+      "frozen_config_sha256": "58b6f93fa130d6d5da16d42f7cd40fcb96fd8d2abcf807b87bd11f17d12bbfb3",
+      "peak_tracked_process_gpu_memory_mib_by_physical_gpu": {
+        "0": 1282
+      }
     },
     {
       "dataset": "xjtu",
       "model": "tabdpt130",
       "seed": 101,
       "stage": "final",
-      "status": "blocked_on_validation_freeze_and_execution_equivalence"
+      "status": "completed_device_macro_public_test_history_disclosed",
+      "physical_gpus": [
+        3
+      ],
+      "logical_device": "cuda:0",
+      "elapsed_seconds": 40.84033993817866,
+      "result": "artifacts/formal/results/xjtu_tabdpt130_device_metrics_seed101.json",
+      "prediction_audit": "artifacts/formal/results/xjtu_tabdpt130_prediction_audit_seed101.json",
+      "frozen_config_sha256": "58b6f93fa130d6d5da16d42f7cd40fcb96fd8d2abcf807b87bd11f17d12bbfb3",
+      "peak_tracked_process_gpu_memory_mib_by_physical_gpu": {
+        "3": 1282
+      }
     },
     {
       "dataset": "xjtu",
@@ -1944,7 +2082,7 @@
       "status": "completed_device_macro_public_test_history_disclosed"
     }
   ],
-  "updated_utc": "2026-09-28T12:36:56.116984+00:00",
+  "updated_utc": "2026-09-28T14:02:06.156439+00:00",
   "analysis": {
     "xjtu_warning_horizons": {
       "status": "derived_from_train_devices_only",
@@ -1964,6 +2102,28 @@
       "device_metrics": "artifacts/formal/results/nc_p_lstm_three_seed_summary.json",
       "critical_metrics": "artifacts/formal/results/nc_p_lstm_critical_three_seed_summary.json",
       "nasa_metrics": "artifacts/formal/results/nc_p_lstm_nasa_three_seed_summary.json"
+    },
+    "xjtu_tabdpt130": {
+      "status": "completed_audited_three_seed_fixed_configuration",
+      "frozen_config_sha256": "58b6f93fa130d6d5da16d42f7cd40fcb96fd8d2abcf807b87bd11f17d12bbfb3",
+      "device_metrics": "artifacts/formal/results/xjtu_tabdpt130_three_seed_summary.json",
+      "environment_lock": "patches/tabdpt130-environment.lock",
+      "environment_lock_sha256": "a22e5f614ed5bdca4635385202d8f299a778ca175dc005610522655ff94fa78e",
+      "failed_attempt": "artifacts/formal/selection_runs/xjtu_tabdpt130_w1_s1_lrNone_formal_awkw29_gpu2/manifest.json",
+      "failed_attempt_reason": "missing_phmd_dependency_before_loader_initialization; no fit or test metrics"
+    },
+    "xjtu_tabdpt11": {
+      "status": "completed_audited_three_seed_fixed_configuration",
+      "device_metrics": "artifacts/formal/results/xjtu_tabdpt11_three_seed_summary.json"
+    },
+    "xjtu_tabpfn": {
+      "status": "blocked_pending_execution_mode_equivalence",
+      "default_fit_mode_failed_manifest": "artifacts/formal/selection_runs/xjtu_tabpfn_w1_s1_lrNone_formal_awkw29_gpu2/manifest.json",
+      "default_fit_mode_failure": "validation fit OOM; 6557 training rows x 460 features; no test metrics",
+      "low_memory_validation_manifest": "artifacts/formal/selection_runs/xjtu_tabpfn_w1_low_memory_retry2_gpu2/manifest.json",
+      "low_memory_validation_loss": 0.09925265610218048,
+      "test_metrics_accessed": false,
+      "execution_mode_benchmark_manifest": "artifacts/formal/tabpfn_xjtu_fit_mode_lowmem_preflight/manifest.json"
     }
   }
 }
