@@ -2,8 +2,12 @@
 
 defaults:
   - override /datasource: concepts_n_cmapss_multi_source
-  - override /evaluator: rul
+  - override /evaluator: per_unit
   - override /task_definition: prognostics/concepts_n_cmapss_rul_prediction
+
+dataset:
+  dataset_cfg:
+    get_unit_id: true
 
 evaluator:
   train:

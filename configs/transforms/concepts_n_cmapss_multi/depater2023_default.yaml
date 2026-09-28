@@ -36,7 +36,7 @@ scaler_rul:
 
 subsample_features_target:
   transform:
-    _target_: picid.transforms.base_transforms.subsample.WindowedAggregationTransform
+    _target_: picid.research.n_cmapss.UnitWiseWindowedAggregationTransform
     step: 60
     window_size: 60
     aggregation: mean
@@ -45,12 +45,19 @@ subsample_features_target:
 
 subsample_others:
   transform:
-    _target_: picid.transforms.base_transforms.subsample.WindowedAggregationTransform
+    _target_: picid.research.n_cmapss.UnitWiseWindowedAggregationTransform
     step: 60
     window_size: 60
     aggregation: last
   metadata:
     apply_to: [unit, timestamps, health_states, rul, n_DS]
+
+build_unit_id:
+  transform:
+    _target_: picid.research.n_cmapss.UnitIdentifierTransform
+  metadata:
+    apply_to: [unit, n_DS]
+    assign_to: unit_id
 
 build_concept_classes:
   transform:

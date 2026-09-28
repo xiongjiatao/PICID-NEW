@@ -19,6 +19,7 @@ model:
       - timestamps
       - health_states
       - unit
+      - unit_id
       - concepts
 
 target_metric: val/loss

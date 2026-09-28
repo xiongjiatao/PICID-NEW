@@ -67,6 +67,42 @@ tabularize_x_val_test:
     assign_to: features
     transform_on_keys: ["val", "test"]
 
+
+tabularize_unit_id_train:
+  transform:
+    _target_: picid.transforms.base_transforms.tabularizers.TimeseriesTabularizer
+    seq_len: 1
+    label_len: 0
+    pred_len: 0
+    stride: ${task_definition.stride_train}
+    padding_left_flag: ${task_definition.padding_left_flag}
+    timestep_dimension: 1
+    subset_ratio: ${oc.select:task_definition.subset_ratio,null}
+    subset_seed: ${oc.select:task_definition.subset_seed,null}
+    subset_blocks: ${oc.select:task_definition.subset_blocks,null}
+    select_features:
+      - unit_id: present
+  metadata:
+    apply_to: [unit_id]
+    assign_to: unit_id
+    transform_on_keys: ["train"]
+
+tabularize_unit_id_val_test:
+  transform:
+    _target_: picid.transforms.base_transforms.tabularizers.TimeseriesTabularizer
+    seq_len: 1
+    label_len: 0
+    pred_len: 0
+    stride: ${task_definition.stride}
+    padding_left_flag: ${task_definition.padding_left_flag}
+    timestep_dimension: 1
+    select_features:
+      - unit_id: present
+  metadata:
+    apply_to: [unit_id]
+    assign_to: unit_id
+    transform_on_keys: ["val", "test"]
+
 tabularize_y_train:
   # Concatenate time-features to the feature set
   transform:

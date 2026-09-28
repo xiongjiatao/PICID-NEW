@@ -15,6 +15,14 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+def _collapse_single_task_unit_ids(unit_ids: np.ndarray, predictions: np.ndarray) -> np.ndarray:
+    """Remove the singleton fit-predict task axis from per-query unit IDs."""
+    if (unit_ids.ndim == 3 and unit_ids.shape[0] == 1
+            and unit_ids.shape[1] == predictions.shape[0]):
+        return unit_ids[0]
+    return unit_ids
+
+
 class CustomEvaluatorInterface(ABC):
     """Interface for custom evaluators."""
 
@@ -316,7 +324,10 @@ class CustomEvaluatorLightningModule(LightningModule, CustomEvaluatorInterface):
 
         # Process optional 'unit_id' from the batch
         if "unit_id" in batch and batch["unit_id"] is not None:
-            model_out["unit_id"] = self._to_numpy(batch["unit_id"], "unit_id")
+            unit_ids = self._to_numpy(batch["unit_id"], "unit_id")
+            model_out["unit_id"] = _collapse_single_task_unit_ids(
+                unit_ids, model_out["predictions"]
+            )
 
         # Extend here if you want to pass smth from the batch to the evaluator
 
