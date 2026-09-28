@@ -1,0 +1,7 @@
+{
+  "source_sha256": "e696892c55c6e0182ead6085eac415ea8b1902dadbded98d3d513889629845c9",
+  "patched_sha256": "1ab23d72c4a242ed4a4db849af9df544629327b18c7a220de939525a67817cc2",
+  "file": "tabpfn/architectures/base/transformer.py",
+  "upstream_version": "2.2.1",
+  "validation_status": "pending_real_model_equivalence"
+}

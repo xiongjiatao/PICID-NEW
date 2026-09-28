@@ -93,6 +93,8 @@ class FitPredictTabPFNWrapper(AbstractFitPredictWrapper):
             backbone = TabPFNClassifier(
                 ignore_pretraining_limits=kwargs["ignore_pretraining_limits"],
                 random_state=kwargs["random_state"],
+                n_estimators=kwargs.get("n_estimators", 8),
+                model_path=kwargs.get("model_path", "auto"),
                 device=device,
                 n_jobs=kwargs.get("n_jobs", -1),
                 fit_mode=kwargs.get("fit_mode", "fit_preprocessors"),
@@ -101,6 +103,8 @@ class FitPredictTabPFNWrapper(AbstractFitPredictWrapper):
             backbone = TabPFNRegressor(
                 ignore_pretraining_limits=kwargs["ignore_pretraining_limits"],
                 random_state=kwargs["random_state"],
+                n_estimators=kwargs.get("n_estimators", 8),
+                model_path=kwargs.get("model_path", "auto"),
                 device=device,
                 n_jobs=kwargs.get("n_jobs", -1),
                 fit_mode=kwargs.get("fit_mode", "fit_preprocessors"),
@@ -255,12 +259,16 @@ class TabPFNWrapper(AbstractFeedForwardWrapper):
             backbone = TabPFNClassifier(
                 ignore_pretraining_limits=kwargs["ignore_pretraining_limits"],
                 random_state=kwargs["random_state"],
+                n_estimators=kwargs.get("n_estimators", 8),
+                model_path=kwargs.get("model_path", "auto"),
                 device="cuda" if kwargs["device"] == "gpu" else "cpu",
             )
         else:
             backbone = TabPFNRegressor(
                 ignore_pretraining_limits=kwargs["ignore_pretraining_limits"],
                 random_state=kwargs["random_state"],
+                n_estimators=kwargs.get("n_estimators", 8),
+                model_path=kwargs.get("model_path", "auto"),
                 device="cuda" if kwargs["device"] == "gpu" else "cpu",
             )
         super().__init__(backbone=backbone, **kwargs)

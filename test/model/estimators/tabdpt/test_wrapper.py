@@ -23,7 +23,7 @@ class _StubTabDPTRegressor:
         self._fitted = True
         return self
 
-    def predict(self, X):
+    def predict(self, X, **kwargs):
         n = len(X)
         return np.linspace(0.0, 1.0, n).reshape(n, 1)
 
@@ -37,10 +37,13 @@ class _StubTabDPTClassifier:
         self._fitted = True
         return self
 
-    def predict(self, X):
+    def predict(self, X, **kwargs):
         return np.argmax(self.predict_proba(X), axis=1, keepdims=True)
 
-    def predict_proba(self, X):
+    def ensemble_predict_proba(self, X, **kwargs):
+        return self.predict_proba(X, **kwargs)
+
+    def predict_proba(self, X, **kwargs):
         n = len(X)
         return np.tile(np.array([[0.4, 0.6]], dtype=np.float64), (n, 1))
 
@@ -168,3 +171,18 @@ def test_load_model_missing_file_raises(tmp_path):
     )
     with pytest.raises(FileNotFoundError, match="Model file not found"):
         w.load_model("ghost")
+
+
+def test_explicit_prediction_seed_and_method_parameters():
+    wrapper = _cls()(device="cpu", task_type="regression", random_state=101,
+                     context_size=3, n_ensembles=4, inf_batch_size=64, compile=False)
+    wrapper.fit(torch.randn(6, 2), torch.randn(6, 1))
+    calls = []
+    def record(X, **kwargs):
+        calls.append(kwargs)
+        return np.zeros(len(X))
+    wrapper.backbone.predict = record
+    wrapper.predict(torch.randn(2, 2))
+    assert calls == [dict(seed=101, context_size=3, n_ensembles=4)]
+    assert wrapper.actual_context_size == 3
+    assert wrapper.backbone.inf_batch_size == 64

@@ -42,6 +42,12 @@ class FitPredictTabDPTWrapper(AbstractFitPredictWrapper):
         model_cache_path: str = None,
         yield_strategy: bool = False,
         yield_batch_size: int = 128,
+        random_state: int = 72,
+        context_size: int | None = 2048,
+        n_ensembles: int = 8,
+        inf_batch_size: int | None = None,
+        model_weight_path: str | None = None,
+        compile: bool = True,
         **kwargs,
     ):
         """
@@ -73,21 +79,20 @@ class FitPredictTabDPTWrapper(AbstractFitPredictWrapper):
 
         self.task_type = task_type
 
-        device = "cuda" if (device == "gpu") or ("cuda" in device) else "cpu"
-        logger.info(f"Using TabDPT on device: {device}, kwargs: {kwargs}")
-
-        if task_type in self.classification_tasks:
-            backbone = partial(
-                TabDPTClassifier,
-                inf_batch_size=yield_batch_size,
-                device=device,
-            )
-        else:
-            backbone = partial(
-                TabDPTRegressor,
-                inf_batch_size=yield_batch_size,
-                device=device,
-            )
+        if n_ensembles < 1 or (context_size is not None and context_size < 1):
+            raise ValueError("Ensemble and context sizes must be positive.")
+        self.random_state = int(random_state)
+        self.context_size = context_size
+        self.n_ensembles = n_ensembles
+        self.inf_batch_size = inf_batch_size if inf_batch_size is not None else yield_batch_size
+        if self.inf_batch_size < 1:
+            raise ValueError("inf_batch_size must be positive.")
+        device = "cuda" if device == "gpu" else device
+        constructor = TabDPTClassifier if task_type in self.classification_tasks else TabDPTRegressor
+        backbone = partial(
+            constructor,
+            **self._constructor_options(device, model_weight_path, compile),
+        )
 
         self.model_cache_path = model_cache_path
         self.device = device
@@ -99,6 +104,14 @@ class FitPredictTabDPTWrapper(AbstractFitPredictWrapper):
             reinit_on_fit=True,
             **kwargs,
         )
+
+    def _constructor_options(self, device, model_weight_path, compile):
+        return dict(device=device, inf_batch_size=self.inf_batch_size,
+                    model_weight_path=model_weight_path, compile=compile)
+
+    def _prediction_options(self):
+        return dict(seed=self.random_state, context_size=self.context_size,
+                    n_ensembles=self.n_ensembles)
 
     @override
     def _call_fit(self, X: torch.Tensor, y: torch.Tensor):
@@ -116,6 +129,10 @@ class FitPredictTabDPTWrapper(AbstractFitPredictWrapper):
             self._reinit_backbone()
 
         self.backbone.fit(X.numpy(), y.numpy().ravel())
+        self.actual_context_size = min(len(X), self.context_size or len(X))
+        logger.info("TabDPT context=%s ensembles=%s seed=%s inference_batch=%s",
+                    self.actual_context_size, self.n_ensembles, self.random_state,
+                    self.inf_batch_size)
 
     @override
     def _call_predict(self, X: torch.Tensor) -> torch.Tensor:
@@ -133,9 +150,9 @@ class FitPredictTabDPTWrapper(AbstractFitPredictWrapper):
             Regression predictions or class probabilities.
         """
         if self.task_type in CLASSIFICATION_TASKS:
-            return torch.Tensor(self.backbone.predict_proba(X.numpy()))
+            return torch.Tensor(self.backbone.ensemble_predict_proba(X.numpy(), **self._prediction_options()))
         else:
-            return torch.Tensor(self.backbone.predict(X.numpy()))
+            return torch.Tensor(self.backbone.predict(X.numpy(), **self._prediction_options()))
 
     @override
     def serialize_model(self, task_id: str | None = None):

@@ -1,0 +1,41 @@
+--- a/tabpfn/architectures/base/transformer.py
++++ b/tabpfn/architectures/base/transformer.py
+@@ -534,16 +534,18 @@
+         )
+         del data_dags
+ 
+-        # b s f e + b s 1 e -> b s f+1 e
+-        embedded_input = torch.cat((embedded_x, embedded_y.unsqueeze(2)), dim=2)
+-
+-        if torch.isnan(embedded_input).any():
++        # Preserve NaN rejection while bounding temporary bool allocations.
++        x_has_nan = _bounded_has_nan(embedded_x)
++        y_has_nan = _bounded_has_nan(embedded_y)
++        if x_has_nan or y_has_nan:
+             raise ValueError(
+-                f"There should be no NaNs in the encoded x and y."
++                "There should be no NaNs in the encoded x and y."
+                 "Check that you do not feed NaNs or use a NaN-handling enocder."
+                 "Your embedded x and y returned the following:"
+-                f"{torch.isnan(embedded_x).any()=} | {torch.isnan(embedded_y).any()=}",
+-            )
++                f"x_has_nan={x_has_nan} | y_has_nan={y_has_nan}",
++            )
++        # Release source embeddings before entering the transformer.
++        embedded_input = torch.cat((embedded_x, embedded_y.unsqueeze(2)), dim=2)
+         del embedded_y, embedded_x
+ 
+         encoder_out = self.transformer_encoder(
+@@ -810,3 +812,12 @@
+         # TODO(old) Double check the ordering is right
+         for n, pe_ in zip(graph.nodes(), pe):
+             graph.nodes[n]["positional_encoding"] = pe_
++
++
++def _bounded_has_nan(value, max_elements=1048576):
++    """Equivalent to isnan(value).any(), with bounded temporary storage."""
++    if value.numel() <= max_elements:
++        return bool(torch.isnan(value).any())
++    axis = max(range(value.ndim), key=lambda i: value.shape[i])
++    width = max(1, value.shape[axis] // 2)
++    return any(_bounded_has_nan(part, max_elements) for part in value.split(width, dim=axis))

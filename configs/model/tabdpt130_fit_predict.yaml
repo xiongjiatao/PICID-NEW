@@ -1,12 +1,13 @@
-_target_: picid.model.estimators.tabdpt.wrapper.FitPredictTabDPTWrapper
+_target_: picid.model.estimators.tabdpt.modern.FitPredictTabDPT130Wrapper
 device: ${trainer.accelerator}
 task_type: ${task_definition.task_type}
 model_cache_path: ${paths.model_cache_dir}
 random_state: ${seed}
 context_size: 2048
+context_reduction: subsample
 n_ensembles: 8
-inf_batch_size: 32
+inf_batch_size: 512
 model_weight_path: null
-compile: true
+compile: false
 yield_strategy: false
 yield_batch_size: 128
