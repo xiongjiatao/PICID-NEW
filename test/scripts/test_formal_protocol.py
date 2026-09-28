@@ -15,7 +15,7 @@ def test_full_grid_and_no_candidate_test_access():
 
 
 def test_formal_runner_accepts_the_currently_authorized_physical_gpus():
-    assert PHYSICAL_GPUS == (0, 1, 2, 3)
+    assert PHYSICAL_GPUS == (0, 1, 2, 3, 4, 5)
 
 
 def test_selection_rejects_missing_failed_or_test_accessed_results():
