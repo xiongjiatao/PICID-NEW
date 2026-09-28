@@ -110,7 +110,9 @@ def main():
                 if args.gpu is not None:
                     run += ["--gpu", str(args.gpu), "--expected-peak-mib", str(args.expected_peak_mib)]
                 run += ["--", str(runtime_python), "picid/run.py",
-                        *candidate.overrides(seed=72, test=False), *args.override]
+                        *candidate.overrides(seed=72, test=False),
+                        f"experiment_group=formal_{run_name.replace('.', 'p')}_seed72_selection",
+                        *args.override]
                 if args.cache_base:
                     cache_name = "MultiSource_concepts_N-CMAPSS" if args.dataset == "nc_p" else "XJTU-SY"
                     run.append(f"paths.cache_path={args.cache_base.resolve() / cache_name}")
