@@ -443,3 +443,36 @@ Selection uses the plan's configured validation loss (`val/loss`, normalized
 query-weighted MSE). The headline test table is separately device-macro. These
 are different estimands and are both retained; the test scores did not affect
 selection.
+
+## Audited three-seed snapshot (2026-09-28)
+
+This is the completed subset of the planned baselines, not a claim that the
+entire model/dataset grid is finished. NC-P scores average 16 held-out engines
+(four per data source); XJTU PHMD scores average four held-out bearings. Values
+below are normalized MAE/RMSE, followed by PHM score and, for NC-P, raw-unit
+NASA score. Parentheses are sample standard deviations across the three fixed
+seeds. Device-bootstrap intervals are reported separately in the per-model
+sections above. The two datasets are different tasks and their metric values
+must not be read as a direct ranking across domains.
+
+| Dataset / model | Normalized MAE | Normalized RMSE | PHM score | NASA score | Critical-stage normalized MAE (5% / 10% / 20%) |
+|---|---:|---:|---:|---:|---:|
+| NC-P / TabDPT 1.3.0 | 0.07206 (0.00070) | 0.09712 (0.00093) | 0.41839 (0.00101) | 1.39440 (0.01628) | 0.01223 / 0.01401 / 0.01833 |
+| NC-P / XGBoost 3.1.3 | 0.12336 (0.00000) | 0.15471 (0.00000) | 0.29329 (0.00000) | 6.33798 (0.00000) | 0.08525 / 0.08959 / 0.09745 |
+| XJTU-SY PHMD / LSTM | 0.18348 (0.00145) | 0.22039 (0.00075) | 0.28087 (0.00542) | n/a | not computed |
+
+XGBoost's zero seed deviation reflects identical prediction-file hashes across
+the three executions, so these runs establish deterministic replay under this
+configuration rather than independent stochastic seed evidence. XJTU inverse
+RUL errors are 122.56 (0.47) MAE and 144.92 (0.41) RMSE acquisition minutes;
+they are offline inverse-transform metrics using benchmark lifetimes. Existing
+access to the public XJTU test history is disclosed above.
+
+The frozen configurations and audited tables are retained in
+`artifacts/formal/results/nc_p_tabdpt130_three_seed_summary.json`,
+`artifacts/formal/results/nc_p_xgboost_three_seed_summary.json`, and
+`artifacts/formal/results/xjtu_lstm_three_seed_summary.json`. NC-P LSTM seed-72
+final evaluation and the remaining TabDPT 1.1.13 validation candidates are
+still running; they are not included in this snapshot. TabPFN has no full
+NC-P score because its full-context CUDA preflight failed and remains under
+diagnosis.
