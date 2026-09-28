@@ -26,6 +26,14 @@ Evidence reviewed 2026-09-28. This is a research decision record, not a novelty 
 
 **Required comparisons.** RUL threshold; TabDPT 1.3 full CDF; TabPFN full output/residual ECDF; separately held-out device calibration; discrete-time event classifier and a small DeepHit/MTLR-style model; calibration off/on; condition and device-wise leave-out. Derive 5%, 10%, 20% horizons from training-device median life in native units, then freeze them. For XJTU derive labels from the raw timeline and never use an evaluation bearing's realized total life to create an online horizon.
 
+**Frozen XJTU horizon definition.** The eight PHMD training bearings have
+median maximum RUL 354 acquisition intervals (RUL is `N-1` for `N` ordered
+acquisitions). This fixes candidate horizons at 17.7, 35.4, and 70.8 intervals.
+They are calculated from training-bearing filename indices only and recorded in
+`artifacts/formal/results/xjtu_critical_horizons.json`. This is a label
+definition, not an evaluated alert result; no warning probabilities, calibration
+claims, or online HI-to-RUL conversion are reported yet.
+
 **Metrics and uncertainty.** Device-balanced Brier/log loss and calibration plots, event-risk ranking/AUPRC, detection at calibration-fixed empirical false-alarm levels, alarms per device, missed events and lead-time distribution. Bootstrap whole devices. State explicitly when calibration sample size cannot support a claimed bound; do not treat correlated timestamps as independent Bernoulli trials. Compare prediction-distribution coverage separately from decision quality.
 
 **Falsification / stop rule.** Stop if the native predictive CDF or a simple calibrated RUL threshold matches warning utility at the same false-alarm burden, if independent calibration devices are too few, if results depend on evaluation terminal life, or if horizon labels cannot represent an observable maintenance decision. Current status: **not established; likely an evaluation/design contribution unless the mechanism addresses a measured failure mode**.

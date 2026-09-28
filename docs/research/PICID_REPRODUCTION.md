@@ -436,8 +436,11 @@ evaluation was disabled and confirmed in the log.
 
 The corrected window-5/stride-1 and window-10/stride-5 candidates were
 restarted at 14:55 with unique Hydra `experiment_group` values and isolated
-`model_cache_dir` paths on physical GPUs 2 and 0. Their validation runs remain
-in progress; their test stages are disabled.
+`model_cache_dir` paths on physical GPUs 2 and 0. Both completed with
+`test=false`; validation losses were 0.012012 for 5/1 and 0.010536 for 10/5.
+Window-1 remains the best of the completed candidates at 0.009772. Window-20/5
+and window-50/50 are running in separate cache/output groups on physical GPUs
+0 and 3. Their test stages are disabled.
 
 Selection uses the plan's configured validation loss (`val/loss`, normalized
 query-weighted MSE). The headline test table is separately device-macro. These
@@ -459,6 +462,7 @@ must not be read as a direct ranking across domains.
 |---|---:|---:|---:|---:|---:|
 | NC-P / TabDPT 1.3.0 | 0.07206 (0.00070) | 0.09712 (0.00093) | 0.41839 (0.00101) | 1.39440 (0.01628) | 0.01223 / 0.01401 / 0.01833 |
 | NC-P / XGBoost 3.1.3 | 0.12336 (0.00000) | 0.15471 (0.00000) | 0.29329 (0.00000) | 6.33798 (0.00000) | 0.08525 / 0.08959 / 0.09745 |
+| NC-P / LSTM | 0.07529 (0.00362) | 0.09789 (0.00432) | 0.39981 (0.01060) | 1.56450 (0.17237) | 0.02325 / 0.02237 / 0.02557 |
 | XJTU-SY PHMD / LSTM | 0.18348 (0.00145) | 0.22039 (0.00075) | 0.28087 (0.00542) | n/a | not computed |
 | XJTU-SY PHMD / XGBoost 3.1.3 | 0.21063 (0.00000) | 0.26145 (0.00000) | 0.23328 (0.00000) | n/a | not computed |
 
@@ -473,8 +477,26 @@ to the public XJTU test history is disclosed above.
 The frozen configurations and audited tables are retained in
 `artifacts/formal/results/nc_p_tabdpt130_three_seed_summary.json`,
 `artifacts/formal/results/nc_p_xgboost_three_seed_summary.json`, and
+`artifacts/formal/results/nc_p_lstm_three_seed_summary.json`,
 `artifacts/formal/results/xjtu_lstm_three_seed_summary.json`, and
 `artifacts/formal/results/xjtu_xgboost_three_seed_summary.json`.
+
+For NC-P LSTM, the normalized-MAE engine bootstrap interval is 0.06666–0.08381
+and RMSE interval is 0.08806–0.10712; they resample test engines within source
+and are separate from the seed deviations in the table. Critical-stage MAE
+device-bootstrap intervals at the 5%, 10%, and 20% horizons are
+0.01693–0.03110, 0.01609–0.03048, and 0.01887–0.03396. The raw-unit NASA
+score and per-engine critical-stage summaries are in
+`artifacts/formal/results/nc_p_lstm_nasa_three_seed_summary.json` and
+`artifacts/formal/results/nc_p_lstm_critical_three_seed_summary.json`.
+
+NC-P LSTM seed 72/88/101 took 2,307/1,015/1,199 seconds on physical GPUs
+0/3/2, respectively. PID-attributed peak VRAM sampled by the tracker was 664
+MiB for each run. It passed prediction-versus-per-engine metric reconciliation
+for all 196,153 rows and 16 engines at `atol=1e-4, rtol=1e-6`; the largest
+absolute metric discrepancy was 2.13e-5. The source-level test MAE is DS01
+0.06797, DS04 0.08113, DS05 0.05892, and DS07 0.09315. These four-engine
+source means are descriptive, not independently replicated source estimates.
 
 XJTU XGBoost selected window 50 / train stride 50 from the seed-72 validation
 losses 0.09630, 0.09254, 0.08754, 0.09615 and 0.07709 for the five registered
@@ -483,12 +505,18 @@ CPU; each of the three final CPU runs took about 61.5 seconds. All four test
 bearings and 2,261 prediction rows passed the per-device metrics audit at
 `atol=1e-4, rtol=1e-6`.
 
-NC-P LSTM's seed-72 final test passed the per-engine audit for 196,153 rows on
-16 engines; the largest absolute difference between recomputed and reported
-per-engine metrics was below 2.1e-5. It took 2,307 seconds on physical GPU 0.
-Seeds 88 and 101 are running in parallel on physical GPUs 3 and 2 under the
-current user authorization; GPU 1 remains occupied by another task and is not
-used. The run manifests record physical IDs separately from `cuda:0`. The
-remaining TabDPT 1.1.13 validation candidates are still running. TabPFN has no
-full NC-P score because its full-context CUDA preflight failed and remains
-under diagnosis.
+The PHMD split's eight XJTU training bearings have median maximum RUL 354
+acquisition intervals. Their frozen 5%, 10%, and 20% warning horizons are
+17.7, 35.4, and 70.8 acquisition intervals. The derivation counts ordered raw
+training acquisition files and records their listing hashes in
+`artifacts/formal/results/xjtu_critical_horizons.json`; no validation or test
+bearing lifetime contributes. This freezes horizon labels only. No XJTU warning
+probabilities or alert metrics have been evaluated, and no test lifetime is
+used to turn an HI prediction into online remaining time.
+
+The NC-P LSTM seeds completed on physical GPUs 0, 3, and 2. During these runs,
+the current user authorization allowed GPUs 0–3; GPU 1 remained occupied and
+was not used. Manifests distinguish physical IDs from `cuda:0`. NC-P TabDPT
+1.1.13 window-20/50 validation candidates remain running. TabPFN has no full
+NC-P score because its full-context CUDA preflight failed and remains under
+diagnosis.
