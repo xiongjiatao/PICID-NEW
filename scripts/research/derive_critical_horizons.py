@@ -1,4 +1,4 @@
-"""Derive fixed NC-P warning horizons from training engines only."""
+"""Derive fixed warning horizons from training devices only."""
 
 import argparse
 import hashlib
@@ -89,12 +89,75 @@ def derive_training_horizons(data_root: Path, sources=SOURCES, train_units=TRAIN
     }
 
 
+def derive_xjtu_training_horizons(data_root: Path, training_bearings=None,
+                                  fractions=FRACTIONS):
+    """Derive XJTU horizons from PHMD training-bearing acquisition indices only.
+
+    Each CSV is one acquisition. PHMD labels the first acquisition with RUL
+    ``N-1`` and the last with zero, so the training lifetime used here is
+    ``N-1`` in acquisition intervals. Evaluation-bearing directories are never
+    read by this function.
+    """
+    if training_bearings is None:
+        from picid.data.datasources.phmd_xjtu_sy import XJTU_SY_SPLIT_ASSIGNMENTS_BY_MODE
+
+        training_bearings = XJTU_SY_SPLIT_ASSIGNMENTS_BY_MODE["phmd_split"]["train"]
+    training_bearings = tuple(training_bearings)
+    lifetimes = {}
+    index_hashes = {}
+    acquisition_counts = {}
+    for bearing in training_bearings:
+        folder = data_root / "train" / f"Bearing{bearing}"
+        if not folder.is_dir():
+            raise FileNotFoundError(folder)
+        indices = []
+        for path in folder.glob("*.csv"):
+            try:
+                indices.append(int(path.stem))
+            except ValueError as exc:
+                raise ValueError(f"Non-numeric acquisition file in {folder}: {path.name}") from exc
+        indices.sort()
+        expected = list(range(1, len(indices) + 1))
+        if not indices or indices != expected:
+            raise ValueError(f"{folder} acquisition indices are empty, duplicated, or gapped")
+        acquisition_counts[f"Bearing{bearing}"] = len(indices)
+        lifetimes[f"Bearing{bearing}"] = float(len(indices) - 1)
+        listing = "\n".join(f"{index}.csv" for index in indices).encode()
+        index_hashes[f"Bearing{bearing}"] = hashlib.sha256(listing).hexdigest()
+    values = list(lifetimes.values())
+    median = float(statistics.median(values))
+    if median <= 0:
+        raise ValueError("Training-bearing median maximum RUL must be positive")
+    return {
+        "protocol": "training_only_max_rul_fraction",
+        "dataset": "xjtu",
+        "raw_rul_unit": "PHMD bearing acquisition intervals",
+        "lifetime_definition": "N ordered acquisition files; maximum PHMD RUL is N-1",
+        "split": "phmd_split",
+        "training_bearings": list(training_bearings),
+        "training_device_count": len(lifetimes),
+        "training_device_acquisition_count": acquisition_counts,
+        "training_device_max_rul": lifetimes,
+        "median_training_device_max_rul": median,
+        "horizons": {
+            f"{int(fraction * 100)}pct": {
+                "fraction": fraction,
+                "rul_threshold": median * fraction,
+            }
+            for fraction in fractions
+        },
+        "acquisition_index_listing_sha256": index_hashes,
+    }
+
+
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--dataset", choices=("nc_p", "xjtu"), default="nc_p")
     parser.add_argument("--data-root", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    result = derive_training_horizons(args.data_root)
+    result = (derive_training_horizons(args.data_root) if args.dataset == "nc_p"
+              else derive_xjtu_training_horizons(args.data_root))
     result["raw_data_root"] = str(args.data_root.resolve())
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2, sort_keys=True, allow_nan=False) + "\n")
