@@ -15,10 +15,11 @@ a local source snapshot, not a reconstruction of upstream Git history.
 Targeted reproduction models: TabPFN, TabDPT, the paper-reported XGBoost baseline,
 and LSTM. The imported/upstream `xgboost_fit_predict` wrapper actually
 instantiated scikit-learn GradientBoosting rather than XGBoost. This research
-copy now invokes the `xgboost` 3.1.3 package; it preserves the prior wrapper's
-explicit 1,000 boosting rounds and seed 42, while all other tree settings use
-the locked library defaults. This corrects model identity but is not an exact
-recovery of the paper's undisclosed tree parameter search. Table 9 supplies
+copy now invokes the `xgboost` 3.1.3 package with 1,000 boosting rounds and the
+formal run seed as `random_state`; other tree settings use the locked library
+defaults. Historical exploratory XGBoost runs with seed 42 remain separately
+identified. This corrects model identity but is not an exact recovery of the
+paper's undisclosed tree parameter search. Table 9 supplies
 five context/stride pairs, while the paper's generic tuning statement does not
 specify XGBoost's tree-specific search ranges. These defaults are therefore
 declared reproduction assumptions, not exact paper hyperparameters. The main task is
@@ -30,6 +31,8 @@ zero-shot transfer between turbofans and bearings.
 Paper seeds: 72, 88, 101, 666, 226688. First smoke seed: 72. Fit-predict
 window/stride candidates: (1,1), (5,1), (10,5), (20,5), (50,50).
 Five random seeds quantify algorithm randomness, not independent asset evidence.
+This phase uses seeds 72, 88, and 101 as a fixed-configuration baseline; it is
+not presented as the paper's five-seed numeric reproduction.
 
 ## Execution gates
 
@@ -43,7 +46,7 @@ Five random seeds quantify algorithm randomness, not independent asset evidence.
 4. Test XJTU's locked PHMD RUL-to-HI equation, inverse units, fit-on-train feature
    scalers, training-only ICL contexts, label/window alignment and cache equality.
 5. After complete source files pass archive/CRC checks, run seed 72 and record
-   time/peak memory; then repeat the paper's five seeds. Use only physical GPUs
+   time/peak memory; freeze validation-selected configurations, then run seeds 88 and 101. Use only physical GPUs
    0/1/2 with explicit CUDA_VISIBLE_DEVICES and record logical cuda:0 separately.
 
 Validation-only context/stride selection depends on the top-level `test=false`
@@ -78,8 +81,9 @@ The real GPU0 retry loaded the completed cache, trained the configured LSTM for
 27 epochs, selected epoch 1 by validation loss, and evaluated the PHMD test
 devices. Seed-72 device-macro test normalized-HI MAE/RMSE were 0.20298/0.24632
 (20.30%/24.63%); inverse RUL acquisition-minute MAE/RMSE were 139.28/171.08.
-This is a single-seed pilot, not the paper's five-seed reproduction or a
-comparative result. The recovery report is in the failed run's ignored
+This is an earlier single-seed pilot, not the paper's five-seed reproduction.
+The frozen window-50, learning-rate-1e-4 run is a separate later result below.
+The recovery report is in the failed run's ignored
 `artifacts/.../cache_recovery_report.json`; the CPU preflight command and status
 are in `artifacts/picid_seed72_xjtu_lstm/runs/cache_preflight_2026-09-27/experiment_manifest.json`.
 The successful retry metrics are in
@@ -97,9 +101,9 @@ device-macro normalized-HI MAE/RMSE were 21.06%/26.14%, and PHM score was
 0.23328. For comparison, the paper's Appendix Table 15 gives XGBoost normalized
 MAE 19.20±0.00%, and Table 16 gives PHM score 20.14±0.00. This is not an exact
 reproduction: the paper does not expose the XGBoost tree search grid, the
-improved copy uses the pinned library defaults (with 1,000 rounds and seed 42
-retained from the released wrapper), only seed 72 is run, and the PHMD test set
-was accidentally evaluated on one unselected 1/1 run before the test gate fix.
+this historical pilot used pinned library defaults with 1,000 rounds and seed
+42, and the PHMD test set was accidentally evaluated on one unselected 1/1 run
+before the test gate fix.
 No test values were used to choose 50/50, but the test is not fully blind, so
 these metrics are exploratory pending a clean external/independent evaluation.
 
@@ -123,7 +127,8 @@ were:
 
 Validation therefore selects 50/50 for this one split/seed. Do not interpret
 the unusually large gap as reliable evidence: 50/50 creates 23,000 flattened
-features, 46 times TabPFN v2's 500-feature pretraining limit. The wrapper's
+features, 46 times TabPFN v2's expected 500-feature range; this alone does not invalidate
+the experiment. The wrapper's
 `ignore_pretraining_limits=true` permits the run but does not make this
 feature-count extrapolation in-distribution. This is a single-seed
 validation-only pilot, not a five-seed reproduction.
@@ -136,8 +141,10 @@ serialized fitted model and enabled the existing PICID query-yield wrapper at
 initial full-batch attempt had already accessed the test input, and the XGBoost
 pilot had also evaluated this PHMD test split, so no subsequent result on this
 split can be described as blind confirmation. There is no TabPFN test result
-to compare with the XGBoost/LSTM pilots, and no further 50/50 test retry is
-planned. The failed and validation-only runs have per-run manifests under their
+to compare with the XGBoost/LSTM pilots, and execution-equivalent retries remain permitted after memory and throughput
+preflight. Test-input forward OOM alone is not label leakage; audit whether
+test data influenced fitting or selection and whether query batching changes
+predictions. The failed and validation-only runs have per-run manifests under their
 ignored `artifacts/` experiment directories.
 
 - The transform now accepts both aggregation parameter names and rejects
@@ -190,3 +197,249 @@ descriptive oracle curves, not deployable threshold guarantees. Bootstrap whole
 devices; label insufficient sample support explicitly. Do not claim 95%-confidence
 FPR <= 5% from correlated timestamps. New method design follows replication and
 the literature matrix; no BA-TCT/DH implementation is presupposed.
+
+
+## Next-stage protocol wiring (2026-09-28)
+
+Work is isolated in branch `research/formal-baselines` and worktree
+`.worktrees/formal-baselines`; the source snapshot remains unchanged. The full
+seed-72 validation candidate grid and gated final task grid are in
+`formal_tasks.json`; the per-model progress and frozen files record which
+candidates have since completed.
+The independent TabDPT 1.3.0 environment has a recorded lock, and its pinned
+weight digests, cross-checked against the official model file page, are stored
+in `patches/tabdpt-weights.json`. Per-model selection progress, frozen
+seed-72 configurations, final-run manifests and audited result tables record
+the experiments completed after this task registry was written.
+
+On a fixed 2,049-row by 18-feature NC-P slice with 512 queries, the old TabDPT
+model produced identical predictions at batch 32, then exceeded the configured
+1e-4 tolerance at larger batches; batch 512 OOMed. The newer model, using its native subsampling with a 2,048-row context, was stable
+through the tested 512 batch size on that slice. TabPFN was stable at batch 32
+and differed at 128 and above. These short checks only guide execution settings.
+TabDPT 1.3 subsequently completed full NC-P validation selection and its three
+selected-configuration test runs; the seed-72 full validation estimate was
+about 45 seconds. TabDPT 1.1.13 full validation is still running at the status
+reported below. TabPFN's full-context failure remains unresolved and has no
+test score. Detailed logs and traces are under the local ignored
+`artifacts/formal/`.
+
+The old-worktree result archive has 349 files (4,562,643,595 bytes) with matching
+source/target SHA-256 digests. The original worktree remains in place until
+cache restoration is demonstrated from the new path. XJTU cache reuse requires
+retaining the prior worktree path strings in `paths.cache_path` and
+`datasource.cache_dir`; although both point to the same shared directory, PICID
+includes those strings in cache identity. A new-path run that omitted these
+legacy path values reread the 9,216 source files (about 355 seconds) before any
+metrics; it was stopped before model fitting. The seed-72 LSTM selection and
+final test runs then used the verified original cache identity.
+
+
+## N-CMAPSS engine-boundary correction
+
+The audit of the existing transformed cache found row-aligned `unit` and `n_DS`
+segments for each source (DS01, DS04, DS05, DS07), but the old window transform
+could flatten a source segment before sliding windows. The validation-only XJTU
+LSTM sweep was resumed after the correction and all nine seed-72 candidates now
+have validation records; its selected configuration is frozen separately. The
+new NC-P transform aggregates each ragged engine independently, retains the
+engine axis for `TimeseriesTabularizer`, and then creates histories inside each
+engine. A synthetic two-engine test checks both aggregate values and the
+resulting history rows. A cached NC-P audit checks all 40 source/unit/split
+groups, row counts, and the source-plus-unit identity. Any previous NC-P model
+outputs produced before this correction are protocol-invalid for non-unit
+windows and must be excluded.
+
+The first NC-P LSTM validation attempt then exposed a second interface mismatch:
+`RULContextBatchDataset` required datasource `unit_ids` metadata, while NC-P's
+composite `(source, unit)` IDs are built as aligned row data. The dataset now
+sequences those IDs with the same ragged windows and emits the last ID at each
+query. A two-engine regression test verifies alignment. The failed pre-fit
+attempt has no validation or test score and is excluded. The corrected LSTM
+validation grid is running with `test=false` on physical GPU 0.
+
+
+## Runtime-specific cache identities
+
+The old TabDPT 1.1 environment uses Awkward 2.9.0; the isolated TabDPT 1.3
+environment uses Awkward 2.14.0 and `awkward-cpp` 57. Sharing a cache root
+across those environments caused an Awkward pickle schema load failure before
+any baseline fit. Candidate runs now use separate roots under
+`datasets/cache/formal-py312-awkw29/` and
+`datasets/cache/formal-py312-awkw214/`. The raw dataset files remain shared.
+
+An early parallel TabDPT 1.1.13 seed-72 attempt omitted candidate-specific
+`experiment_group` values. The window-5 and window-10 launches landed in the
+same second-level Hydra output directory and shared `model_cache_dir`; window 5
+then failed with a 90-versus-180 feature-count mismatch, and window 10 was
+excluded and stopped at six of eight ensembles. Neither attempt accessed test
+metrics or enters validation selection. Candidate runners now assign a unique
+Hydra output group to every window/stride configuration; corrected window-5 and
+window-10 runs are in progress.
+
+## NC-P unit-isolated validation integration
+
+With `seq_len=5`, stride 1, and tests disabled, the real preprocessing path now
+emits 67,709 validation queries with 90 features. Their source/device lengths
+are DS01-unit06 13,947, DS04-unit06 19,784, DS05-unit06 16,233, and DS07-unit06
+17,745; the sum is exactly 67,709. The 20 train engines remain separately
+identified. A synthetic boundary regression test exercises both the ragged
+window aggregator and `TimeseriesTabularizer`. The quick integration outputs
+and identity manifest are under ignored `artifacts/formal/inputs/nc_p_unitwise_w5_s1_final/`.
+
+## Updated model execution evidence
+
+- TabDPT 1.3, context 2,048, seed 72, eight ensembles and inference batch 512
+  selected on a 2,049-row by 18-feature NC-P slice. The configuration is
+  numerically stable across tested batches up to 512 with a 1e-4 tolerance.
+  The full-data window-1 validation candidate ran test-free and reported
+  `val/loss=0.0086336`, normalized MAE 0.0704 and RMSE 0.0929. Peak observed
+  process memory was about 1.4 GiB; validation inference itself took about
+  45 seconds. A subsequent aggregate-only seed-72 test produced normalized MAE/RMSE
+  0.0707/0.0984, but it lacked engine IDs and is retained as exploratory only.
+  The per-engine `MultiUnitEvaluator` protocol is now wired. The three selected
+  fixed-configuration seeds have been rerun under that protocol; the corrected
+  results are reported below.
+- TabPFN v2.2.1, eight estimators, passed replay and batch-32 equivalence on
+  16,384 training rows and one query, with 1.61 GiB peak allocated and 7.36
+  seconds for the replay query. At 265,359 NC-P training rows the one-query
+  full-context preflight ran for about 1,197 seconds and ended with
+  `CUDA error: invalid configuration argument`; observed peak allocation was
+  not captured, and the largest sampled GPU usage was 11.3 GiB. This failure
+  is not an OOM determination. Full-context TabPFN remains blocked until the
+  failing kernel is isolated or an explicitly budgeted context strategy is
+  selected under validation-only evidence.
+- The earlier XJTU LSTM validation-only search has all nine seed-72 losses.
+  It selects window 50, train batch 512, learning rate 1e-4 with minimum
+  normalized validation loss 0.047744. The frozen configuration and result
+  digest are in `xjtu_lstm_frozen_seed72.json`; seed-72 final device-macro
+  metrics are recorded below. The public-test history remains disclosed above.
+
+
+## NC-P device-macro evaluation contract
+
+The selected fit/predict dataset now constructs `unit_id=(n_DS, source-local unit)`
+after unit-wise aggregation, tabularizes one current-point ID per query with the
+same sequence stride, and passes those IDs through the evaluator. The experiment
+uses `MultiUnitEvaluator`, so `*_mean` metrics average engine metrics instead of
+all timestamps together. `CustomEvaluatorLightningModule.process_outputs`
+removes the singleton fit-predict task axis from IDs before evaluator updates.
+Regression tests cover composite IDs and the metric macro. Final seed-72 results
+were rerun with this corrected reporting protocol before seeds 88 and 101 were
+launched.
+
+## NC-P device-macro evaluator wiring
+
+NC-P fit/predict rows now carry a two-column `unit_id=(n_DS, unit)` vector
+through the same per-unit window sequence as the model input. The dataset
+collates that vector with each query row and `MultiUnitEvaluator` reports each
+engine's metrics plus an equal-engine `*_mean`. The adapter removes only the
+singleton fit-predict task dimension; it verifies the remaining ID row count
+against predictions. Synthetic tests exercise ID generation, task-axis removal,
+per-engine aggregation, temporal windows, and the evaluator's macro arithmetic.
+The real window-5 integration exports 67,709 aligned validation IDs. The prior
+aggregate-only NC-P seed-72 test is retained as exploratory and is excluded from
+final device-macro summaries; it must be repeated with the new evaluator before
+being considered for the three-seed table.
+
+
+For the formal three-seed runs, `subset_seed=72` stays fixed because the
+registered NC-P protocol uses `subset_ratio=1.0`; this avoids invalidating the
+preprocessed cache without changing the selected rows. Model RNG remains the
+reported run seed (72, 88 or 101).
+
+## Device-macro final results
+
+After adding the composite engine ID and `MultiUnitEvaluator`, NC-P TabDPT 1.3
+was reevaluated with the frozen window-1 configuration for seeds 72, 88 and
+101. The normalized equal-engine macro MAE is 0.07206 (seed sample SD 0.00070),
+RMSE is 0.09712 (SD 0.00093), and PHM score is 0.41839 (SD 0.00101). Across
+the 16 held-out engines, the source-stratified 95% bootstrap interval is
+0.06494–0.07856 for MAE and 0.08921–0.10441 for RMSE. These intervals resample
+engines within each of the four source groups and average the three seed scores
+per engine; seed SD is reported separately. The intervals describe variation
+over this small benchmark split and do not imply a population-level guarantee.
+The per-seed, per-engine, per-source results and input digests are in
+`artifacts/formal/results/nc_p_tabdpt130_three_seed_summary.json` and the three
+adjacent `nc_p_tabdpt130_device_metrics_seed*.json` reports. The earlier
+aggregate-only seed-72 test remains exploratory and is excluded.
+The equal-engine NASA score, recomputed from saved raw-RUL predictions using
+PICID's `NASAScoreMetric` formula, is 1.39440 (seed SD 0.01628); this preserves
+the N-CMAPSS paper's asymmetric score alongside the secondary PHM score.
+Its source-stratified engine bootstrap 95% interval is 1.138–1.656.
+Per-device NASA values and seed aggregation are in the adjacent
+`nc_p_tabdpt130_nasa_*` reports.
+The seed-averaged normalized MAE varies by NC-P source: DS01 0.06376, DS04
+0.07999, DS05 0.05866 and DS07 0.08584 (four engines per source). This is a
+descriptive source contrast on the fixed test split, not an independently
+replicated source-generalization estimate.
+
+Critical-phase errors use fixed horizons at 5%, 10% and 20% of the median
+maximum RUL among the 20 NC-P training engines (units 1--5 in DS01/04/05/07).
+The raw training HDF5 targets give a median of 84.0 target units, so the frozen
+thresholds are 4.2, 8.4 and 16.8. No validation or test device contributes to
+these thresholds. Test rows are included in a phase only when their observed
+target is at or below the frozen threshold; every engine has at least 307
+queries in the 5% phase. Across the three seeds, equal-engine normalized MAE
+is 0.01223 (SD 0.00048), 0.01401 (SD 0.00027), and 0.01833 (SD 0.00021) for
+the 5%, 10%, and 20% horizons. Their source-stratified device bootstrap
+intervals are 0.00974–0.01477, 0.01066–0.01743, and 0.01366–0.02323,
+respectively. The horizon derivation, raw-data digests, per-device errors and
+seed summaries are in `artifacts/formal/results/nc_p_critical_horizons.json`
+and the adjacent `nc_p_tabdpt130_critical_*` reports. These are retrospective
+RUL-error strata for baseline characterization, not online warning results.
+
+The selected XJTU-SY PHMD-split LSTM configuration (window 50, learning rate
+1e-4, batch 512) was evaluated for all three fixed seeds. Across four test
+bearings, normalized-HI device-macro MAE/RMSE are 0.18348 (seed SD 0.00145) /
+0.22039 (SD 0.00075), inverse-RUL MAE/RMSE are 122.56 (SD 0.47) / 144.92
+(SD 0.41) acquisition minutes, and device-macro PHM score is 0.28087
+(SD 0.00542). The source of device variation is visible in the per-bearing
+reports; the normalized MAE's four-bearing bootstrap 95% interval is
+0.15051–0.22448, separately from seed variation. Raw RUL-minute results are
+offline inverse-transform metrics using the PHMD benchmark's known bearing
+lifetimes; they are not online warning estimates. The split's public test
+history has prior access, so these scores are reproducibility results, not
+blind confirmation. Per-bearing and three-seed outputs are in
+`artifacts/formal/results/xjtu_lstm_*`.
+
+The TabDPT 1.3 configuration was selected on seed 72 using the registered
+validation loss and then held fixed for all three final seeds. The selected
+candidate used context size 2,048, eight ensembles and inference batch 512.
+The measured per-seed elapsed time was about 193 seconds, with sampled process
+peak memory about 1,012 MiB. Seed-88/101 attempts made before the evaluator fix
+were aborted before metrics and are not included. The corrected runs completed
+on physical GPUs 0 and 2 while an older TabDPT run occupied physical GPU 1;
+their manifests record physical and logical device IDs.
+
+The NC-P XGBoost seed-72 validation grid completed all five window/stride
+candidates with `test=false`. Validation losses were 0.027496 (1/1), 0.027943
+(5/1), 0.032501 (10/5), 0.033827 (20/5) and 0.043784 (50/50); the selected
+configuration is 1/1. Its three selected-configuration test runs completed on
+CPU in about 20.3 seconds each. Equal-engine normalized MAE/RMSE are 0.12336 /
+0.15471, PHM score is 0.29329, and equal-engine raw-unit NASA score is 6.33798
+(source-stratified device bootstrap 95% interval 3.885–10.407).
+The NASA score and all per-device errors repeat exactly across the three seeds.
+The 5%, 10%, and 20% critical-phase normalized MAE values are 0.08525, 0.08959,
+and 0.09745. The three `predictions.nc`
+files have the same SHA-256 and all 16 per-device metrics match, so this XGBoost
+setup is deterministic under the registered configuration; its zero seed SD
+must not be interpreted as independent seed evidence. Per-seed device metrics,
+critical errors, prediction audits and the aggregated report are retained under
+`artifacts/formal/results/nc_p_xgboost_*`.
+
+The TabDPT 1.1.13 seed-72 window-1 validation run completed on 2026-09-28 at
+13:22 Asia/Shanghai. Its `val/loss` was 0.00977; all eight ensembles took
+2 h 6 min and the tracked run, including preprocessing, took 8,522 seconds.
+The sampled peak memory on its assigned physical GPU 1 was 3,866 MiB. Test
+evaluation was disabled and confirmed in the log.
+
+The corrected window-5/stride-1 and window-10/stride-5 candidates were
+restarted at 14:55 with unique Hydra `experiment_group` values and isolated
+`model_cache_dir` paths on physical GPUs 2 and 0. Their validation runs remain
+in progress; their test stages are disabled.
+
+Selection uses the plan's configured validation loss (`val/loss`, normalized
+query-weighted MSE). The headline test table is separately device-macro. These
+are different estimands and are both retained; the test scores did not affect
+selection.

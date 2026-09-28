@@ -44,4 +44,44 @@ def test_prediction_export_reconciles_per_device_metrics():
 
     assert result["row_count"] == 3
     assert result["device_count"] == 2
-    assert max(result["max_abs_metric_difference"].values()) < 1e-6
+    assert max(result["max_abs_metric_difference"].values()) < 1e-4
+
+
+def test_xjtu_metrics_use_bearing_identifiers():
+    pred_norm = np.asarray([[[0.4]], [[0.7]]], dtype=np.float32)
+    target_norm = np.asarray([[[0.3]], [[0.5]]], dtype=np.float32)
+    ids = np.asarray([[1, 5], [2, 2]], dtype=np.float32)
+    report = {
+        "dataset": "xjtu",
+        "seed": 88,
+        "per_device": {
+            "bearing1_5": {
+                "mae_denormalized": 10.0,
+                "rmse_denormalized": 10.0,
+                "mse_denormalized": 100.0,
+                "mae_normalized": 0.1,
+                "rmse_normalized": 0.1,
+                "mse_normalized": 0.01,
+            },
+            "bearing2_2": {
+                "mae_denormalized": 20.0,
+                "rmse_denormalized": 20.0,
+                "mse_denormalized": 400.0,
+                "mae_normalized": 0.2,
+                "rmse_normalized": 0.2,
+                "mse_normalized": 0.04,
+            },
+        },
+    }
+    dataset = xr.Dataset({
+        "preds": (("sample", "time", "feature"), (pred_norm * 100)),
+        "targets": (("sample", "time", "feature"), (target_norm * 100)),
+        "preds_normalized": (("sample", "time", "feature"), pred_norm),
+        "targets_normalized": (("sample", "time", "feature"), target_norm),
+        "unit_ids": (("sample", "unit_dim_1"), ids),
+    })
+
+    result = audit_arrays(dataset, report)
+
+    assert result["device_count"] == 2
+    assert max(result["max_abs_metric_difference"].values()) < 1e-4

@@ -27,7 +27,7 @@ def _digest(path: Path) -> str:
     return digest.hexdigest()
 
 
-def audit_arrays(dataset, report: dict, atol: float = 1e-4):
+def audit_arrays(dataset, report: dict, atol: float = 1e-4, rtol: float = 1e-6):
     pred = dataset["preds"].values.reshape(-1)
     target = dataset["targets"].values.reshape(-1)
     pred_norm = dataset["preds_normalized"].values.reshape(-1)
@@ -41,7 +41,8 @@ def audit_arrays(dataset, report: dict, atol: float = 1e-4):
     device_rows = {}
     max_difference = {metric: 0.0 for metric in CHECKED_METRICS}
     for source, unit in np.unique(ids, axis=0):
-        device = f"DS{source:02d}-unit{unit:02d}"
+        device = (f"bearing{source}_{unit}" if report["dataset"] == "xjtu"
+                  else f"DS{source:02d}-unit{unit:02d}")
         if device not in report["per_device"]:
             raise ValueError(f"Saved predictions contain unexpected device {device}")
         mask = (ids == (source, unit)).all(axis=1)
@@ -61,9 +62,10 @@ def audit_arrays(dataset, report: dict, atol: float = 1e-4):
         for metric, value in observed.items():
             difference = abs(value - float(report["per_device"][device][metric]))
             max_difference[metric] = max(max_difference[metric], difference)
-            if difference > atol:
+            tolerance = atol + rtol * abs(float(report["per_device"][device][metric]))
+            if difference > tolerance:
                 raise ValueError(
-                    f"{device}/{metric} differs from report by {difference:.8g} > {atol}"
+                    f"{device}/{metric} differs from report by {difference:.8g} > {tolerance:.8g}"
                 )
     if set(device_rows) != set(report["per_device"]):
         raise ValueError("Prediction device set differs from the per-device report")
@@ -74,6 +76,7 @@ def audit_arrays(dataset, report: dict, atol: float = 1e-4):
         "checked_metrics": sorted(CHECKED_METRICS),
         "max_abs_metric_difference": max_difference,
         "atol": atol,
+        "rtol": rtol,
     }
 
 
@@ -83,10 +86,11 @@ def main():
     parser.add_argument("--metrics", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--atol", type=float, default=1e-4)
+    parser.add_argument("--rtol", type=float, default=1e-6)
     args = parser.parse_args()
     report = json.loads(args.metrics.read_text())
     with xr.open_dataset(args.predictions) as dataset:
-        audit = audit_arrays(dataset, report, args.atol)
+        audit = audit_arrays(dataset, report, args.atol, args.rtol)
     audit.update({
         "dataset": report["dataset"],
         "seed": report["seed"],

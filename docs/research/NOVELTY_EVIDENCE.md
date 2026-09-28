@@ -29,3 +29,7 @@ The two questions may overlap with other recent work. Dedicated full-text
 retrieval/context, survival-TFM, and industrial early-warning literature searches
 remain outstanding. A single authoritative paper cannot prove two new methods
 novel, and this matrix does not establish that novelty.
+
+## 2026-09-28 evidence refresh
+
+Full-text HTML was additionally reviewed for [End-to-End Compression for Tabular Foundation Models (TACO, arXiv:2602.05649)](https://arxiv.org/html/2602.05649v1), [Tabular Foundation Models Can Do Survival Analysis (arXiv:2601.22259)](https://arxiv.org/html/2601.22259v1), [Tabular Foundation Models for Clinical Survival Analysis via Survival-Aware Adaptation (arXiv:2606.12006)](https://arxiv.org/html/2606.12006v1), and [SurvPFN (arXiv:2606.04564)](https://arxiv.org/html/2606.04564v1). TACO rules out a generic learned-table-compression claim. The 2026 survival papers rule out generic dynamic TFM failure-risk formulation as novelty; any remaining warning direction needs a more specific device-level industrial calibration question, while the available evaluation units remain small. Candidate contribution directions and stop criteria are detailed in [CANDIDATE_EVIDENCE_MATRIX.md](CANDIDATE_EVIDENCE_MATRIX.md).

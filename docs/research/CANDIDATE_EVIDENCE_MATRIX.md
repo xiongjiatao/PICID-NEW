@@ -1,0 +1,40 @@
+# PICID candidate contribution evidence matrix
+
+Evidence reviewed 2026-09-28. This is a research decision record, not a novelty claim. The local 43-page TFM-PHM source and the official TabDPT v1.3 release were also checked. Recheck this landscape before method submission because relevant preprints are appearing rapidly.
+
+## Candidate A — preserving temporal degradation evidence under a fixed inference budget
+
+**Question.** Given identical observed history rows, context count, query points, model weights, and measured latency/memory budget, which temporal statistics must survive context reduction for cross-device RUL estimation?
+
+**What is already covered.** TFM-PHM already turns PHM history into table rows, tests five window/stride settings, and reports that time tabularization changes performance. TACO (arXiv:2602.05649, submitted to ICML per its HTML source) learns an end-to-end latent compressed training table for a tabular foundation model and reports large inference/memory reductions. Plain PCA, representative-context retrieval, batching, or an engineering cache cannot be a contribution by themselves. TabDPT has native retrieval, feature reduction and v1.3 context reduction choices that need direct controls.
+
+**Unresolved, narrower hypothesis.** A generic compressed row set may preserve pointwise feature distribution while erasing ordered degradation phase, local derivative, or a change-point that distinguishes stable operation from approach to failure. A time-aware selector could preserve these signals at an equal number of context rows. This is a falsifiable domain-specific hypothesis, not an established property of TACO or TabDPT.
+
+**Required protocol.** Keep device split, query set, original history support, context rows, batch size and seed fixed. Compare original chronological windows, flattened-window baseline, training-fitted PCA, fixed multiscale statistics, uniform/device-balanced row subsampling, TabDPT native retrieval/subsampling, and TACO if its public implementation/checkpoint is runnable under a compatible protocol. Match both context-row count and measured peak memory/query latency. Report per-device MAE/RMSE, critical-stage errors, and confidence intervals bootstrapped over devices; report seed variation separately. Audit every produced window against its source device and raw time indices before fitting.
+
+**Evidence needed before implementation.** A measured accuracy-versus-budget curve from a validation-only sweep must show that current methods lose performance specifically around identifiable degradation transitions, and that the signal loss is not explained by row count, feature count, stride, context retrieval, or a split artifact. A local synthetic unit test should prove no history window crosses device boundaries. Candidate mechanism should then target the observed lost evidence.
+
+**Falsification / stop rule.** Stop or reformulate if equal-budget PCA/statistics/native TabDPT preserve critical-stage metrics, if no robust phase-specific error appears across device resamples, if the gain disappears under matched chronological query points, or if a released general-purpose compressor already provides the same temporal guarantee. Current status: **not established**. The pilot batch-size tests in `artifacts/formal/ncp_tabdpt*_batch_preflight` do not test this hypothesis.
+
+## Candidate B — reliable failure-proximity alerts from dynamic predictions
+
+**Question.** Can a model produce useful, calibrated probabilities that a device enters a predeclared failure-proximity horizon, using only information available at the current timestamp and calibration devices independent of evaluation devices?
+
+**What is already covered.** TFM-PHM studies predictive maintenance/prognostics and interprets TabPFN output probabilistically. TabDPT v1.3 adds a native full regression distribution with quantile/statistic helpers. “Predict an event probability,” a residual empirical CDF, a generic discrete-time classifier, or ordinary conformal intervals are not new alone. The 2026 *Tabular Foundation Models Can Do Survival Analysis* paper studies static and dynamic censored outcomes by time-discretized binary tasks and gives a consistency result under conditional independent censoring. *Tabular Foundation Models for Clinical Survival Analysis via Survival-Aware Adaptation* studies TabPFN/TabDPT/TabICL, interval reformulation and an MTLR head. SurvPFN studies a pretrained event-time density with an explicit censoring-aware likelihood. These studies make generic TFM survival and dynamic event-risk framing occupied ground.
+
+**Industrial gap to test, not presume.** The remaining plausible gap is deployment-aligned, device-level warning under limited independent failures and condition changes, with historical dependence, repeated alerts and a fixed maintenance horizon all accounted for. The stated NC-P split has 16 held-out engines (four in each of DS01, DS04, DS05 and DS07); the XJTU PHMD split has four test bearings. Those counts support device-level analysis but remain small for high-confidence false-alarm guarantees, especially for source-conditional claims with only four NC-P engines per source. N-CMAPSS benchmark terminal labels and XJTU dataset end points are operational proxies, not verified field maintenance events. This gap may be too weakly sampled to support a paper claim.
+
+**Required comparisons.** RUL threshold; TabDPT 1.3 full CDF; TabPFN full output/residual ECDF; separately held-out device calibration; discrete-time event classifier and a small DeepHit/MTLR-style model; calibration off/on; condition and device-wise leave-out. Derive 5%, 10%, 20% horizons from training-device median life in native units, then freeze them. For XJTU derive labels from the raw timeline and never use an evaluation bearing's realized total life to create an online horizon.
+
+**Metrics and uncertainty.** Device-balanced Brier/log loss and calibration plots, event-risk ranking/AUPRC, detection at calibration-fixed empirical false-alarm levels, alarms per device, missed events and lead-time distribution. Bootstrap whole devices. State explicitly when calibration sample size cannot support a claimed bound; do not treat correlated timestamps as independent Bernoulli trials. Compare prediction-distribution coverage separately from decision quality.
+
+**Falsification / stop rule.** Stop if the native predictive CDF or a simple calibrated RUL threshold matches warning utility at the same false-alarm burden, if independent calibration devices are too few, if results depend on evaluation terminal life, or if horizon labels cannot represent an observable maintenance decision. Current status: **not established; likely an evaluation/design contribution unless the mechanism addresses a measured failure mode**.
+
+## Source register
+
+- Theiler et al., [Towards Unified and Data-Efficient Prognostics and Health Management with Tabular Foundation Models](https://arxiv.org/html/2606.05481v1), especially its time-tabularization experiments and probabilistic-output discussion.
+- Zabërgja et al., [End-to-End Compression for Tabular Foundation Models](https://arxiv.org/html/2602.05649v1), especially sections 3–4. It learns a latent compressed table jointly with its predictor; this is direct overlap with generic context compression.
+- [Tabular Foundation Models Can Do Survival Analysis](https://arxiv.org/html/2601.22259v1), especially its dynamic conditional survival formulation, interval tasks and assumptions.
+- [Tabular Foundation Models for Clinical Survival Analysis via Survival-Aware Adaptation](https://arxiv.org/html/2606.12006v1), especially its TabPFN/TabDPT/TabICL evaluation and MTLR head.
+- [SurvPFN: Towards Foundation Models for Survival Predictions](https://arxiv.org/html/2606.04564v1), especially its censored density/ranking objective and event-time distribution.
+- [Official TabDPT v1.3.0 release](https://github.com/layer6ai-labs/TabDPT-inference/releases/tag/v1.3.0), which adds full probabilistic regression output and `BarDistribution` helpers.
