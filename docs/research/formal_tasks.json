@@ -20,7 +20,15 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.009771773591637611,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/nc_p_tabdpt_w1_s1_lrNone_post_unitwise_awkw29",
+      "physical_gpu": 1,
+      "logical_device": "cuda:0",
+      "progress_source": "artifacts/formal/nc_p_tabdpt_selection_progress.json"
     },
     {
       "dataset": "nc_p",
@@ -42,7 +50,15 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.01201151218265295,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/nc_p_tabdpt_w5_s1_lrNone_post_unitwise_awkw29",
+      "physical_gpu": 1,
+      "logical_device": "cuda:0",
+      "progress_source": "artifacts/formal/nc_p_tabdpt_selection_progress.json"
     },
     {
       "dataset": "nc_p",
@@ -64,7 +80,12 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "running",
+      "output": "artifacts/formal/selection_runs/nc_p_tabdpt_w10_s5_lrNone_awkw29_fixed_hydra_gpu0",
+      "physical_gpu": 0,
+      "logical_device": "cuda:0",
+      "test_disabled_log_verified": "pending_final_log"
     },
     {
       "dataset": "nc_p",
@@ -131,7 +152,16 @@
         "model=tabdpt130_fit_predict"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.008633623830974102,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/nc_p_tabdpt130_w1_s1_retry2",
+      "physical_gpu": 2,
+      "logical_device": "cuda:0",
+      "reused_existing_result": true,
+      "progress_source": "artifacts/formal/nc_p_tabdpt130_selection_progress.json"
     },
     {
       "dataset": "nc_p",
@@ -154,7 +184,16 @@
         "model=tabdpt130_fit_predict"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.009792808443307877,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/nc_p_tabdpt130_w5_s1_lrNone_modern_retry1",
+      "physical_gpu": 2,
+      "logical_device": "cuda:0",
+      "reused_existing_result": true,
+      "progress_source": "artifacts/formal/nc_p_tabdpt130_selection_progress.json"
     },
     {
       "dataset": "nc_p",
@@ -177,7 +216,15 @@
         "model=tabdpt130_fit_predict"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.010823069140315056,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/nc_p_tabdpt130_w10_s5_lrNone_modern_retry2",
+      "physical_gpu": 2,
+      "logical_device": "cuda:0",
+      "progress_source": "artifacts/formal/nc_p_tabdpt130_selection_progress.json"
     },
     {
       "dataset": "nc_p",
@@ -200,7 +247,15 @@
         "model=tabdpt130_fit_predict"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.011504161171615124,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/nc_p_tabdpt130_w20_s5_lrNone_modern_retry2",
+      "physical_gpu": 2,
+      "logical_device": "cuda:0",
+      "progress_source": "artifacts/formal/nc_p_tabdpt130_selection_progress.json"
     },
     {
       "dataset": "nc_p",
@@ -223,7 +278,15 @@
         "model=tabdpt130_fit_predict"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.018203699961304665,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/nc_p_tabdpt130_w50_s50_lrNone_modern_retry2",
+      "physical_gpu": 2,
+      "logical_device": "cuda:0",
+      "progress_source": "artifacts/formal/nc_p_tabdpt130_selection_progress.json"
     },
     {
       "dataset": "nc_p",
@@ -245,7 +308,8 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "blocked_full_context_cuda_invalid_configuration_pending_diagnosis"
     },
     {
       "dataset": "nc_p",
@@ -267,7 +331,8 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "blocked_full_context_cuda_invalid_configuration_pending_diagnosis"
     },
     {
       "dataset": "nc_p",
@@ -289,7 +354,8 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "blocked_full_context_cuda_invalid_configuration_pending_diagnosis"
     },
     {
       "dataset": "nc_p",
@@ -311,7 +377,8 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "blocked_full_context_cuda_invalid_configuration_pending_diagnosis"
     },
     {
       "dataset": "nc_p",
@@ -333,7 +400,8 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "blocked_full_context_cuda_invalid_configuration_pending_diagnosis"
     },
     {
       "dataset": "nc_p",
@@ -355,7 +423,17 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.027495652437210083,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "artifacts/formal/selection_runs/nc_p_xgboost_w1_s1_lrNone_unitwise_awkw29_retry2",
+      "logical_device": "cpu",
+      "reused_existing_result": true,
+      "progress_source": "artifacts/formal/nc_p_xgboost_selection_progress.json",
+      "selection_decision": "selected_by_seed72_validation_loss",
+      "frozen_config_sha256": "98a17daf4f10910a96507359f22c9743554df521d0e8e88ed98baa40c3e373b2"
     },
     {
       "dataset": "nc_p",
@@ -377,7 +455,15 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.02794310636818409,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "artifacts/formal/selection_runs/nc_p_xgboost_w5_s1_lrNone_unitwise_awkw29_retry2",
+      "logical_device": "cpu",
+      "reused_existing_result": true,
+      "progress_source": "artifacts/formal/nc_p_xgboost_selection_progress.json"
     },
     {
       "dataset": "nc_p",
@@ -399,7 +485,15 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.03250052034854889,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "artifacts/formal/selection_runs/nc_p_xgboost_w10_s5_lrNone_unitwise_awkw29_retry2",
+      "logical_device": "cpu",
+      "reused_existing_result": true,
+      "progress_source": "artifacts/formal/nc_p_xgboost_selection_progress.json"
     },
     {
       "dataset": "nc_p",
@@ -421,7 +515,15 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.033827044069767,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "artifacts/formal/selection_runs/nc_p_xgboost_w20_s5_lrNone_unitwise_awkw29_retry2",
+      "logical_device": "cpu",
+      "reused_existing_result": true,
+      "progress_source": "artifacts/formal/nc_p_xgboost_selection_progress.json"
     },
     {
       "dataset": "nc_p",
@@ -443,7 +545,15 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.04378357157111168,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "artifacts/formal/selection_runs/nc_p_xgboost_w50_s50_lrNone_unitwise_awkw29_retry2",
+      "logical_device": "cpu",
+      "reused_existing_result": true,
+      "progress_source": "artifacts/formal/nc_p_xgboost_selection_progress.json"
     },
     {
       "dataset": "nc_p",
@@ -470,7 +580,15 @@
         "optimization.lr=0.001"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.008006388321518898,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/nc_p_lstm_w1_s1_lr0.001_unitid_row_aligned_retry1",
+      "physical_gpu": 0,
+      "logical_device": "cuda:0",
+      "progress_source": "artifacts/formal/nc_p_lstm_selection_progress.json"
     },
     {
       "dataset": "nc_p",
@@ -497,7 +615,15 @@
         "optimization.lr=0.0005"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.008276249282062054,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/nc_p_lstm_w1_s1_lr0.0005_unitid_row_aligned_retry1",
+      "physical_gpu": 0,
+      "logical_device": "cuda:0",
+      "progress_source": "artifacts/formal/nc_p_lstm_selection_progress.json"
     },
     {
       "dataset": "nc_p",
@@ -524,7 +650,15 @@
         "optimization.lr=0.0001"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.009054653346538544,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/nc_p_lstm_w1_s1_lr0.0001_unitid_row_aligned_retry1",
+      "physical_gpu": 0,
+      "logical_device": "cuda:0",
+      "progress_source": "artifacts/formal/nc_p_lstm_selection_progress.json"
     },
     {
       "dataset": "nc_p",
@@ -551,7 +685,15 @@
         "optimization.lr=0.001"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.00846197921782732,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/nc_p_lstm_w10_s1_lr0.001_unitid_row_aligned_retry1",
+      "physical_gpu": 0,
+      "logical_device": "cuda:0",
+      "progress_source": "artifacts/formal/nc_p_lstm_selection_progress.json"
     },
     {
       "dataset": "nc_p",
@@ -578,7 +720,15 @@
         "optimization.lr=0.0005"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.007950805127620697,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/nc_p_lstm_w10_s1_lr0.0005_unitid_row_aligned_retry1",
+      "physical_gpu": 0,
+      "logical_device": "cuda:0",
+      "progress_source": "artifacts/formal/nc_p_lstm_selection_progress.json"
     },
     {
       "dataset": "nc_p",
@@ -605,7 +755,15 @@
         "optimization.lr=0.0001"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.007885945960879326,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/nc_p_lstm_w10_s1_lr0.0001_unitid_row_aligned_retry1",
+      "physical_gpu": 0,
+      "logical_device": "cuda:0",
+      "progress_source": "artifacts/formal/nc_p_lstm_selection_progress.json"
     },
     {
       "dataset": "nc_p",
@@ -632,7 +790,15 @@
         "optimization.lr=0.001"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.008213577792048454,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/nc_p_lstm_w50_s1_lr0.001_unitid_row_aligned_retry1",
+      "physical_gpu": 0,
+      "logical_device": "cuda:0",
+      "progress_source": "artifacts/formal/nc_p_lstm_selection_progress.json"
     },
     {
       "dataset": "nc_p",
@@ -659,7 +825,15 @@
         "optimization.lr=0.0005"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.007904953323304653,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/nc_p_lstm_w50_s1_lr0.0005_unitid_row_aligned_retry1",
+      "physical_gpu": 0,
+      "logical_device": "cuda:0",
+      "progress_source": "artifacts/formal/nc_p_lstm_selection_progress.json"
     },
     {
       "dataset": "nc_p",
@@ -686,7 +860,17 @@
         "optimization.lr=0.0001"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.007744602393358946,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/nc_p_lstm_w50_s1_lr0.0001_unitid_row_aligned_retry1",
+      "physical_gpu": 0,
+      "logical_device": "cuda:0",
+      "progress_source": "artifacts/formal/nc_p_lstm_selection_progress.json",
+      "selection_decision": "selected_by_seed72_validation_loss",
+      "frozen_config_sha256": "8c9b013632ce3ea98c6359d9eaa6b2dc9d3626c0cc24805ec314eda8b3d7adcc"
     },
     {
       "dataset": "xjtu",
@@ -1043,7 +1227,14 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.09629947692155838,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_xgboost_w1_s1_lrNone_formal_awkw29_cpu_escalated_retry1",
+      "logical_device": "cpu",
+      "progress_source": "artifacts/formal/xjtu_xgboost_selection_progress.json"
     },
     {
       "dataset": "xjtu",
@@ -1065,7 +1256,14 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.09254287928342819,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_xgboost_w5_s1_lrNone_formal_awkw29_cpu_escalated_retry1",
+      "logical_device": "cpu",
+      "progress_source": "artifacts/formal/xjtu_xgboost_selection_progress.json"
     },
     {
       "dataset": "xjtu",
@@ -1087,7 +1285,14 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.08753987401723862,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_xgboost_w10_s5_lrNone_formal_awkw29_cpu_escalated_retry1",
+      "logical_device": "cpu",
+      "progress_source": "artifacts/formal/xjtu_xgboost_selection_progress.json"
     },
     {
       "dataset": "xjtu",
@@ -1109,7 +1314,14 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.09615218639373779,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_xgboost_w20_s5_lrNone_formal_awkw29_cpu_escalated_retry1",
+      "logical_device": "cpu",
+      "progress_source": "artifacts/formal/xjtu_xgboost_selection_progress.json"
     },
     {
       "dataset": "xjtu",
@@ -1131,7 +1343,16 @@
         "num_threads=8"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.07709353417158127,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_xgboost_w50_s50_lrNone_formal_awkw29_cpu_escalated_retry1",
+      "logical_device": "cpu",
+      "progress_source": "artifacts/formal/xjtu_xgboost_selection_progress.json",
+      "selection_decision": "selected_by_seed72_validation_loss",
+      "frozen_config_sha256": "8e216fecff59c9c2d08bc79e6b0ab5588ecbb90affc531a744e39f01f6697ed2"
     },
     {
       "dataset": "xjtu",
@@ -1158,7 +1379,16 @@
         "optimization.lr=0.001"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.0596824549138546,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/artifacts/formal/xjtu_lstm_seed72_preflight_legacy_cachekey",
+      "physical_gpu": 0,
+      "logical_device": "cuda:0",
+      "reused_existing_result": true,
+      "progress_source": "artifacts/formal/xjtu_lstm_selection_progress.json"
     },
     {
       "dataset": "xjtu",
@@ -1185,7 +1415,16 @@
         "optimization.lr=0.0005"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.05625861510634422,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_lstm_w1_s1_lr0.0005",
+      "physical_gpu": 0,
+      "logical_device": "cuda:0",
+      "reused_existing_result": true,
+      "progress_source": "artifacts/formal/xjtu_lstm_selection_progress.json"
     },
     {
       "dataset": "xjtu",
@@ -1212,7 +1451,16 @@
         "optimization.lr=0.0001"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.053885407745838165,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_lstm_w1_s1_lr0.0001",
+      "physical_gpu": 0,
+      "logical_device": "cuda:0",
+      "reused_existing_result": true,
+      "progress_source": "artifacts/formal/xjtu_lstm_selection_progress.json"
     },
     {
       "dataset": "xjtu",
@@ -1239,7 +1487,16 @@
         "optimization.lr=0.001"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.05382581055164337,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_lstm_w10_s1_lr0.001",
+      "physical_gpu": 0,
+      "logical_device": "cuda:0",
+      "reused_existing_result": true,
+      "progress_source": "artifacts/formal/xjtu_lstm_selection_progress.json"
     },
     {
       "dataset": "xjtu",
@@ -1266,7 +1523,16 @@
         "optimization.lr=0.0005"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.05848664045333862,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_lstm_w10_s1_lr0.0005",
+      "physical_gpu": 0,
+      "logical_device": "cuda:0",
+      "reused_existing_result": true,
+      "progress_source": "artifacts/formal/xjtu_lstm_selection_progress.json"
     },
     {
       "dataset": "xjtu",
@@ -1293,7 +1559,16 @@
         "optimization.lr=0.0001"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.049430761486291885,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_lstm_w10_s1_lr0.0001",
+      "physical_gpu": 0,
+      "logical_device": "cuda:0",
+      "reused_existing_result": true,
+      "progress_source": "artifacts/formal/xjtu_lstm_selection_progress.json"
     },
     {
       "dataset": "xjtu",
@@ -1320,7 +1595,15 @@
         "optimization.lr=0.001"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.05286181718111038,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_lstm_w50_s1_lr0.001_resume_after_nc_window_fix",
+      "physical_gpu": 0,
+      "logical_device": "cuda:0",
+      "progress_source": "artifacts/formal/xjtu_lstm_selection_progress.json"
     },
     {
       "dataset": "xjtu",
@@ -1347,7 +1630,15 @@
         "optimization.lr=0.0005"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.05837417021393776,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_lstm_w50_s1_lr0.0005_resume_after_nc_window_fix",
+      "physical_gpu": 0,
+      "logical_device": "cuda:0",
+      "progress_source": "artifacts/formal/xjtu_lstm_selection_progress.json"
     },
     {
       "dataset": "xjtu",
@@ -1374,7 +1665,15 @@
         "optimization.lr=0.0001"
       ],
       "cost_estimate": null,
-      "cost_status": "not_measured_on_candidate_exact_context_and_features"
+      "cost_status": "not_measured_on_candidate_exact_context_and_features",
+      "status": "success",
+      "best_val_loss": 0.04774400219321251,
+      "test_disabled_log_verified": true,
+      "test_fields_populated": false,
+      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_lstm_w50_s1_lr0.0001_resume_after_nc_window_fix",
+      "physical_gpu": 0,
+      "logical_device": "cuda:0",
+      "progress_source": "artifacts/formal/xjtu_lstm_selection_progress.json"
     }
   ],
   "final": [
@@ -1467,21 +1766,38 @@
       "model": "lstm",
       "seed": 72,
       "stage": "final",
-      "status": "blocked_on_validation_freeze_and_execution_equivalence"
+      "status": "completed_audited_device_macro",
+      "physical_gpus": [
+        0
+      ],
+      "logical_device": "cuda:0",
+      "result": "artifacts/formal/results/nc_p_lstm_device_metrics_seed72.json",
+      "prediction_audit": "artifacts/formal/results/nc_p_lstm_prediction_audit_seed72.json",
+      "elapsed_seconds": 2306.6390105504543
     },
     {
       "dataset": "nc_p",
       "model": "lstm",
       "seed": 88,
       "stage": "final",
-      "status": "blocked_on_validation_freeze_and_execution_equivalence"
+      "status": "running",
+      "physical_gpus": [
+        3
+      ],
+      "logical_device": "cuda:0",
+      "output": "artifacts/formal/nc_p_lstm_selected_seed88_final"
     },
     {
       "dataset": "nc_p",
       "model": "lstm",
       "seed": 101,
       "stage": "final",
-      "status": "blocked_on_validation_freeze_and_execution_equivalence"
+      "status": "running",
+      "physical_gpus": [
+        2
+      ],
+      "logical_device": "cuda:0",
+      "output": "artifacts/formal/nc_p_lstm_selected_seed101_final"
     },
     {
       "dataset": "xjtu",
@@ -1551,21 +1867,39 @@
       "model": "xgboost",
       "seed": 72,
       "stage": "final",
-      "status": "blocked_on_validation_freeze_and_execution_equivalence"
+      "status": "completed_audited_device_macro_deterministic_replay",
+      "physical_gpus": [],
+      "logical_device": "cpu",
+      "result": "artifacts/formal/results/xjtu_xgboost_device_metrics_seed72.json",
+      "prediction_audit": "artifacts/formal/results/xjtu_xgboost_prediction_audit_seed72.json",
+      "elapsed_seconds": 61.5,
+      "frozen_config_sha256": "8e216fecff59c9c2d08bc79e6b0ab5588ecbb90affc531a744e39f01f6697ed2"
     },
     {
       "dataset": "xjtu",
       "model": "xgboost",
       "seed": 88,
       "stage": "final",
-      "status": "blocked_on_validation_freeze_and_execution_equivalence"
+      "status": "completed_audited_device_macro_deterministic_replay",
+      "physical_gpus": [],
+      "logical_device": "cpu",
+      "result": "artifacts/formal/results/xjtu_xgboost_device_metrics_seed88.json",
+      "prediction_audit": "artifacts/formal/results/xjtu_xgboost_prediction_audit_seed88.json",
+      "elapsed_seconds": 61.5,
+      "frozen_config_sha256": "8e216fecff59c9c2d08bc79e6b0ab5588ecbb90affc531a744e39f01f6697ed2"
     },
     {
       "dataset": "xjtu",
       "model": "xgboost",
       "seed": 101,
       "stage": "final",
-      "status": "blocked_on_validation_freeze_and_execution_equivalence"
+      "status": "completed_audited_device_macro_deterministic_replay",
+      "physical_gpus": [],
+      "logical_device": "cpu",
+      "result": "artifacts/formal/results/xjtu_xgboost_device_metrics_seed101.json",
+      "prediction_audit": "artifacts/formal/results/xjtu_xgboost_prediction_audit_seed101.json",
+      "elapsed_seconds": 61.5,
+      "frozen_config_sha256": "8e216fecff59c9c2d08bc79e6b0ab5588ecbb90affc531a744e39f01f6697ed2"
     },
     {
       "dataset": "xjtu",
@@ -1588,5 +1922,6 @@
       "stage": "final",
       "status": "completed_device_macro_public_test_history_disclosed"
     }
-  ]
+  ],
+  "updated_utc": "2026-09-28T09:08:12.900207+00:00"
 }

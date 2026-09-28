@@ -460,19 +460,35 @@ must not be read as a direct ranking across domains.
 | NC-P / TabDPT 1.3.0 | 0.07206 (0.00070) | 0.09712 (0.00093) | 0.41839 (0.00101) | 1.39440 (0.01628) | 0.01223 / 0.01401 / 0.01833 |
 | NC-P / XGBoost 3.1.3 | 0.12336 (0.00000) | 0.15471 (0.00000) | 0.29329 (0.00000) | 6.33798 (0.00000) | 0.08525 / 0.08959 / 0.09745 |
 | XJTU-SY PHMD / LSTM | 0.18348 (0.00145) | 0.22039 (0.00075) | 0.28087 (0.00542) | n/a | not computed |
+| XJTU-SY PHMD / XGBoost 3.1.3 | 0.21063 (0.00000) | 0.26145 (0.00000) | 0.23328 (0.00000) | n/a | not computed |
 
-XGBoost's zero seed deviation reflects identical prediction-file hashes across
-the three executions, so these runs establish deterministic replay under this
-configuration rather than independent stochastic seed evidence. XJTU inverse
-RUL errors are 122.56 (0.47) MAE and 144.92 (0.41) RMSE acquisition minutes;
-they are offline inverse-transform metrics using benchmark lifetimes. Existing
-access to the public XJTU test history is disclosed above.
+Both XGBoost rows have zero seed deviation and identical prediction-file
+SHA-256 values across all three executions. They establish deterministic replay
+under each configuration, not independent stochastic-seed evidence. XJTU
+inverse-RUL errors are 122.56 (0.47) MAE and 144.92 (0.41) RMSE acquisition
+minutes for LSTM, and 133.53 (0.00) / 167.32 (0.00) for XGBoost. They are
+offline inverse-transform metrics using benchmark lifetimes. Existing access
+to the public XJTU test history is disclosed above.
 
 The frozen configurations and audited tables are retained in
 `artifacts/formal/results/nc_p_tabdpt130_three_seed_summary.json`,
 `artifacts/formal/results/nc_p_xgboost_three_seed_summary.json`, and
-`artifacts/formal/results/xjtu_lstm_three_seed_summary.json`. NC-P LSTM seed-72
-final evaluation and the remaining TabDPT 1.1.13 validation candidates are
-still running; they are not included in this snapshot. TabPFN has no full
-NC-P score because its full-context CUDA preflight failed and remains under
-diagnosis.
+`artifacts/formal/results/xjtu_lstm_three_seed_summary.json`, and
+`artifacts/formal/results/xjtu_xgboost_three_seed_summary.json`.
+
+XJTU XGBoost selected window 50 / train stride 50 from the seed-72 validation
+losses 0.09630, 0.09254, 0.08754, 0.09615 and 0.07709 for the five registered
+window/stride candidates. The validation-only grid took 317 seconds total on
+CPU; each of the three final CPU runs took about 61.5 seconds. All four test
+bearings and 2,261 prediction rows passed the per-device metrics audit at
+`atol=1e-4, rtol=1e-6`.
+
+NC-P LSTM's seed-72 final test passed the per-engine audit for 196,153 rows on
+16 engines; the largest absolute difference between recomputed and reported
+per-engine metrics was below 2.1e-5. It took 2,307 seconds on physical GPU 0.
+Seeds 88 and 101 are running in parallel on physical GPUs 3 and 2 under the
+current user authorization; GPU 1 remains occupied by another task and is not
+used. The run manifests record physical IDs separately from `cuda:0`. The
+remaining TabDPT 1.1.13 validation candidates are still running. TabPFN has no
+full NC-P score because its full-context CUDA preflight failed and remains
+under diagnosis.
