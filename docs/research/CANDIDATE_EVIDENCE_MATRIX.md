@@ -2,6 +2,12 @@
 
 Evidence reviewed 2026-09-29. This is a research decision record, not a novelty claim. The local 43-page TFM-PHM source and the official TabDPT v1.3 release were also checked. Recheck this landscape before method submission because relevant preprints are appearing rapidly.
 
+Device-level validation and the prospective project-blinded C-MAPSS protocol
+are frozen in [DEVICE_VALIDATION_AND_BLIND_TEST_PREREGISTRATION.md](DEVICE_VALIDATION_AND_BLIND_TEST_PREREGISTRATION.md).
+The planned five-fold NC-P analysis uses the 20 canonical training engines, so
+it is development cross-validation rather than untouched confirmatory evidence;
+the previously accessed NC-P and XJTU test assets cannot be relabeled as blind.
+
 ## Candidate A — preserving temporal degradation evidence under a fixed inference budget
 
 **Question.** Given identical observed history rows, context count, query points, model weights, and measured latency/memory budget, which temporal statistics must survive context reduction for cross-device RUL estimation?

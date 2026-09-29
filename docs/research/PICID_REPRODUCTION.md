@@ -2,6 +2,14 @@
 
 ## Scope and provenance
 
+The expanded grouped device-validation design and blind-test boundary are
+registered in
+[DEVICE_VALIDATION_AND_BLIND_TEST_PREREGISTRATION.md](DEVICE_VALIDATION_AND_BLIND_TEST_PREREGISTRATION.md).
+It preserves the paper's five seeds and five fit-predict window/stride pairs.
+The supplementary 20-engine grouped cross-validation is explicitly a
+development-pool analysis; the existing canonical NC-P and XJTU-SY test results
+are exposed benchmark replays, not blind evaluations.
+
 The three mandatory papers have been cross-reviewed in full in
 [FULL_TEXT_CROSS_REVIEW.md](FULL_TEXT_CROSS_REVIEW.md). This protocol follows
 the target TFM-PHM paper and treats the PICID infrastructure paper as the
