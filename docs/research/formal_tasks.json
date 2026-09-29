@@ -2291,7 +2291,7 @@
       "status": "completed_device_macro_public_test_history_disclosed"
     }
   ],
-  "updated_utc": "2026-09-29T06:43:04+00:00",
+  "updated_utc": "2026-09-29T06:53:36+00:00",
   "baseline_completeness_audit": {
     "checked_utc": "2026-09-28T15:23:25+00:00",
     "status": "tabdpt120_weights_unavailable; supplementary_efficiency_claim_pending",
@@ -2462,6 +2462,27 @@
         "reserve_mib": 1024
       },
       "feature_extrapolation": "window 50 has 900 flattened columns and exceeds the 500-feature intended range; report separately",
+      "batch_size_preflight": {
+        "status": "tool_implemented_pending_real_input_run",
+        "script": "scripts/research/benchmark_prediction.py",
+        "input_exporter": "scripts/research/export_validation_inputs.py",
+        "fit_context_rows": 10000,
+        "fit_context_sampling": "unit_balanced_temporal with the same source/unit identifiers as the candidate runs",
+        "fixed_validation_query_rows": 512,
+        "query_sampling": "unit_balanced_temporal",
+        "batch_sizes": [32, 64, 128, 256, 512],
+        "equivalence_tolerance": {
+          "atol": 0.0001,
+          "rtol": 0.0001
+        },
+        "metrics": [
+          "cold and steady prediction latency",
+          "throughput",
+          "peak allocated and reserved VRAM",
+          "maximum prediction difference against batch 32"
+        ],
+        "launch_gate": "run on an available GPU without sharing its measured throughput with another model task"
+      },
       "result": null,
       "test_access": false
     }

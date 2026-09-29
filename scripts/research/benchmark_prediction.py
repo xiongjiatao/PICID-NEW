@@ -2,6 +2,7 @@
 import argparse
 from functools import partial
 import gc
+import hashlib
 from importlib.metadata import version
 import json
 import os
@@ -17,6 +18,9 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from picid.research.protocol import PHYSICAL_GPUS  # noqa: E402
+from picid.model.estimators.tabpfn.context_sampling import (  # noqa: E402
+    unit_balanced_temporal_indices,
+)
 
 
 def _predict_batches(model, queries, batch_size):
@@ -41,6 +45,72 @@ def _predict_tabdpt(model, queries, batch_size, uses_predict_batch_size, context
     return model.predict(queries, **options)
 
 
+def prepare_benchmark_inputs(
+    train_features,
+    train_targets,
+    val_features,
+    *,
+    train_unit_ids=None,
+    val_unit_ids=None,
+    train_rows=2049,
+    query_rows=512,
+    max_fit_samples=None,
+):
+    """Select a fixed fit context and query subset for batching comparisons."""
+    if train_rows <= 0 or query_rows <= 0:
+        raise ValueError("train_rows and query_rows must be positive")
+    train_targets = np.asarray(train_targets).reshape(-1)
+    if len(train_features) != len(train_targets):
+        raise ValueError("training features and targets have different row counts")
+    if train_unit_ids is not None and len(train_features) != len(train_unit_ids):
+        raise ValueError("training unit IDs are not row-aligned with features")
+    if val_unit_ids is not None and len(val_features) != len(val_unit_ids):
+        raise ValueError("validation unit IDs are not row-aligned with features")
+
+    if max_fit_samples is None:
+        fit_indices = np.arange(min(train_rows, len(train_features)), dtype=np.int64)
+        fit_selection = "chronological_prefix"
+    else:
+        if train_unit_ids is None:
+            raise ValueError("unit_id metadata is required when max_fit_samples is set")
+        fit_indices = unit_balanced_temporal_indices(train_unit_ids, max_fit_samples)
+        fit_selection = "unit_balanced_temporal"
+
+    if val_unit_ids is not None and query_rows < len(val_features):
+        query_indices = unit_balanced_temporal_indices(val_unit_ids, query_rows)
+        query_selection = "unit_balanced_temporal"
+    else:
+        query_indices = np.arange(min(query_rows, len(val_features)), dtype=np.int64)
+        query_selection = "chronological_prefix"
+
+    X = np.asarray(train_features[fit_indices]).copy()
+    y = train_targets[fit_indices].copy()
+    Q = np.asarray(val_features[query_indices]).copy()
+    fit_ids = (
+        np.asarray(train_unit_ids).reshape(len(train_unit_ids), -1)[fit_indices]
+        if train_unit_ids is not None else None
+    )
+    query_ids = (
+        np.asarray(val_unit_ids).reshape(len(val_unit_ids), -1)[query_indices]
+        if val_unit_ids is not None else None
+    )
+    metadata = {
+        "fit_selection": fit_selection,
+        "query_selection": query_selection,
+        "fit_rows": len(fit_indices),
+        "query_rows": len(query_indices),
+        "fit_indices_sha256": hashlib.sha256(fit_indices.tobytes()).hexdigest(),
+        "query_indices_sha256": hashlib.sha256(query_indices.tobytes()).hexdigest(),
+        "fit_unit_count": (
+            len({tuple(row.tolist()) for row in fit_ids}) if fit_ids is not None else None
+        ),
+        "query_unit_count": (
+            len({tuple(row.tolist()) for row in query_ids}) if query_ids is not None else None
+        ),
+    }
+    return X, y, Q, metadata
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", choices=("tabpfn", "tabdpt", "tabdpt120", "tabdpt130"), required=True)
@@ -50,6 +120,7 @@ def main():
     parser.add_argument("--fit-mode", default="fit_preprocessors")
     parser.add_argument("--train-rows", type=int, default=2049)
     parser.add_argument("--query-rows", type=int, default=512)
+    parser.add_argument("--max-fit-samples", type=int)
     parser.add_argument("--batches", type=int, nargs="+", default=[32, 64, 128, 256, 512])
     args = parser.parse_args()
     visible = os.environ.get("CUDA_VISIBLE_DEVICES")
@@ -57,11 +128,30 @@ def main():
         raise ValueError(f"Explicit single allowed physical GPU required: {PHYSICAL_GPUS}")
     torch.set_num_threads(8)
     rng = np.random.default_rng(72)
+    input_metadata = None
     if args.inputs:
-        X = np.load(args.inputs / "train_features.npy", mmap_mode="r")[:args.train_rows].copy()
-        y = np.load(args.inputs / "train_rul.npy", mmap_mode="r")[:args.train_rows].reshape(-1).copy()
-        Q = np.load(args.inputs / "val_features.npy", mmap_mode="r")[:args.query_rows].copy()
+        train_features = np.load(args.inputs / "train_features.npy", mmap_mode="r")
+        train_targets = np.load(args.inputs / "train_rul.npy", mmap_mode="r")
+        val_features = np.load(args.inputs / "val_features.npy", mmap_mode="r")
+        train_id_path = args.inputs / "train_unit_id.npy"
+        val_id_path = args.inputs / "val_unit_id.npy"
+        train_unit_ids = (
+            np.load(train_id_path, mmap_mode="r") if train_id_path.exists() else None
+        )
+        val_unit_ids = np.load(val_id_path, mmap_mode="r") if val_id_path.exists() else None
+        X, y, Q, input_metadata = prepare_benchmark_inputs(
+            train_features,
+            train_targets,
+            val_features,
+            train_unit_ids=train_unit_ids,
+            val_unit_ids=val_unit_ids,
+            train_rows=args.train_rows,
+            query_rows=args.query_rows,
+            max_fit_samples=args.max_fit_samples,
+        )
     else:
+        if args.max_fit_samples is not None:
+            raise ValueError("--max-fit-samples requires --inputs with unit IDs")
         X = rng.normal(size=(args.train_rows, 14)).astype("float32")
         y = (X[:, 0] * .1 + X[:, 1] * .2).astype("float32")
         Q = rng.normal(size=(args.query_rows, 14)).astype("float32")
@@ -69,9 +159,12 @@ def main():
     report = {"model": args.model, "physical_gpu": int(visible), "logical_gpu": "cuda:0",
               "seed": 72, "training_shape": X.shape, "query_shape": Q.shape,
               "input_source": str(args.inputs) if args.inputs else "synthetic_smoke_not_formal",
-              "n_ensembles": 8, "context_size": _tabdpt_context_size(args.model),
+              "n_ensembles": 8,
+              "context_size": _tabdpt_context_size(args.model) if args.model.startswith("tabdpt") else None,
               "atol": 1e-4, "rtol": 1e-4, "fit_mode": args.fit_mode,
-              "version": version("tabpfn" if args.model == "tabpfn" else "tabdpt"), "batches": []}
+              "version": version("tabpfn" if args.model == "tabpfn" else "tabdpt"),
+              "input_selection": input_metadata,
+              "batches": []}
     baseline = None
     for batch in args.batches:
         model = None

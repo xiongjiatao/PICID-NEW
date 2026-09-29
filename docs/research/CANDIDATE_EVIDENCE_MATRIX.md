@@ -19,7 +19,9 @@ device-balanced subsampling control under the v2 10,000-row intended range. It
 uses training `unit_id` only, keeps the validation/test query rows untouched,
 and is an engineering baseline rather than a proposed contribution. NC-P
 seed-72 1/1 and 5/1 validation pilots are running; no accuracy or cost result
-is claimed yet.
+is claimed yet. A matched-input batch-size preflight is implemented for 32,
+64, 128, 256, and 512 queries with a fixed 10,000-row sampled fit context; it
+is pending an uncontended GPU slot and the cache-backed validation input export.
 
 **Evidence needed before implementation.** A measured accuracy-versus-budget curve from a validation-only sweep must show that current methods lose performance specifically around identifiable degradation transitions, and that the signal loss is not explained by row count, feature count, stride, context retrieval, or a split artifact. A local synthetic unit test should prove no history window crosses device boundaries. Candidate mechanism should then target the observed lost evidence.
 

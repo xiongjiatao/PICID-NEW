@@ -599,7 +599,8 @@ and the observed run ended with a CUDA kernel configuration error. A separately
 named 10,000-row, unit-balanced temporal-context validation grid is running
 seed-72 1/1 and 5/1 candidates on physical GPUs5 and1 with test evaluation
 disabled; the other three candidates remain pending. No NC-P TabPFN score is
-claimed yet.
+claimed yet. A fixed-input query-batch comparison helper is implemented and
+awaits a cache-backed input export plus an uncontended GPU slot.
 On XJTU, the default cached fit mode OOMed during validation fitting at 6,557
 rows and 460 features. A separate low-memory path reproduced deterministically,
 but on a matched 2,049-row by 460-feature training slice and 398 validation
