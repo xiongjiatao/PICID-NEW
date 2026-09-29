@@ -22,12 +22,39 @@ The current `unit_balanced_temporal` TabPFN fit-context sampler is one explicit
 device-balanced subsampling control under the v2 10,000-row intended range. It
 uses training `unit_id` only, keeps the validation/test query rows untouched,
 and is an engineering baseline rather than a proposed contribution. NC-P
-seed-72 1/1 and 5/1 validation pilots are running; no accuracy or cost result
-is claimed yet. A matched-input batch-size preflight is implemented for 32,
-64, 128, 256, and 512 queries with a fixed 10,000-row sampled fit context; it
-is pending an uncontended GPU slot and the cache-backed validation input export.
+device-disjoint validation controls are now complete for seeds 72, 88, and
+101. They compare raw chronological windows of 1, 10, and 50 rows, an
+additional context-only PCA(128) transform on W50, and fixed multiscale
+statistics on W50. All arms use the same 2,048 context rows, 1,024 query rows
+on each of the same four validation engines, eight TabDPT v1.3 ensembles, and
+the model's native PCA/context reduction. The validation queries are held
+constant across representations and seeds.
 
-**Evidence needed before implementation.** A measured accuracy-versus-budget curve from a validation-only sweep must show that current methods lose performance specifically around identifiable degradation transitions, and that the signal loss is not explained by row count, feature count, stride, context retrieval, or a split artifact. A local synthetic unit test should prove no history window crosses device boundaries. Candidate mechanism should then target the observed lost evidence.
+| Representation | Input dimensions | All-stage normalized MAE | Critical 5% MAE | Critical 20% MAE |
+|---|---:|---:|---:|---:|
+| Raw W1 | 18 | 0.07493 ± 0.00038 | 0.01944 ± 0.00134 | 0.03428 ± 0.00142 |
+| Raw W10 | 180 | 0.08585 ± 0.00157 | 0.01946 ± 0.00078 | 0.03514 ± 0.00228 |
+| Raw W50 | 900 | 0.10578 ± 0.00085 | 0.01652 ± 0.00061 | 0.04074 ± 0.00072 |
+| Context-only PCA(128) + W50 | 128 | 0.10468 ± 0.00244 | 0.01657 ± 0.00127 | 0.03996 ± 0.00255 |
+| Fixed multiscale statistics + W50 | 270 | 0.09065 ± 0.00201 | 0.02274 ± 0.00124 | 0.03914 ± 0.00196 |
+
+Values are mean ± sample SD over three stochastic seeds, not 12 independent
+devices: the same four engines are reused in each seed. W1 has the best
+all-stage error. W50 lowers the macro critical-5% error by about 15% relative
+to W1, while raising all-stage MAE by about 41%; its critical-20% error is
+worse. This small critical-5% difference is source-heterogeneous: it is
+strongest on DS04 and does not reproduce uniformly on DS05/DS07. There is one
+validation engine per source, so this cannot establish a source-level effect.
+Context-only PCA barely changes W50's critical-5% score, and fixed multiscale
+statistics do not preserve its small gain. These results motivate a larger,
+device-resampled test of the trade-off; they do not yet show a general benefit
+from longer histories or identify a novel mechanism. No test-set result was
+used. Peak allocated memory was 0.484 GiB; wall time varied under concurrent
+GPU load and is not suitable for ranking these representations. Per-seed
+manifests and per-representation metrics are under
+`artifacts/research/ncp_temporal_control_seed*_gpu*_20260929/`.
+
+**Evidence needed before implementation.** The first validation-only accuracy comparison is now available, but its small, source-heterogeneous critical-5% gain does not isolate a degradation transition or survive a meaningful device-resampling analysis. The unit-boundary invariant has a synthetic regression test, and each generated history is constrained to one engine. Next, vary history support and query locations separately on additional device-disjoint validation folds, include TabDPT v1.2/Turbo when its checkpoint is obtainable, and report cold-start/steady-state latency under a recorded concurrency profile. Implement a mechanism only if a reproducible phase-specific information loss remains after those matched controls.
 
 Before making a broad “industrial time-series foundation model” claim, add a compatible Chronos-2 RUL baseline or explicitly scope conclusions to the tabular foundation models evaluated. The two new studies show that omitting TSFMs would leave a direct recent RUL baseline family untested. Their tasks and data protocols differ from NC-P and XJTU, so their published metrics must not be ranked directly against PICID results.
 
@@ -47,21 +74,50 @@ The released artifact includes README, protocol, code, and JSON/CSV results, but
 
 **Required comparisons.** RUL threshold; TabDPT 1.3 full CDF; TabPFN full output/residual ECDF; separately held-out device calibration; discrete-time event classifier and a small DeepHit/MTLR-style model; calibration off/on; condition and device-wise leave-out. Derive 5%, 10%, 20% horizons from training-device median life in native units, then freeze them. For XJTU derive labels from the raw timeline and never use an evaluation bearing's realized total life to create an online horizon.
 
-**Compute-budget control.** Reuse the same frozen point-prediction checkpoint and query rows when comparing threshold, CDF, and residual-ECDF decisions; report the incremental calibration/preprocessing time, per-query alert latency, and peak VRAM separately. A trained event-time model must report full fitting plus inference cost on the same GPU class and split. Set the numeric latency/VRAM ceiling only after the pending uncontended batch-size preflight, then freeze that ceiling before the alert comparison; do not infer a budget from utilization snapshots or combine runtimes from contended GPUs.
+**Compute-budget control.** The three probability-study runs each used a single explicitly recorded physical GPU and completed in 242–246 seconds, with 0.424 GiB peak allocated memory. These end-to-end times include loading, prediction, calibration, and alert metrics; they are descriptive under concurrent GPU load, not a clean latency ranking. The run manifests record the full command, physical/logical device, concurrent processes, seed, output path, and stage timings. The full-distribution route is a separately named inference protocol because its predicted means differ from the saved point-output route by 0.0135–0.0243, above the registered 1e-4 tolerance. Do not pool its probabilities with the point-prediction baseline or attribute their difference to calibration.
 
 **Frozen XJTU horizon definition.** The eight PHMD training bearings have
 median maximum RUL 354 acquisition intervals (RUL is `N-1` for `N` ordered
 acquisitions). This fixes candidate horizons at 17.7, 35.4, and 70.8 intervals.
 They are calculated from training-bearing filename indices only and recorded in
-`artifacts/formal/results/xjtu_critical_horizons.json`. This is a label
-definition, not an evaluated alert result; no warning probabilities, calibration
-claims, or online HI-to-RUL conversion are reported yet.
+`artifacts/formal/results/xjtu_critical_horizons.json`. The warning study has
+now been evaluated for seeds 72, 88, and 101 using eight-fold leave-one-training-
+bearing-out predictions to fit Platt mappings and empirical alert thresholds.
+Events are constructed from each bearing's raw native-RUL timeline. No test
+bearing's lifetime is used to convert predicted HI to online RUL.
+
+| Horizon | Probability source | Brier uncalibrated → Platt | AUPRC | Test warning-window detection | False-alarm episodes / bearing | Mean lead among detected (intervals) |
+|---|---|---:|---:|---:|---:|---:|
+| 5% | TabDPT native CDF | 0.0982 ± 0.0029 → 0.0943 ± 0.0017 | 0.5165 ± 0.1183 | 0.083 ± 0.144 | 0.00 ± 0.00 | 6.00 |
+| 10% | TabDPT native CDF | 0.1929 ± 0.0038 → 0.1730 ± 0.0036 | 0.5082 ± 0.0422 | 0.083 ± 0.144 | 1.25 ± 1.75 | 7.00 |
+| 20% | TabDPT native CDF | 0.2666 ± 0.0088 → 0.2140 ± 0.0073 | 0.6935 ± 0.0180 | 0.667 ± 0.144 | 2.00 ± 0.25 | 39.28 ± 0.95 |
+| 5% | Residual ECDF | 0.0931 ± 0.0020 → 0.0945 ± 0.0019 | 0.4852 ± 0.0680 | 0.500 ± 0.000 | 4.75 ± 1.09 | 10.33 ± 2.84 |
+| 10% | Residual ECDF | 0.1917 ± 0.0032 → 0.1749 ± 0.0041 | 0.4779 ± 0.0206 | 0.333 ± 0.144 | 1.58 ± 2.13 | 11.50 ± 8.67 |
+| 20% | Residual ECDF | 0.2587 ± 0.0096 → 0.2187 ± 0.0079 | 0.6711 ± 0.0115 | 0.417 ± 0.144 | 1.00 ± 1.15 | 23.33 ± 15.78 |
+| 5% | Direct event logistic | 0.0780 ± 0.0000 → 0.0924 ± 0.0000 | 0.6527 ± 0.0000 | 1.000 ± 0.000 | 0.50 ± 0.00 | 10.50 ± 0.00 |
+| 10% | Direct event logistic | 0.1540 ± 0.0000 → 0.1763 ± 0.0000 | 0.6299 ± 0.0000 | 1.000 ± 0.000 | 1.25 ± 0.00 | 12.00 ± 0.00 |
+| 20% | Direct event logistic | 0.1846 ± 0.0000 → 0.2268 ± 0.0000 | 0.7716 ± 0.0000 | 1.000 ± 0.000 | 1.00 ± 0.00 | 33.00 ± 0.00 |
+
+Values are seed means ± sample SD; direct logistic scores are identical across
+seeds. Lead time is conditional on test bearings detected within the warning
+window, and seed runs with no detected bearing contribute no lead value. Alert
+thresholds were selected from out-of-fold training-bearing scores at an
+empirical device-macro FPR near 5%; this is not a population FPR guarantee.
+Platt calibration improves the native CDF Brier score at each horizon but does
+not yield strong 5%/10% detection on the four public test bearings. Residual
+ECDF has higher short-horizon detection and lead but more 5% false-alarm
+episodes. The direct event classifier ranks better and detects all four
+bearings in this split, while Platt worsens its Brier scores at all horizons.
+These are competing trade-offs, not evidence that one approach is calibrated
+and operationally superior.
+Per-seed reports are in
+`artifacts/research/xjtu_warning_study_seed*_gpu*_20260929/manifest.json`.
 
 **Metrics and uncertainty.** Device-balanced Brier/log loss and calibration plots, event-risk ranking/AUPRC, detection at calibration-fixed empirical false-alarm levels, alarms per device, missed events and lead-time distribution. Bootstrap whole devices. State explicitly when calibration sample size cannot support a claimed bound; do not treat correlated timestamps as independent Bernoulli trials. Compare prediction-distribution coverage separately from decision quality.
 
 **Finite-sample calibration constraint.** Treat a complete device/bearing as the exchangeable statistical unit. Under standard split conformal, the finite-sample order-statistic index is `ceil((n+1)(1-alpha))`; a 90% interval needs at least nine independent calibration units for a finite quantile. XJTU has only eight PHMD training bearings in total, while its three validation bearings are also insufficient; NC-P has four validation engines. Thus a 90% device-level split-conformal guarantee cannot be claimed from the existing XJTU set or NC-P validation set. Adding calibration engines inside NC-P's 20 training units is possible only by reducing the fitting pool, and must be explicitly budgeted before fitting. Resampling timestamp residuals cannot manufacture independent devices. The alert study may still report descriptive calibration/utility curves, but its guarantee and uncertainty language must match the actual number of held-out assets.
 
-**Decision after literature refresh.** The broad direction—“turn RUL predictions into cross-condition failure warnings with uncertainty”—is already covered and is rejected as a novelty claim. A narrower question about repeated, device-level alert burden and lead time under a frozen empirical false-alarm budget remains only a possible evaluation gap. It is not established as a method gap; given four XJTU test bearings and 16 NC-P test engines, current data support descriptive results and falsification checks, not strong deployment-level false-alarm guarantees.
+**Decision after literature refresh and first evaluation.** The broad direction—“turn RUL predictions into cross-condition failure warnings with uncertainty”—is already covered and is rejected as a novelty claim. The observed XJTU results do not establish a superior warning method: native CDF calibration improves Brier but misses most 5%/10% events; residual ECDF buys short-horizon detection at a larger false-alarm burden; the direct event classifier ranks and detects better here but becomes less calibrated after Platt scaling. Only four public test bearings were evaluated, and their test histories had been accessed in earlier baseline work. These results are descriptive replication evidence, not blind external validation or a reliable false-alarm guarantee. A possible next study is a prospectively frozen, device-disjoint comparison of alert burden and lead time, with enough independent assets and a deployment-defined intervention label. Until then, this remains an evaluation question, not an established method gap.
 
 **Falsification / stop rule.** Stop if the native predictive CDF or a simple calibrated RUL threshold matches warning utility at the same false-alarm burden, if independent calibration devices are too few, if results depend on evaluation terminal life, or if horizon labels cannot represent an observable maintenance decision. Current status: **not established; likely an evaluation/design contribution unless the mechanism addresses a measured failure mode**.
 

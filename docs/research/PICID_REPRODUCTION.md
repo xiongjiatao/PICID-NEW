@@ -47,8 +47,8 @@ not presented as the paper's five-seed numeric reproduction.
    scalers, training-only ICL contexts, label/window alignment and cache equality.
 5. After complete source files pass archive/CRC checks, run seed 72 and record
    time/peak memory; freeze validation-selected configurations, then run seeds
-   88 and 101. Under the user's latest authorization, formal GPU work may use
-   physical GPUs 0–5, with an explicit CUDA_VISIBLE_DEVICES subset and the
+   88 and 101. Under the latest authorization, formal GPU work may use
+   physical GPUs 1–6, with an explicit CUDA_VISIBLE_DEVICES subset and the
    logical device recorded separately.
 
 Validation-only context/stride selection depends on the top-level `test=false`
@@ -561,9 +561,17 @@ acquisition intervals. Their frozen 5%, 10%, and 20% warning horizons are
 17.7, 35.4, and 70.8 acquisition intervals. The derivation counts ordered raw
 training acquisition files and records their listing hashes in
 `artifacts/formal/results/xjtu_critical_horizons.json`; no validation or test
-bearing lifetime contributes. This freezes horizon labels only. No XJTU warning
-probabilities or alert metrics have been evaluated, and no test lifetime is
-used to turn an HI prediction into online remaining time.
+bearing lifetime contributes. The first TabDPT 1.3 full-distribution warning
+study is now complete for seeds 72, 88, and 101; detailed device-balanced Brier,
+AUPRC, detection, false-alarm episodes, lead time, execution costs, and the
+point/full-output protocol discrepancy are recorded in
+`docs/research/CANDIDATE_EVIDENCE_MATRIX.md` and each seed manifest under
+`artifacts/research/xjtu_warning_study_seed*_gpu*_20260929/`. The native CDF,
+residual ECDF, and direct event classifier have distinct calibration/utility
+trade-offs on four public test bearings. The prior public-test access remains
+disclosed above, so this is descriptive replication evidence rather than blind
+external validation. Event labels come from the raw RUL timeline; no test
+lifetime is used to convert an HI prediction into online remaining time.
 
 ### Baseline-version completeness audit
 
