@@ -1,4 +1,25 @@
-# Execution status — 2026-09-27
+# Execution status — updated 2026-09-29
+
+## Superseding status update — 2026-09-29
+
+- All five seed-72 XJTU TabPFN validation candidates completed with
+  `test=false` under the low-memory, 32-query-yield execution path. The
+  selected 50/50 final evaluation is now running on physical GPU4; the public
+  test-access history remains disclosed, and no audited final metric is
+  available yet.
+- The earlier statement that further XJTU TabPFN retries were not planned is
+  superseded. Retries are allowed after an execution-path and resource
+  preflight; prior OOM/slow attempts and test access remain part of the record.
+- NC-P TabPFN's 265,359-row full-context attempt ended with a CUDA kernel
+  configuration error, not a confirmed OOM. The pinned local TabPFN 2.2.1
+  package declares an intended range of 10,000 rows and 500 features. A
+  separate, explicit 10,000-row device-balanced temporal training-context
+  policy is being validated. Its seed-72 1/1 candidate is running on physical
+  GPU5 with `test=false`; no validation metric is available yet.
+- NC-P TabDPT 1.1.13 seed 72 is complete and audited. Seeds 88 and 101 remain
+  active; their preprocessing is currently CPU-bound, while model inference is
+  expected to use the assigned GPUs. Do not interpret short GPU-idle intervals
+  as a failed run.
 
 ## Completed in this project
 
@@ -117,8 +138,12 @@
   Test evaluation of the selected candidate OOMed when the full 2,261-query
   trajectory was passed at once (requested 4.93 GiB with 3.20 GiB free). A
   cache-reusing test-only attempt with 32-query wrapper chunks then ran for
-  30m59s without writing metrics and was stopped. No TabPFN test metric exists;
-  the test split is considered touched and further retries are not planned.
+  30m59s without writing metrics and was stopped. These attempts touched the
+  public test split and must remain disclosed. As of the superseding update
+  above, all five validation-only candidates have completed under the
+  low-memory/yield32 path and the selected seed-72 final evaluation is running;
+  its result is pending audit. The earlier no-retry sentence is historical
+  and no longer describes the active plan.
   Per-run manifests record both the successful validation candidates and failed
   test attempts under their ignored `artifacts/` directories.
 - The mislabeled sklearn GradientBoosting control was stopped at the user's

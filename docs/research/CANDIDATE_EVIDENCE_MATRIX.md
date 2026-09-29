@@ -14,6 +14,12 @@ Evidence reviewed 2026-09-28. This is a research decision record, not a novelty 
 
 **Required protocol.** Keep device split, query set, original history support, context rows, batch size and seed fixed. Compare original chronological windows, flattened-window baseline, training-fitted PCA, fixed multiscale statistics, uniform/device-balanced row subsampling, TabDPT native retrieval/subsampling, and TACO if its public implementation/checkpoint is runnable under a compatible protocol. Match both context-row count and measured peak memory/query latency. Report per-device MAE/RMSE, critical-stage errors, and confidence intervals bootstrapped over devices; report seed variation separately. Audit every produced window against its source device and raw time indices before fitting.
 
+The current `unit_balanced_temporal` TabPFN fit-context sampler is one explicit
+device-balanced subsampling control under the v2 10,000-row intended range. It
+uses training `unit_id` only, keeps the validation/test query rows untouched,
+and is an engineering baseline rather than a proposed contribution. Its NC-P
+validation pilot is running; no accuracy or cost result is claimed yet.
+
 **Evidence needed before implementation.** A measured accuracy-versus-budget curve from a validation-only sweep must show that current methods lose performance specifically around identifiable degradation transitions, and that the signal loss is not explained by row count, feature count, stride, context retrieval, or a split artifact. A local synthetic unit test should prove no history window crosses device boundaries. Candidate mechanism should then target the observed lost evidence.
 
 **Falsification / stop rule.** Stop or reformulate if equal-budget PCA/statistics/native TabDPT preserve critical-stage metrics, if no robust phase-specific error appears across device resamples, if the gain disappears under matched chronological query points, or if a released general-purpose compressor already provides the same temporal guarantee. Current status: **not established**. The pilot batch-size tests in `artifacts/formal/ncp_tabdpt*_batch_preflight` do not test this hypothesis.

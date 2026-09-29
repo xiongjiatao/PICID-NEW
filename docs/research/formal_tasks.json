@@ -2291,7 +2291,7 @@
       "status": "completed_device_macro_public_test_history_disclosed"
     }
   ],
-  "updated_utc": "2026-09-29T06:02:38.854059+00:00",
+  "updated_utc": "2026-09-29T06:36:18+00:00",
   "baseline_completeness_audit": {
     "checked_utc": "2026-09-28T15:23:25+00:00",
     "status": "tabdpt120_weights_unavailable; supplementary_efficiency_claim_pending",
@@ -2420,6 +2420,36 @@
       "low_memory_selection_protocol": "pending; use fit_mode=low_memory and yield_batch_size=32; freeze execution overrides",
       "additional_query_batch_preflight": "pending GPU2 availability",
       "test_metrics_accessed": false
+    },
+    "nc_p_tabpfn_capped_context": {
+      "status": "seed72_validation_pilot_running",
+      "full_context_failure": "265359 training rows; CUDA invalid configuration argument after about 1197 seconds; not established as OOM",
+      "tabpfn_version": "2.2.1",
+      "intended_sample_limit": 10000,
+      "intended_feature_limit": 500,
+      "training_context_cap": 10000,
+      "sampling_policy": "unit_balanced_temporal",
+      "sampling_unit": "source plus source-local engine id",
+      "sampling_scope": "fit split only; validation and test query rows are untouched",
+      "query_set_changed": false,
+      "implementation": "picid/model/estimators/tabpfn/context_sampling.py",
+      "validation_tests": [
+        "test/model/estimators/tabpfn/test_context_sampling.py",
+        "test/model/estimators/tabpfn/test_wrapper.py",
+        "test/pipeline/test_base.py"
+      ],
+      "pilot_output": "artifacts/formal/nc_p_tabpfn_balanced10k_w1_s1_seed72_selection_pilot",
+      "pilot_manifest": "artifacts/formal/nc_p_tabpfn_balanced10k_w1_s1_seed72_selection_pilot/manifest.json",
+      "pilot_started_utc": "2026-09-29T06:30:16.683340+00:00",
+      "pilot_seed": 72,
+      "pilot_window": 1,
+      "pilot_stride": 1,
+      "pilot_test_enabled": false,
+      "pilot_physical_gpu": 5,
+      "pilot_logical_device": "cuda:0",
+      "feature_extrapolation": "window 50 has 900 flattened columns and exceeds the 500-feature intended range; report separately",
+      "result": null,
+      "test_access": false
     }
   }
 }

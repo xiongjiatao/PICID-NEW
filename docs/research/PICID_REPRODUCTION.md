@@ -308,9 +308,20 @@ and identity manifest are under ignored `artifacts/formal/inputs/nc_p_unitwise_w
   full-context preflight ran for about 1,197 seconds and ended with
   `CUDA error: invalid configuration argument`; observed peak allocation was
   not captured, and the largest sampled GPU usage was 11.3 GiB. This failure
-  is not an OOM determination. Full-context TabPFN remains blocked until the
-  failing kernel is isolated or an explicitly budgeted context strategy is
-  selected under validation-only evidence.
+  is not an OOM determination. Separately, the pinned local TabPFN 2.2.1
+  `InferenceConfig` declares 10,000 rows and 500 features as intended ranges;
+  `ignore_pretraining_limits=true` bypasses the guard but does not subsample.
+  This matches the [official TabPFN inference configuration](https://github.com/PriorLabs/TabPFN/blob/main/src/tabpfn/inference_config.py).
+  Full-context NC-P TabPFN is therefore not treated as a supported core
+  baseline. An explicitly separate validation-only variant now caps the fit
+  context at 10,000 rows by assigning near-equal quotas to each training
+  engine and selecting rows evenly across its chronological order. Row-aligned
+  `unit_id=(source, local unit)` metadata is used only during fitting; validation
+  and test query sets are unchanged. The implementation is unit-tested. The
+  seed-72 1/1 `test=false` validation pilot is running on physical GPU5; the
+  remaining four candidates and their resource costs are pending. Window-50
+  cases remain beyond the 500-feature intended range and will be labelled as
+  extrapolative if retained.
 - The earlier XJTU LSTM validation-only search has all nine seed-72 losses.
   It selects window 50, train batch 512, learning rate 1e-4 with minimum
   normalized validation loss 0.047744. The frozen configuration and result
@@ -580,8 +591,13 @@ effect of any one architectural change.
 The NC-P LSTM seeds completed on physical GPUs 0, 3, and 2. Manifests
 distinguish physical IDs from `cuda:0`; the current GPU authorization covers
 physical GPUs 0–5. The NC-P TabDPT 1.1.13 seed-72 test is complete and audited,
-and seeds 88 and 101 use the same frozen configuration. TabPFN remains
-incomplete on NC-P: its full-context validation ended with a CUDA kernel error.
+and seeds 88 and 101 use the same frozen configuration. The original
+full-context TabPFN validation remains ineligible as a supported baseline: its
+265,359-row input is about 26.5 times TabPFN 2.2.1's 10,000-row intended range,
+and the observed run ended with a CUDA kernel configuration error. A separately
+named 10,000-row, unit-balanced temporal-context validation grid is running
+its seed-72 1/1 pilot on physical GPU5 with test evaluation disabled; the other
+four candidates remain pending. No NC-P TabPFN score is claimed yet.
 On XJTU, the default cached fit mode OOMed during validation fitting at 6,557
 rows and 460 features. A separate low-memory path reproduced deterministically,
 but on a matched 2,049-row by 460-feature training slice and 398 validation
