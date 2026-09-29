@@ -28,17 +28,22 @@ def _predict_tabpfn(model, queries, batch_size):
     return _predict_batches(model, queries, batch_size)
 
 
-def _predict_tabdpt(model, queries, batch_size, modern):
-    options = {"n_ensembles": 8, "seed": 72,
-               "context_size": 2048}
-    if modern:
+def _tabdpt_context_size(model_name):
+    return None if model_name == "tabdpt120" else 2048
+
+
+def _predict_tabdpt(model, queries, batch_size, uses_predict_batch_size, context_size):
+    options = {"n_ensembles": 8, "seed": 72}
+    if context_size is not None:
+        options["context_size"] = context_size
+    if uses_predict_batch_size:
         options["batch_size"] = batch_size
     return model.predict(queries, **options)
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", choices=("tabpfn", "tabdpt", "tabdpt130"), required=True)
+    parser.add_argument("--model", choices=("tabpfn", "tabdpt", "tabdpt120", "tabdpt130"), required=True)
     parser.add_argument("--inputs", type=Path)
     parser.add_argument("--weights", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
@@ -64,7 +69,8 @@ def main():
     report = {"model": args.model, "physical_gpu": int(visible), "logical_gpu": "cuda:0",
               "seed": 72, "training_shape": X.shape, "query_shape": Q.shape,
               "input_source": str(args.inputs) if args.inputs else "synthetic_smoke_not_formal",
-              "n_ensembles": 8, "atol": 1e-4, "rtol": 1e-4, "fit_mode": args.fit_mode,
+              "n_ensembles": 8, "context_size": _tabdpt_context_size(args.model),
+              "atol": 1e-4, "rtol": 1e-4, "fit_mode": args.fit_mode,
               "version": version("tabpfn" if args.model == "tabpfn" else "tabdpt"), "batches": []}
     baseline = None
     for batch in args.batches:
@@ -85,12 +91,17 @@ def main():
             else:
                 from tabdpt import TabDPTRegressor
                 options = dict(device="cuda", model_weight_path=str(args.weights), compile=False)
-                if args.model == "tabdpt":
+                uses_predict_batch_size = args.model in {"tabdpt120", "tabdpt130"}
+                context_size = _tabdpt_context_size(args.model)
+                if not uses_predict_batch_size:
                     options["inf_batch_size"] = batch
                 model = TabDPTRegressor(**options)
                 model.fit(X, y)
-                predict = partial(_predict_tabdpt, model, Q, batch, args.model == "tabdpt130")
-                record["actual_context_rows"] = min(len(X), 2048) if args.model == "tabdpt" else len(X)
+                predict = partial(_predict_tabdpt, model, Q, batch,
+                                  uses_predict_batch_size, context_size)
+                record["actual_context_rows"] = (
+                    len(X) if context_size is None else min(len(X), context_size)
+                )
             torch.cuda.synchronize()
             record["fit_seconds"] = time.monotonic() - start
             start = time.monotonic()

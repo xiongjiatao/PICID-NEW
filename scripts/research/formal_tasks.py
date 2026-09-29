@@ -13,14 +13,19 @@ from picid.research.protocol import candidates, SEEDS  # noqa: E402
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--include-supplemental", action="store_true",
+                        help="Include the separately registered TabDPT v1.2 grid")
     args = parser.parse_args()
     tasks = [{**asdict(c), "id": c.key, "seed": 72, "stage": "selection",
               "test_enabled": False, "overrides": c.overrides(),
               "cost_estimate": None, "cost_status": "requires_measured_preflight"}
-             for c in candidates()]
+             for c in candidates(include_supplemental=args.include_supplemental)]
     finals = [{"dataset": d, "model": m, "seed": s, "stage": "final",
                "status": "blocked_on_validation_freeze_and_execution_equivalence"}
               for d in ("nc_p", "xjtu")
-              for m in ("tabdpt", "tabdpt130", "tabpfn", "xgboost", "lstm") for s in SEEDS]
+              for m in (("tabdpt", "tabdpt130", "tabpfn", "xgboost", "lstm", "tabdpt120")
+                        if args.include_supplemental else
+                        ("tabdpt", "tabdpt130", "tabpfn", "xgboost", "lstm"))
+              for s in SEEDS]
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps({"selection": tasks, "final": finals}, indent=2))

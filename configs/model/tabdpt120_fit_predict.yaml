@@ -1,0 +1,12 @@
+_target_: picid.model.estimators.tabdpt.turbo.FitPredictTabDPT120Wrapper
+device: ${trainer.accelerator}
+task_type: ${task_definition.task_type}
+model_cache_path: ${paths.model_cache_dir}
+random_state: ${seed}
+context_size: null
+n_ensembles: 8
+inf_batch_size: 512
+model_weight_path: null
+compile: false
+yield_strategy: false
+yield_batch_size: 128

@@ -11,7 +11,8 @@ import torch
 
 _TABDPT = "tabdpt"
 _WRAPPER = "picid.model.estimators.tabdpt.wrapper"
-_STUBBED_MODULES = (_TABDPT, _WRAPPER)
+_TURBO = "picid.model.estimators.tabdpt.turbo"
+_STUBBED_MODULES = (_TABDPT, _WRAPPER, _TURBO)
 
 
 class _StubTabDPTRegressor:
@@ -53,6 +54,7 @@ def _install_stub_tabdpt():
     mod.TabDPTRegressor = _StubTabDPTRegressor
     mod.TabDPTClassifier = _StubTabDPTClassifier
     sys.modules[_TABDPT] = mod
+    sys.modules.pop(_TURBO, None)
     sys.modules.pop(_WRAPPER, None)
     return importlib.import_module(_WRAPPER)
 
@@ -186,3 +188,53 @@ def test_explicit_prediction_seed_and_method_parameters():
     assert calls == [dict(seed=101, context_size=3, n_ensembles=4)]
     assert wrapper.actual_context_size == 3
     assert wrapper.backbone.inf_batch_size == 64
+
+
+def test_turbo_v12_uses_prediction_batch_size_and_version_guard(monkeypatch):
+    _cls()
+    turbo = importlib.import_module("picid.model.estimators.tabdpt.turbo")
+    monkeypatch.setattr(turbo, "version", lambda _: "1.2.0")
+    wrapper = turbo.FitPredictTabDPT120Wrapper(
+        device="cpu", task_type="regression", random_state=101,
+        context_size=3, n_ensembles=4, inf_batch_size=64, compile=False,
+    )
+    assert wrapper.backbone_factory.keywords == {
+        "device": "cpu", "model_weight_path": None, "compile": False,
+    }
+    wrapper.fit(torch.randn(6, 2), torch.randn(6, 1))
+    calls = []
+
+    def record(X, **kwargs):
+        calls.append(kwargs)
+        return np.zeros(len(X))
+
+    wrapper.backbone.predict = record
+    wrapper.predict(torch.randn(2, 2))
+    assert calls == [dict(seed=101, context_size=3, n_ensembles=4,
+                          batch_size=64)]
+
+    monkeypatch.setattr(turbo, "version", lambda _: "1.3.0")
+    with pytest.raises(RuntimeError, match="requires tabdpt==1.2.0"):
+        turbo.FitPredictTabDPT120Wrapper(device="cpu", task_type="regression")
+
+
+def test_turbo_v12_native_context_is_unbounded_when_unspecified(monkeypatch):
+    _cls()
+    turbo = importlib.import_module("picid.model.estimators.tabdpt.turbo")
+    monkeypatch.setattr(turbo, "version", lambda _: "1.2.0")
+    wrapper = turbo.FitPredictTabDPT120Wrapper(
+        device="cpu", task_type="regression", context_size=None,
+        n_ensembles=8, inf_batch_size=32, compile=False,
+    )
+    wrapper.fit(torch.randn(9, 2), torch.randn(9, 1))
+    calls = []
+
+    def record(X, **kwargs):
+        calls.append(kwargs)
+        return np.zeros(len(X))
+
+    wrapper.backbone.predict = record
+    wrapper.predict(torch.randn(3, 2))
+    assert wrapper.actual_context_size == 9
+    assert calls == [dict(seed=72, context_size=None, n_ensembles=8,
+                          batch_size=32)]

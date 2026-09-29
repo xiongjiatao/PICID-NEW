@@ -12,6 +12,7 @@ DATASETS = {
     "xjtu": "xjtu_sy/prognostics/phmd_split/combined",
 }
 MODELS = ("tabdpt", "tabdpt130", "tabpfn", "xgboost", "lstm")
+SUPPLEMENTAL_MODELS = ("tabdpt120",)
 
 
 def digest(value):
@@ -33,14 +34,16 @@ class Candidate:
     def overrides(self, seed=72, test=False):
         if seed not in SEEDS:
             raise ValueError("Unregistered seed")
-        base_model = "tabdpt" if self.model == "tabdpt130" else self.model
+        tabdpt_versions = {"tabdpt120", "tabdpt130"}
+        base_model = "tabdpt" if self.model in tabdpt_versions else self.model
         suffix = "lstm" if base_model == "lstm" else f"{base_model}_fit_predict"
         args = [f"experiment={DATASETS[self.dataset]}/{suffix}", f"seed={seed}",
                 f"test={str(test).lower()}", f"task_definition.seq_len={self.window}",
                 f"task_definition.stride_train={self.stride}",
                 "task_definition.subset_seed=72", "logger=csv", "num_threads=8"]
-        if self.model == "tabdpt130":
-            args.append("model=tabdpt130_fit_predict")
+        if self.model in tabdpt_versions:
+            version_suffix = self.model.removeprefix("tabdpt")
+            args.append(f"model=tabdpt{version_suffix}_fit_predict")
         if self.model == "lstm":
             args += ["trainer.max_epochs=200", "datamodule.train_batch_size=512",
                      "datamodule.val_batch_size=1024", "datamodule.test_batch_size=1024",
@@ -48,9 +51,10 @@ class Candidate:
         return args
 
 
-def candidates():
+def candidates(include_supplemental=False):
+    models = MODELS + (SUPPLEMENTAL_MODELS if include_supplemental else ())
     for dataset in DATASETS:
-        for model in MODELS:
+        for model in models:
             if model == "lstm":
                 for window in (1, 10, 50):
                     for lr in (1e-3, 5e-4, 1e-4):

@@ -54,7 +54,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", choices=("nc_p", "xjtu"), required=True)
-    parser.add_argument("--model", choices=("lstm", "tabdpt", "tabdpt130", "tabpfn", "xgboost"), required=True)
+    parser.add_argument("--model", choices=("lstm", "tabdpt", "tabdpt120", "tabdpt130", "tabpfn", "xgboost"), required=True)
     device_group = parser.add_mutually_exclusive_group(required=True)
     device_group.add_argument("--gpu", type=int, choices=PHYSICAL_GPUS)
     device_group.add_argument("--cpu", action="store_true")
