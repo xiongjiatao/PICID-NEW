@@ -24,7 +24,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from picid.research.ncp_device_cv import (  # noqa: E402
     balanced_strided_context_indices,
-    common_query_indices,
+    full_timeline_query_indices,
     fold_critical_horizons,
     nc_device_names,
     source_stratified_device_folds,
@@ -32,11 +32,13 @@ from picid.research.ncp_device_cv import (  # noqa: E402
 from picid.research.temporal_controls import (  # noqa: E402
     contiguous_unit_slices,
     history_windows,
+    nasa_score_by_device,
     regression_metrics_by_device,
 )
 
 
 PAPER_WINDOW_STRIDE_GRID = ((1, 1), (5, 1), (10, 5), (20, 5), (50, 50))
+PAPER_SEEDS = (72, 88, 101, 666, 226688)
 
 
 def _sha256(path: Path) -> str:
@@ -113,14 +115,23 @@ def main() -> int:
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--physical-gpu", type=int, required=True)
     parser.add_argument("--fold", type=int, choices=range(5), required=True)
-    parser.add_argument("--seed", type=int, required=True)
-    parser.add_argument("--context-rows", type=int, default=1024)
-    parser.add_argument("--queries-per-device", type=int, default=512)
+    parser.add_argument("--seed", type=int, choices=PAPER_SEEDS, required=True)
+    parser.add_argument("--context-rows", type=int, default=2048)
     parser.add_argument("--n-ensembles", type=int, default=8)
     parser.add_argument("--inference-batch-size", type=int, default=512)
     parser.add_argument("--weight-path", type=Path, required=True)
     parser.add_argument("--concurrent-tasks", type=str, default="")
     args = parser.parse_args()
+
+    if (args.context_rows, args.n_ensembles, args.inference_batch_size) != (
+        2048,
+        8,
+        512,
+    ):
+        raise ValueError(
+            "Registered NC-P device-CV budget is context=2048, ensembles=8, "
+            "inference_batch_size=512"
+        )
 
     visible = os.environ.get("CUDA_VISIBLE_DEVICES")
     if visible != str(args.physical_gpu):
@@ -179,9 +190,25 @@ def main() -> int:
     input_manifest_path = input_dir / "manifest.json"
     preprocessing_path = input_dir / "preprocessing.yaml"
     input_manifest = json.loads(input_manifest_path.read_text())
-    target_scale = float(
-        OmegaConf.load(preprocessing_path).transforms.scaler_rul.transform.factor
-    )
+    preprocessing = OmegaConf.load(preprocessing_path)
+    target_scale = float(preprocessing.transforms.scaler_rul.transform.factor)
+    aggregation = preprocessing.transforms.subsample_features_target.transform
+    if input_manifest.get("dataset") != "nc_p":
+        raise ValueError("This runner requires the NC-P dataset manifest")
+    if (input_manifest.get("window"), input_manifest.get("stride")) != (1, 1):
+        raise ValueError("Input cache must contain unwindowed, stride-1 NC-P rows")
+    if (
+        int(aggregation.step),
+        int(aggregation.window_size),
+        str(aggregation.aggregation),
+    ) != (60, 60, "mean"):
+        raise ValueError(
+            "Input cache does not use the registered 60/60 mean aggregation"
+        )
+    if not np.isclose(target_scale, 0.01, rtol=0.0, atol=1e-12):
+        raise ValueError(
+            "Input cache does not use the registered NC-P RUL ×0.01 target"
+        )
     input_paths = [
         input_manifest_path,
         preprocessing_path,
@@ -189,15 +216,31 @@ def main() -> int:
         input_dir / "train_rul.npy",
         input_dir / "train_unit_id.npy",
     ]
+    train_data_manifest = input_manifest["splits"]["train"]
+    expected_array_hashes = {
+        "train_features.npy": train_data_manifest["features"]["sha256"],
+        "train_rul.npy": train_data_manifest["rul"]["sha256"],
+        "train_unit_id.npy": train_data_manifest["unit_id"]["sha256"],
+    }
+    for path in input_paths:
+        expected_hash = expected_array_hashes.get(path.name)
+        if expected_hash is not None and _sha256(path) != expected_hash:
+            raise ValueError(f"Input array does not match its manifest digest: {path}")
     manifest: dict[str, Any] = {
         "status": "running",
-        "protocol": "NC-P grouped device-held-out temporal controls v1",
+        "protocol": "NC-P grouped device-held-out temporal controls v2",
+        "protocol_scope": "supplementary development-pool CV; not the paper's canonical split or a blind test",
+        "target_paper": "https://arxiv.org/html/2606.05481v1",
         "command": f"CUDA_VISIBLE_DEVICES={visible} {shlex.join(sys.argv)}",
         "argv": sys.argv,
         "cwd": os.getcwd(),
         "source_root": str(REPO_ROOT),
         "source_commit": subprocess.run(
-            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True
+            ["git", "rev-parse", "HEAD"],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
         ).stdout.strip(),
         "source_sha256": {
             "runner": _sha256(Path(__file__).resolve()),
@@ -210,6 +253,15 @@ def main() -> int:
         "input_manifest_sha256": _sha256(input_manifest_path),
         "input_files_sha256": {path.name: _sha256(path) for path in input_paths},
         "input_dataset_manifest": input_manifest,
+        "data_protocol": {
+            "dataset": "N-CMAPSS NC-P development training pool",
+            "source_unit_identity": "(n_DS, source-local unit)",
+            "raw_feature_aggregation": "non-overlapping 60/60 mean",
+            "target": "RUL multiplied by 0.01 in cached normalized space",
+            "scaler_note": "fixed PICID benchmark scaler; provenance sensitivity remains required",
+            "input_window": 1,
+            "input_stride": 1,
+        },
         "physical_gpu": args.physical_gpu,
         "cuda_visible_devices": visible,
         "logical_device": "cuda:0",
@@ -247,7 +299,6 @@ def main() -> int:
             "fold": args.fold,
             "seed": args.seed,
             "context_rows": args.context_rows,
-            "queries_per_device": args.queries_per_device,
             "n_ensembles": args.n_ensembles,
             "inference_batch_size": args.inference_batch_size,
             "weight_path": str(weight_path),
@@ -256,6 +307,11 @@ def main() -> int:
             {"window": window, "stride": stride}
             for window, stride in PAPER_WINDOW_STRIDE_GRID
         ],
+        "progress": {
+            "completed_candidates": 0,
+            "total_candidates": len(PAPER_WINDOW_STRIDE_GRID),
+            "estimated_remaining_seconds": None,
+        },
         "candidates": [],
     }
     _write_manifest(manifest_path, manifest)
@@ -293,7 +349,7 @@ def main() -> int:
         raise ValueError("Device identity leaked across fold roles")
     train_fold_units = {name: train_units[name] for name in train_devices}
     query_indices = {
-        name: common_query_indices(len(train_units[name][0]), args.queries_per_device)
+        name: full_timeline_query_indices(len(train_units[name][0]))
         for name in test_devices
     }
     target_rows: list[np.ndarray] = []
@@ -305,13 +361,35 @@ def main() -> int:
         target_rows.append(targets[indices])
         query_ids.append(np.full(len(indices), name, dtype=object))
         query_times.append(indices)
-    manifest["query_indices_by_device"] = {
-        name: indices.tolist() for name, indices in query_indices.items()
+    manifest["query_protocol"] = {
+        "rule": "every transformed row in chronological order; no test/query subsampling",
+        "indices_by_device": {
+            name: {
+                "count": int(len(indices)),
+                "first": int(indices[0]),
+                "last": int(indices[-1]),
+                "sha256_little_endian_int64": hashlib.sha256(
+                    indices.astype("<i8", copy=False).tobytes()
+                ).hexdigest(),
+            }
+            for name, indices in query_indices.items()
+        },
+        "total_rows": int(sum(len(indices) for indices in query_indices.values())),
     }
     _write_manifest(manifest_path, manifest)
 
-    for window, stride in PAPER_WINDOW_STRIDE_GRID:
+    candidate_wall_times: list[float] = []
+    candidate_total = len(PAPER_WINDOW_STRIDE_GRID)
+    for candidate_index, (window, stride) in enumerate(
+        PAPER_WINDOW_STRIDE_GRID, start=1
+    ):
         candidate_started = time.perf_counter()
+        print(
+            f"fold={heldout_fold} seed={args.seed} window={window} stride={stride} "
+            f"candidate={candidate_index}/{candidate_total} status=preparing full-query evaluation",
+            flush=True,
+        )
+        preparation_started = time.perf_counter()
         context_indices = balanced_strided_context_indices(
             train_fold_units,
             stride=stride,
@@ -338,10 +416,12 @@ def main() -> int:
         times = np.concatenate(query_times)
         fit_x = context_x.reshape(len(context_x), -1).astype(np.float32, copy=False)
         predict_x = query_x.reshape(len(query_x), -1).astype(np.float32, copy=False)
+        preparation_seconds = time.perf_counter() - preparation_started
 
         torch.cuda.empty_cache()
         gc.collect()
         torch.cuda.reset_peak_memory_stats(0)
+        model_init_started = time.perf_counter()
         model = TabDPTRegressor(
             device="cuda",
             model_weight_path=str(weight_path),
@@ -349,6 +429,8 @@ def main() -> int:
             context_reduction="subsample",
             compile=False,
         )
+        torch.cuda.synchronize()
+        model_initialization_seconds = time.perf_counter() - model_init_started
         fit_started = time.perf_counter()
         model.fit(fit_x, context_y.astype(np.float32, copy=False))
         torch.cuda.synchronize()
@@ -380,6 +462,13 @@ def main() -> int:
             horizons,
             critical_values=native_target,
         )
+        nasa_metrics = nasa_score_by_device(
+            predictions / target_scale, native_target, ids
+        )
+        native_metrics["device_macro_nasa_score"] = nasa_metrics["device_macro"]
+        native_metrics["query_weighted_nasa_score"] = nasa_metrics["query_weighted"]
+        for name, score in nasa_metrics["per_device"].items():
+            native_metrics["per_device"][name]["nasa_score"] = score
         candidate = {
             "window": window,
             "stride": stride,
@@ -388,6 +477,7 @@ def main() -> int:
             "context_rows_by_device": {
                 name: int(len(context_indices[name])) for name in train_devices
             },
+            "context_allocation": "max-min water-fill under per-device stride-eligible endpoint caps",
             "context_endpoint_indices_by_device": {
                 name: context_indices[name].tolist() for name in train_devices
             },
@@ -398,33 +488,62 @@ def main() -> int:
             "fit_seconds": fit_seconds,
             "predict_seconds": predict_seconds,
             "query_throughput_per_second": float(len(query_y) / predict_seconds),
-            "candidate_wall_seconds": time.perf_counter() - candidate_started,
+            "data_preparation_seconds": preparation_seconds,
+            "model_initialization_seconds": model_initialization_seconds,
             "peak_allocated_gib": float(torch.cuda.max_memory_allocated(0) / 1024**3),
             "peak_reserved_gib": float(torch.cuda.max_memory_reserved(0) / 1024**3),
             "metrics_normalized_target": normalized_metrics,
             "metrics_native_rul": native_metrics,
+            "nasa_score_native_rul": nasa_metrics,
             "prediction_finite": bool(np.isfinite(predictions).all()),
         }
         if not candidate["prediction_finite"]:
             raise ValueError(
                 f"Non-finite predictions for window={window}, stride={stride}"
             )
-        np.savez_compressed(
+        prediction_path = (
             output_dir
-            / f"fold{heldout_fold}_window{window}_stride{stride}_predictions.npz",
-            predictions=predictions,
+            / f"fold{heldout_fold}_window{window}_stride{stride}_predictions.npz"
+        )
+        serialization_started = time.perf_counter()
+        np.savez_compressed(
+            prediction_path,
+            predictions_normalized=predictions,
             targets_normalized=query_y,
             targets_native=native_target,
             unit_ids=ids.astype(str),
             query_times=times,
         )
+        candidate["serialization_seconds"] = time.perf_counter() - serialization_started
+        candidate["prediction_file"] = prediction_path.name
+        digest_started = time.perf_counter()
+        candidate["prediction_sha256"] = _sha256(prediction_path)
+        candidate["digest_seconds"] = time.perf_counter() - digest_started
+        candidate["candidate_wall_seconds"] = time.perf_counter() - candidate_started
         manifest["candidates"].append(candidate)
+        candidate_wall_times.append(float(candidate["candidate_wall_seconds"]))
+        remaining_candidates = candidate_total - len(candidate_wall_times)
+        eta_seconds = (
+            float(np.mean(candidate_wall_times) * remaining_candidates)
+            if remaining_candidates
+            else 0.0
+        )
+        manifest["progress"] = {
+            "completed_candidates": len(candidate_wall_times),
+            "total_candidates": candidate_total,
+            "estimated_remaining_seconds": eta_seconds,
+        }
         _write_manifest(manifest_path, manifest)
         print(
-            f"fold={heldout_fold} window={window} stride={stride} "
+            f"fold={heldout_fold} seed={args.seed} window={window} stride={stride} "
+            f"candidate={candidate_index}/{candidate_total} "
             f"query_rows={len(query_y)} fit_s={fit_seconds:.1f} "
             f"predict_s={predict_seconds:.1f} "
-            f"device_macro_mae={native_metrics['device_macro_mae']:.4f}",
+            f"device_macro_native_mae={native_metrics['device_macro_mae']:.4f} "
+            f"device_macro_nasa={native_metrics['device_macro_nasa_score']:.4f} "
+            f"throughput_rows_s={candidate['query_throughput_per_second']:.1f} "
+            f"peak_allocated_gib={candidate['peak_allocated_gib']:.2f} "
+            f"eta_seconds={eta_seconds:.0f}",
             flush=True,
         )
         del model, context_x, query_x, fit_x, predict_x, predictions

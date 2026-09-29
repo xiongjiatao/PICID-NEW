@@ -73,36 +73,92 @@ def balanced_strided_context_indices(
     context_rows: int,
     seed: int,
 ) -> dict[str, np.ndarray]:
-    """Sample a fixed, equal number of training endpoints per device and stride."""
+    """Sample a fixed context budget, water-filled across train devices.
+
+    Devices with too few stride-eligible endpoints are capped at their available
+    capacity. Their unused quota is redistributed as evenly as possible across
+    the remaining devices. This keeps the total context budget fixed without
+    duplicating endpoints or silently dropping short devices.
+    """
     if stride < 1 or not units or context_rows < len(units):
         raise ValueError("Require positive stride and at least one context per device")
     names = sorted(units)
-    if context_rows % len(names):
+    candidates_by_device: dict[str, np.ndarray] = {}
+    capacities: list[int] = []
+    for name in names:
+        features, targets = units[name]
+        if not len(features) or len(features) != len(targets):
+            raise ValueError(f"Require non-empty aligned features/targets for {name}")
+        candidates = np.arange(0, len(features), stride, dtype=np.int64)
+        if not len(candidates):
+            raise ValueError(f"No stride-eligible context endpoint for {name}")
+        candidates_by_device[name] = candidates
+        capacities.append(len(candidates))
+
+    if sum(capacities) < context_rows:
         raise ValueError(
-            "context_rows must be divisible by the number of train devices"
+            f"stride={stride} leaves only {sum(capacities)} eligible endpoints "
+            f"across {len(names)} train devices; need {context_rows}"
         )
-    per_device = context_rows // len(names)
+
+    # Max-min fair allocation subject to each device's eligible endpoint cap.
+    lower, upper = 0, max(capacities)
+    while lower < upper:
+        level = (lower + upper + 1) // 2
+        if sum(min(capacity, level) for capacity in capacities) <= context_rows:
+            lower = level
+        else:
+            upper = level - 1
+    allocation = [min(capacity, lower) for capacity in capacities]
+    remaining = context_rows - sum(allocation)
+    tie_order = np.random.default_rng(seed).permutation(len(names)).tolist()
+    for rank in tie_order:
+        if not remaining:
+            break
+        if allocation[rank] < capacities[rank]:
+            allocation[rank] += 1
+            remaining -= 1
+    if remaining:
+        raise RuntimeError("Water-filled context allocation did not use its budget")
+
     selected: dict[str, np.ndarray] = {}
     for rank, name in enumerate(names):
-        features, _ = units[name]
-        candidates = np.arange(0, len(features), stride, dtype=np.int64)
-        if len(candidates) < per_device:
-            raise ValueError(
-                f"stride={stride} leaves only {len(candidates)} endpoints for {name}; "
-                f"need {per_device}"
-            )
-        sampled = stratified_timeline_indices(len(candidates), per_device, seed + rank)
+        candidates = candidates_by_device[name]
+        count = allocation[rank]
+        sampled = stratified_timeline_indices(len(candidates), count, seed + rank)
         selected[name] = candidates[sampled]
     return selected
 
 
-def common_query_indices(length: int, query_count: int) -> np.ndarray:
-    """Return a deterministic timeline-spanning query set shared by candidates."""
-    if length < 1 or query_count < 1:
-        raise ValueError("length and query_count must be positive")
-    return np.unique(
-        np.linspace(0, length - 1, min(length, query_count), dtype=np.int64)
-    )
+def full_timeline_query_indices(length: int) -> np.ndarray:
+    """Return every transformed-time query row in chronological order."""
+    if length < 1:
+        raise ValueError("length must be positive")
+    return np.arange(length, dtype=np.int64)
+
+
+def validate_full_timeline_query_rows(
+    unit_ids: np.ndarray,
+    query_times: np.ndarray,
+    expected_counts: Mapping[str, int],
+) -> None:
+    """Require each listed device's full query timeline exactly once in order."""
+    ids = np.asarray(unit_ids).astype(str).reshape(-1)
+    times = np.asarray(query_times, dtype=np.int64).reshape(-1)
+    if len(ids) != len(times) or not expected_counts:
+        raise ValueError("query IDs, times, and expected device counts must be aligned")
+    if set(np.unique(ids)) != set(expected_counts):
+        raise ValueError("query device inventory differs from the registered split")
+    for device, count in expected_counts.items():
+        if count < 1:
+            raise ValueError(f"Expected query count must be positive for {device}")
+        observed = times[ids == device]
+        if len(observed) != count or not np.array_equal(
+            observed, np.arange(count, dtype=np.int64)
+        ):
+            raise ValueError(
+                f"query timeline for {device} is incomplete, repeated, or reordered"
+            )
 
 
 def fold_critical_horizons(

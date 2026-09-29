@@ -2,11 +2,14 @@
 
 Evidence reviewed 2026-09-29. This is a research decision record, not a novelty claim. The local 43-page TFM-PHM source and the official TabDPT v1.3 release were also checked. Recheck this landscape before method submission because relevant preprints are appearing rapidly.
 
-Device-level validation and the prospective project-blinded C-MAPSS protocol
-are frozen in [DEVICE_VALIDATION_AND_BLIND_TEST_PREREGISTRATION.md](DEVICE_VALIDATION_AND_BLIND_TEST_PREREGISTRATION.md).
-The planned five-fold NC-P analysis uses the 20 canonical training engines, so
-it is development cross-validation rather than untouched confirmatory evidence;
-the previously accessed NC-P and XJTU test assets cannot be relabeled as blind.
+The corrected full-timeline NC-P device-validation protocol and blind-test
+eligibility gate are frozen in
+[DEVICE_VALIDATION_AND_BLIND_TEST_PREREGISTRATION.md](DEVICE_VALIDATION_AND_BLIND_TEST_PREREGISTRATION.md).
+The five-fold analysis uses the 20 canonical training engines, so it is
+development cross-validation rather than untouched confirmatory evidence. No
+eligible custodian-sealed blind set has been verified; the previously accessed
+NC-P and XJTU test assets cannot be relabeled as blind, and classic C-MAPSS is
+not a substitute for the paper's N-CMAPSS tasks.
 
 ## Candidate A — preserving temporal degradation evidence under a fixed inference budget
 
@@ -35,6 +38,13 @@ statistics on W50. All arms use the same 2,048 context rows, 1,024 query rows
 on each of the same four validation engines, eight TabDPT v1.3 ensembles, and
 the model's native PCA/context reduction. The validation queries are held
 constant across representations and seeds.
+
+That earlier 1,024-query-per-validation-engine experiment is a reduced-query
+diagnostic and must not be pooled with the paper-faithful all-query NC-P
+evaluation. The corrected grouped-CV protocol evaluates every transformed-time
+row from each held-out engine and uses 2,048 context rows as the resolved
+project configuration; the paper specifies all test rows but does not itself
+disclose that context-row count.
 
 | Representation | Input dimensions | All-stage normalized MAE | Critical 5% MAE | Critical 20% MAE |
 |---|---:|---:|---:|---:|

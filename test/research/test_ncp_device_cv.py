@@ -5,9 +5,10 @@ import pytest
 
 from picid.research.ncp_device_cv import (
     balanced_strided_context_indices,
-    common_query_indices,
+    full_timeline_query_indices,
     fold_critical_horizons,
     source_stratified_device_folds,
+    validate_full_timeline_query_rows,
 )
 from picid.research.temporal_controls import history_windows
 
@@ -79,13 +80,77 @@ def test_context_endpoints_respect_stride_and_balance_devices() -> None:
     assert np.all(history_b == 1)
 
 
-def test_common_query_grid_is_deterministic_and_spans_timeline() -> None:
-    expected = np.asarray([0, 2, 4, 6, 9])
-    np.testing.assert_array_equal(common_query_indices(10, 5), expected)
-    np.testing.assert_array_equal(common_query_indices(10, 20), np.arange(10))
+def test_query_indices_include_every_timeline_row_in_order() -> None:
+    np.testing.assert_array_equal(full_timeline_query_indices(10), np.arange(10))
+    np.testing.assert_array_equal(full_timeline_query_indices(1), np.asarray([0]))
+    validate_full_timeline_query_rows(
+        np.asarray(["DS01-unit01"] * 3 + ["DS04-unit01"] * 2),
+        np.asarray([0, 1, 2, 0, 1]),
+        {"DS01-unit01": 3, "DS04-unit01": 2},
+    )
 
 
-def test_context_sampler_rejects_stride_with_too_few_candidates() -> None:
+@pytest.mark.parametrize(
+    ("unit_ids", "query_times"),
+    [
+        (["DS01-unit01", "DS01-unit01", "DS04-unit01"], [0, 2, 0]),
+        (["DS01-unit01", "DS01-unit01", "DS04-unit01"], [1, 0, 0]),
+        (["DS01-unit01", "DS01-unit01", "DS04-unit02"], [0, 1, 0]),
+    ],
+)
+def test_full_query_audit_rejects_missing_reordered_or_wrong_devices(
+    unit_ids: list[str], query_times: list[int]
+) -> None:
+    with pytest.raises(ValueError):
+        validate_full_timeline_query_rows(
+            np.asarray(unit_ids),
+            np.asarray(query_times),
+            {"DS01-unit01": 2, "DS04-unit01": 1},
+        )
+
+
+def test_context_sampler_redistributes_short_device_quota_without_duplicates() -> None:
+    units = {
+        "DS01-unit01": (np.zeros((21, 2)), np.zeros(21)),
+        "DS04-unit01": (np.ones((201, 2)), np.zeros(201)),
+        "DS05-unit01": (np.full((201, 2), 2), np.zeros(201)),
+    }
+    selected = balanced_strided_context_indices(
+        units, stride=10, context_rows=20, seed=72
+    )
+    counts = {name: len(indices) for name, indices in selected.items()}
+    assert counts["DS01-unit01"] == 3
+    assert sorted(counts.values()) == [3, 8, 9]
+    assert sum(counts.values()) == 20
+    assert all(np.all(indices % 10 == 0) for indices in selected.values())
+    assert all(len(np.unique(indices)) == len(indices) for indices in selected.values())
+    replayed = balanced_strided_context_indices(
+        units, stride=10, context_rows=20, seed=72
+    )
+    for name in selected:
+        np.testing.assert_array_equal(selected[name], replayed[name])
+
+
+def test_context_sampler_fails_if_stride_caps_cannot_fill_budget() -> None:
     units = {"DS01-unit01": (np.zeros((20, 2)), np.zeros(20))}
-    with pytest.raises(ValueError, match="need 5"):
+    with pytest.raises(ValueError, match="only 2 eligible endpoints.*need 5"):
         balanced_strided_context_indices(units, stride=10, context_rows=5, seed=72)
+
+
+def test_paper_context_budget_is_fully_allocated_under_short_device_caps() -> None:
+    units = {
+        f"DS{source:02d}-unit{unit:02d}": (
+            np.zeros((length, 1), dtype=np.float32),
+            np.zeros(length, dtype=np.float32),
+        )
+        for source in (1, 4, 5, 7)
+        for unit, length in enumerate((5_950, 6_450, 7_050, 8_100), start=1)
+    }
+    selected = balanced_strided_context_indices(
+        units, stride=50, context_rows=2048, seed=72
+    )
+    counts = np.asarray([len(indices) for indices in selected.values()])
+    assert counts.sum() == 2048
+    assert counts.min() >= 119
+    assert counts.max() <= 132
+    assert np.all([np.all(indices % 50 == 0) for indices in selected.values()])

@@ -168,6 +168,7 @@ def regression_metrics_by_device(
         per_device[str(unit)] = {
             "query_count": int(mask.sum()),
             "mae": float(np.mean(np.abs(error))),
+            "mse": float(np.mean(error**2)),
             "rmse": float(np.sqrt(np.mean(error**2))),
         }
         for horizon_name, horizon in horizons.items():
@@ -182,7 +183,7 @@ def regression_metrics_by_device(
                 per_device[str(unit)][f"{horizon_name}_mae"] = float("nan")
                 per_device[str(unit)][f"{horizon_name}_query_count"] = 0
     output["per_device"] = per_device
-    metric_names = ["mae", "rmse", *[f"{name}_mae" for name in horizons]]
+    metric_names = ["mae", "mse", "rmse", *[f"{name}_mae" for name in horizons]]
     for metric in metric_names:
         values = [
             row[metric] for row in per_device.values() if np.isfinite(row[metric])
@@ -191,3 +192,37 @@ def regression_metrics_by_device(
             float(np.mean(values)) if values else float("nan")
         )
     return output
+
+
+def nasa_score_by_device(
+    predictions: np.ndarray, targets: np.ndarray, unit_ids: np.ndarray
+) -> dict[str, object]:
+    """Compute the official asymmetric NASA RUL score per device and macro.
+
+    Inputs must be in the benchmark's native RUL unit because the score uses
+    asymmetric error scales of 13 and 10 target units.
+    """
+    pred = np.asarray(predictions, dtype=np.float64).reshape(-1)
+    target = np.asarray(targets, dtype=np.float64).reshape(-1)
+    ids = np.asarray(unit_ids).reshape(-1)
+    if not (len(pred) == len(target) == len(ids)) or not len(pred):
+        raise ValueError(
+            "prediction, target, and unit arrays must be non-empty and aligned"
+        )
+    if not np.isfinite(pred).all() or not np.isfinite(target).all():
+        raise ValueError("prediction and target values must be finite")
+    difference = pred - target
+    scores = np.where(
+        difference < 0,
+        np.exp(-difference / 13.0) - 1.0,
+        np.exp(difference / 10.0) - 1.0,
+    )
+    per_device = {
+        str(unit): float(np.mean(scores[ids == unit])) for unit in np.unique(ids)
+    }
+    return {
+        "per_device": per_device,
+        "device_macro": float(np.mean(list(per_device.values()))),
+        "query_weighted": float(np.mean(scores)),
+        "unit": "native_rul_units",
+    }

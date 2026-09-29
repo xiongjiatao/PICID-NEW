@@ -8,6 +8,7 @@ from picid.research.temporal_controls import (
     device_balanced_sample,
     history_windows,
     multiscale_summary,
+    nasa_score_by_device,
     regression_metrics_by_device,
     stratified_timeline_indices,
 )
@@ -109,7 +110,20 @@ def test_warning_labels_use_native_rul_and_macro_errors_weight_devices_equally()
         {"critical": 0.5},
     )
     assert metrics["device_macro_mae"] == 5.0
+    assert metrics["device_macro_mse"] == 50.0
     assert metrics["device_macro_critical_mae"] == 5.0
+
+
+def test_nasa_score_uses_native_asymmetric_rul_scales_and_device_macro():
+    scores = nasa_score_by_device(
+        predictions=np.array([87.0, 110.0, 100.0]),
+        targets=np.array([100.0, 100.0, 100.0]),
+        unit_ids=np.array(["late", "early", "early"]),
+    )
+    one_scale_error = np.e - 1.0
+    assert scores["per_device"]["late"] == pytest.approx(one_scale_error)
+    assert scores["per_device"]["early"] == pytest.approx(one_scale_error / 2)
+    assert scores["device_macro"] == pytest.approx(0.75 * one_scale_error)
 
 
 def test_critical_phase_uses_explicit_native_units_not_normalized_regression_targets():
