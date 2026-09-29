@@ -125,8 +125,14 @@ def progress_from_log(path: Path, tail_bytes: int = 65536, max_epochs: int | Non
             content = stream.read().decode("utf-8", errors="replace").replace("\r", "\n")
     except OSError:
         return None
+    content = re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", content)
 
     patterns = (
+        ("estimator_prediction", re.compile(
+            r"Estimator\s+(\d+)/(\d+)\s+Predicting in batches of size\s+(\d+):"
+            r"[^\n]*?\b(\d+)/(\d+)\s*\[",
+            re.IGNORECASE,
+        )),
         ("ensemble", re.compile(r"ensembles:\s*\d+%[^\n]*?\b(\d+)\s*/\s*(\d+)", re.IGNORECASE)),
         ("epoch", re.compile(r"Epoch\s+(\d+):\s*\d+%[^\n]*?\b(\d+)\s*/\s*(\d+)", re.IGNORECASE)),
         ("training", re.compile(r"Training:\s*\d+%[^\n]*?\b(\d+)\s*/\s*(\d+)", re.IGNORECASE)),
@@ -135,6 +141,23 @@ def progress_from_log(path: Path, tail_bytes: int = 65536, max_epochs: int | Non
         matches = pattern.findall(content)
         if matches:
             match = matches[-1]
+            if stage == "estimator_prediction":
+                member_index, member_count, batch_size, batch_completed, batch_total = (
+                    int(value) for value in match
+                )
+                if member_count > 0 and batch_total > 0:
+                    return {
+                        "stage": stage,
+                        "key": stage,
+                        "completed": member_index * batch_total + batch_completed,
+                        "total": member_count * batch_total,
+                        "member_index": member_index,
+                        "member_count": member_count,
+                        "batch_size": batch_size,
+                        "batches_completed": batch_completed,
+                        "batches_total": batch_total,
+                        "eta_scope": "current_tabpfn_predict_call",
+                    }
             if stage == "epoch":
                 epoch, completed, total = (int(value) for value in match)
                 if max_epochs is not None:

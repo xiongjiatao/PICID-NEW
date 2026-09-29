@@ -35,6 +35,29 @@ def test_progress_parser_reads_latest_ensemble_and_epoch_markers(tmp_path):
     assert progress_rate(progress, {"key": "ensemble", "completed": 1, "monotonic": 10.0}, now=12.0) == 0.5
 
 
+def test_progress_parser_reads_tabpfn_member_and_inner_batch_progress(tmp_path):
+    log = tmp_path / "stdout.log"
+    log.write_text(
+        "\x1b[A\rEstimator 3/8 Predicting in batches of size 1: "
+        "47%|████▋| 15/32 [00:00<00:00, 69.7it/s]\x1b[A"
+    )
+
+    progress = progress_from_log(log)
+
+    assert progress == {
+        "stage": "estimator_prediction",
+        "key": "estimator_prediction",
+        "completed": 111,
+        "total": 256,
+        "member_index": 3,
+        "member_count": 8,
+        "batch_size": 1,
+        "batches_completed": 15,
+        "batches_total": 32,
+        "eta_scope": "current_tabpfn_predict_call",
+    }
+
+
 def test_epoch_progress_is_monotonic_across_epoch_boundaries(tmp_path):
     log = tmp_path / "stdout.log"
     log.write_text("Epoch 3: 40%|████ | 20/50\n")

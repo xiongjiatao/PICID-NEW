@@ -168,10 +168,23 @@ def main():
             progress = progress_from_log(args.output / "stdout.log", max_epochs=max_epochs)
             if progress is not None:
                 now_progress = time.monotonic()
-                progress["steps_per_second"] = progress_rate(progress, last_progress, now_progress)
-                progress["eta_seconds"] = eta_seconds(progress, last_progress, now_progress)
+                reset = (
+                    last_progress is not None
+                    and last_progress["key"] == progress["key"]
+                    and progress["completed"] < last_progress["completed"]
+                )
+                if reset:
+                    progress["steps_per_second"] = None
+                    progress["eta_seconds"] = None
+                else:
+                    progress["steps_per_second"] = progress_rate(
+                        progress, last_progress, now_progress
+                    )
+                    progress["eta_seconds"] = eta_seconds(
+                        progress, last_progress, now_progress
+                    )
                 event["stage_progress"] = progress
-                if (last_progress is None or last_progress["key"] != progress["key"]
+                if (last_progress is None or reset or last_progress["key"] != progress["key"]
                         or progress["completed"] > last_progress["completed"]):
                     last_progress = {
                         "key": progress["key"],
