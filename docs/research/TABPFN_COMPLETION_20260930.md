@@ -36,7 +36,19 @@ reduction in context, ensemble size, window length or test query count.
 
 A prior XJTU seed72 final took21,957 s; this is an observed reference, not an ETA
 for co-scheduled seeds. NC-P candidate runtime and feasibility remain unresolved.
-New launches follow the latest supplied GPU0–2 restriction. Existing Chronos2
-and PICID TabDPT jobs are retained. The reported process-tree RSS of about208GB
+The user later authorized parallel work on physical GPUs0–6, superseding the
+0–2 restriction above. Existing Chronos2 and PICID TabDPT jobs are retained. The reported process-tree RSS of about208GB
 sums shared forked memory and is not evidence of208GB unique physical memory;
 host MemAvailable is checked directly for scheduling.
+
+
+## Parallel scheduling update — 2026-09-30
+
+With user authorization expanded to GPU0–6, the still-pending NC-P 20/5 and
+50/50 seed72 validation stages are launched on free GPUs3 and4. Their output
+paths and commands match the queued controller plan, so it can verify and reuse
+them after its 10/5 stage finishes instead of running either candidate twice.
+Both admission checks require23,000 MiB estimated peak plus1,024 MiB reserve;
+this is only a ceiling and the 50/50 candidate may fail. Existing GPU0–2 tasks
+continue. GPUs5–6 remain available for additional stages after observed memory
+and process checks.

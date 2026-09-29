@@ -232,3 +232,14 @@ is also a constraint: the completed TabDPT seed88 tracker observed about
 - No warning method novelty or field maintenance-event performance has been
   established. The public run-to-failure labels support only a derived warning
   task until separately validated against real maintenance events.
+
+
+## GPU authorization update — 2026-09-30
+
+The user explicitly updated scheduling authorization to physical GPUs0–6 and
+allows concurrent jobs. This supersedes the 0–2 restriction in the prior host
+reconciliation entry for new jobs in this session. Running jobs on GPUs0–2
+continue unchanged. At the update, GPUs3–6 were empty; NC-P 20/5 and50/50
+validation candidates are assigned separately there. A concurrent memory
+preflight remains mandatory, and no existing user or third-party process is
+interrupted.

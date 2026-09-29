@@ -5,7 +5,7 @@ import json
 import math
 
 SEEDS = (72, 88, 101)
-PHYSICAL_GPUS = (0, 1, 2)
+PHYSICAL_GPUS = (0, 1, 2, 3, 4, 5, 6)
 WINDOWS = ((1, 1), (5, 1), (10, 5), (20, 5), (50, 50))
 DATASETS = {
     "nc_p": "concepts_n_cmapss_multi/prognostics",
