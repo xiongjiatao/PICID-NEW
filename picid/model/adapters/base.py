@@ -204,6 +204,16 @@ class AbstractFitPredictWrapper(ABC):
             y_np = y.cpu().numpy() if isinstance(y, torch.Tensor) else np.asarray(y)
             self._seen_classes = np.unique(y_np.ravel()).astype(int)
 
+    def fit_with_metadata(self, X: torch.Tensor, y: torch.Tensor, metadata=None):
+        """Fit using optional row-aligned metadata supplied by the dataset.
+
+        Most estimators need only features and targets. Specialized estimators
+        can override this method when a documented fit-time policy depends on
+        metadata such as device identifiers.
+        """
+        del metadata
+        return self.fit(X, y)
+
     def _iterate_batches(self, X: torch.Tensor):
         """
         Yield CPU batches for the optional batched prediction path.

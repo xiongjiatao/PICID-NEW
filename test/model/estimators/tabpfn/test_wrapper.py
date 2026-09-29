@@ -19,6 +19,17 @@ class _StubTabPFNRegressor:
         self.device = kwargs.get("device", "cpu")
 
     def fit(self, X, y=None):
+        self.fit_X = (
+            X.detach().cpu().numpy().copy()
+            if isinstance(X, torch.Tensor)
+            else np.array(X, copy=True)
+        )
+        if y is None:
+            self.fit_y = None
+        elif isinstance(y, torch.Tensor):
+            self.fit_y = y.detach().cpu().numpy().copy()
+        else:
+            self.fit_y = np.array(y, copy=True)
         return self
 
     def predict(self, X, output_type="mean"):
@@ -112,6 +123,41 @@ def test_regression_predict_without_full_outputs_path():
     pred = w.predict(X)
     assert pred.shape == (5, 1)
     assert pred.dtype == torch.float32
+
+
+def test_fit_with_metadata_applies_configured_unit_balanced_context_cap():
+    FitPredictTabPFNWrapper = _cls()
+    w = FitPredictTabPFNWrapper(
+        device="cpu",
+        task_type="regression",
+        max_fit_samples=4,
+        fit_sample_strategy="unit_balanced_temporal",
+        **_common_kwargs(),
+    )
+    X = torch.arange(12, dtype=torch.float32).reshape(12, 1)
+    y = X * 10
+    unit_ids = torch.tensor([[0]] * 6 + [[1]] * 6)
+
+    w.fit_with_metadata(X, y, metadata={"unit_id": unit_ids})
+
+    np.testing.assert_array_equal(w.backbone.fit_X[:, 0], [0, 5, 6, 11])
+    np.testing.assert_array_equal(w.backbone.fit_y[:, 0], [0, 50, 60, 110])
+
+
+def test_fit_with_metadata_requires_row_aligned_unit_ids_above_cap():
+    FitPredictTabPFNWrapper = _cls()
+    w = FitPredictTabPFNWrapper(
+        device="cpu",
+        task_type="regression",
+        max_fit_samples=2,
+        fit_sample_strategy="unit_balanced_temporal",
+        **_common_kwargs(),
+    )
+
+    with pytest.raises(ValueError, match="unit_id metadata is required"):
+        w.fit_with_metadata(
+            torch.ones(3, 2), torch.ones(3, 1), metadata={}
+        )
 
 
 def test_classification_uses_predict_proba():

@@ -586,6 +586,13 @@ class FitPredictWrapperLightningModule(CustomEvaluatorLightningModule):
 
         allows_multi_target = self.backbone.allows_multi_target
         n_targets = y.shape[1]
+        fit_metadata = {}
+        unit_ids = batch.get("unit_id")
+        if unit_ids is not None:
+            if isinstance(unit_ids, torch.Tensor) and unit_ids.ndim > 0:
+                if unit_ids.shape[0] == 1:
+                    unit_ids = unit_ids.squeeze(0)
+            fit_metadata["unit_id"] = unit_ids
 
         if not allows_multi_target and n_targets > 1:
             # Reshape y to be 1D if the model does not support multi-target
@@ -599,11 +606,13 @@ class FitPredictWrapperLightningModule(CustomEvaluatorLightningModule):
             )
             for target_idx in range(n_targets):
                 logger.info(f"Fitting target dimension {target_idx + 1} of {n_targets}")
-                self.backbone.fit(X, y[:, target_idx].unsqueeze(1))
+                self.backbone.fit_with_metadata(
+                    X, y[:, target_idx].unsqueeze(1), metadata=fit_metadata
+                )
                 model_id = f"{batch["task_idx"].item()}_{target_idx}"
                 self.backbone.serialize_model(model_id)
         else:
-            self.backbone.fit(X, y)
+            self.backbone.fit_with_metadata(X, y, metadata=fit_metadata)
             model_id = str(batch["task_idx"].item())
             self.backbone.serialize_model(model_id)
 

@@ -471,6 +471,30 @@ class TestFitPredictWrapperLightningModule:
         assert out["targets"].ndim == 3
         assert out["predictions"].shape[0] == 50 and out["targets"].shape[0] == 50
 
+    def test_model_step_fit_forwards_row_aligned_unit_ids_to_backbone(
+        self, mock_evaluators, mock_fit_predict_backbone, phm_fit_predict_batch
+    ):
+        received = []
+        original_fit = mock_fit_predict_backbone.fit_with_metadata
+
+        def record_fit(X, y, metadata=None):
+            received.append(metadata["unit_id"].clone())
+            return original_fit(X, y, metadata=metadata)
+
+        mock_fit_predict_backbone.fit_with_metadata = record_fit
+        module = FitPredictWrapperLightningModule(
+            backbone=mock_fit_predict_backbone,
+            evaluators=mock_evaluators,
+        )
+        batch = dict(phm_fit_predict_batch)
+        batch["unit_id"] = torch.arange(50).reshape(1, 50, 1)
+
+        module.model_step_fit(batch)
+
+        assert len(received) == 1
+        assert received[0].shape == (50, 1)
+        torch.testing.assert_close(received[0], torch.arange(50).reshape(50, 1))
+
     def test_model_step_predict_returns_predictions_and_targets(
         self, mock_evaluators, mock_fit_predict_backbone, phm_fit_predict_batch
     ):

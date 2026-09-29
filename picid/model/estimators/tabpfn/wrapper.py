@@ -15,6 +15,9 @@ from picid.model.adapters.base import (
 )
 from picid.model.definitions import CLASSIFICATION_TASKS, FORECASTING_TASKS
 from picid.model.definitions import REGRESSION_TASKS
+from picid.model.estimators.tabpfn.context_sampling import (
+    unit_balanced_temporal_indices,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +55,8 @@ class FitPredictTabPFNWrapper(AbstractFitPredictWrapper):
         yield_batch_size: int = 128,
         output_type: Literal["mean", "full"] = "mean",
         full_outputs_path: str = None,
+        max_fit_samples: int | None = None,
+        fit_sample_strategy: Literal["none", "unit_balanced_temporal"] = "none",
         **kwargs,
     ):
         """
@@ -73,6 +78,12 @@ class FitPredictTabPFNWrapper(AbstractFitPredictWrapper):
             Output type requested from the regressor.
         full_outputs_path : str, optional
             Directory used to persist full TabPFN outputs.
+        max_fit_samples : int, optional
+            Optional hard limit for the fit context. No sampling is performed
+            when unset or when the input already fits within the limit.
+        fit_sample_strategy : {"none", "unit_balanced_temporal"}, default="none"
+            Deterministic train-context sampling policy used with
+            ``max_fit_samples``.
         **kwargs : Any
             Additional wrapper arguments forwarded to the backbone.
         """
@@ -116,6 +127,20 @@ class FitPredictTabPFNWrapper(AbstractFitPredictWrapper):
         self.model_cache_path = model_cache_path
         self.device = device
         self.full_outputs_path = full_outputs_path
+        if max_fit_samples is not None and (
+            isinstance(max_fit_samples, bool)
+            or not isinstance(max_fit_samples, int)
+            or max_fit_samples <= 0
+        ):
+            raise ValueError("max_fit_samples must be a positive integer or None")
+        if fit_sample_strategy not in {"none", "unit_balanced_temporal"}:
+            raise ValueError(f"Unsupported fit_sample_strategy: {fit_sample_strategy}")
+        if fit_sample_strategy != "none" and max_fit_samples is None:
+            raise ValueError("max_fit_samples is required for the selected fit policy")
+        if max_fit_samples is not None and fit_sample_strategy == "none":
+            raise ValueError("fit_sample_strategy must be set when max_fit_samples is set")
+        self.max_fit_samples = max_fit_samples
+        self.fit_sample_strategy = fit_sample_strategy
 
         super().__init__(
             backbone=backbone,
@@ -123,6 +148,49 @@ class FitPredictTabPFNWrapper(AbstractFitPredictWrapper):
             yield_batch_size=yield_batch_size,
             **kwargs,
         )
+
+    @override
+    def fit_with_metadata(self, X: torch.Tensor, y: torch.Tensor, metadata=None):
+        """Fit the model, applying an explicit train-context cap if configured."""
+        if self.max_fit_samples is None or X.shape[0] <= self.max_fit_samples:
+            return self.fit(X, y)
+
+        metadata = metadata or {}
+        unit_ids = metadata.get("unit_id")
+        if unit_ids is None:
+            raise ValueError(
+                "unit_id metadata is required to apply unit_balanced_temporal "
+                "TabPFN context sampling"
+            )
+        id_array = (
+            unit_ids.detach().cpu().numpy()
+            if isinstance(unit_ids, torch.Tensor)
+            else np.asarray(unit_ids)
+        )
+        if id_array.shape[0] != X.shape[0] or y.shape[0] != X.shape[0]:
+            raise ValueError(
+                "Features, targets, and unit_id metadata must have the same row count"
+            )
+
+        indices = unit_balanced_temporal_indices(unit_ids, self.max_fit_samples)
+        if len(indices) != self.max_fit_samples:
+            raise RuntimeError(
+                f"Context sampler returned {len(indices)} rows; "
+                f"expected {self.max_fit_samples}"
+            )
+        id_rows = id_array.reshape(id_array.shape[0], -1)
+        n_units = len({tuple(row.tolist()) for row in id_rows})
+        index_tensor = torch.as_tensor(indices, dtype=torch.long, device=X.device)
+        logger.info(
+            "Sampling TabPFN training context with %s: %d -> %d rows across %d units",
+            self.fit_sample_strategy,
+            X.shape[0],
+            len(indices),
+            n_units,
+        )
+        sampled_X = X.index_select(0, index_tensor)
+        sampled_y = y.index_select(0, index_tensor)
+        return self.fit(sampled_X, sampled_y)
 
     @override
     def _call_predict(self, X: torch.Tensor) -> torch.Tensor:
