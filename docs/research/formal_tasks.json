@@ -25,10 +25,18 @@
       "best_val_loss": 0.009771773591637611,
       "test_disabled_log_verified": true,
       "test_fields_populated": false,
-      "output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/nc_p_tabdpt_w1_s1_lrNone_post_unitwise_awkw29",
+      "output": "artifacts/formal/selection_runs/nc_p_tabdpt_w1_s1_lrNone_post_unitwise_awkw29",
       "physical_gpu": 1,
       "logical_device": "cuda:0",
-      "progress_source": "artifacts/formal/nc_p_tabdpt_selection_progress.json"
+      "progress_source": "artifacts/formal/nc_p_tabdpt_selection_progress.json",
+      "selection_sha256": "fde4020eeab69f2bc176386b8baa8994de31a5ef000634f0d2996db8da08677f",
+      "execution_overrides": [
+        "model.model_weight_path=/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/artifacts/dependencies/tabdpt1_1.safetensors",
+        "model.inf_batch_size=32",
+        "model.context_size=2048",
+        "model.n_ensembles=8",
+        "model.compile=false"
+      ]
     },
     {
       "dataset": "nc_p",
@@ -55,10 +63,18 @@
       "best_val_loss": 0.01201151218265295,
       "test_disabled_log_verified": true,
       "test_fields_populated": false,
-      "output": "artifacts/formal/selection_runs/nc_p_tabdpt_w5_s1_lrNone_awkw29_fixed_hydra_gpu2",
-      "physical_gpu": 2,
+      "output": "artifacts/formal/selection_runs/nc_p_tabdpt_w5_s1_lrNone_post_unitwise_awkw29",
+      "physical_gpu": 1,
       "logical_device": "cuda:0",
-      "progress_source": "artifacts/formal/nc_p_tabdpt_selection_progress.json"
+      "progress_source": "artifacts/formal/nc_p_tabdpt_selection_progress.json",
+      "selection_sha256": "fde4020eeab69f2bc176386b8baa8994de31a5ef000634f0d2996db8da08677f",
+      "execution_overrides": [
+        "model.model_weight_path=/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/artifacts/dependencies/tabdpt1_1.safetensors",
+        "model.inf_batch_size=32",
+        "model.context_size=2048",
+        "model.n_ensembles=8",
+        "model.compile=false"
+      ]
     },
     {
       "dataset": "nc_p",
@@ -82,11 +98,19 @@
       "cost_estimate": null,
       "cost_status": "not_measured_on_candidate_exact_context_and_features",
       "status": "success",
-      "output": "artifacts/formal/selection_runs/nc_p_tabdpt_w10_s5_lrNone_awkw29_fixed_hydra_gpu0",
-      "physical_gpu": 0,
+      "output": "artifacts/formal/selection_runs/nc_p_tabdpt_w10_s5_lrNone_post_unitwise_awkw29",
+      "physical_gpu": 1,
       "logical_device": "cuda:0",
       "test_disabled_log_verified": true,
-      "best_val_loss": 0.010536076501011848
+      "best_val_loss": 0.010536076501011848,
+      "selection_sha256": "fde4020eeab69f2bc176386b8baa8994de31a5ef000634f0d2996db8da08677f",
+      "execution_overrides": [
+        "model.model_weight_path=/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/artifacts/dependencies/tabdpt1_1.safetensors",
+        "model.inf_batch_size=32",
+        "model.context_size=2048",
+        "model.n_ensembles=8",
+        "model.compile=false"
+      ]
     },
     {
       "dataset": "nc_p",
@@ -109,10 +133,20 @@
       ],
       "cost_estimate": null,
       "cost_status": "not_measured_on_candidate_exact_context_and_features",
-      "status": "running",
-      "output": "artifacts/formal/selection_runs/nc_p_tabdpt_w20_s5_lrNone_awkw29_fixed_hydra_gpu0",
-      "physical_gpu": 0,
-      "logical_device": "cuda:0"
+      "status": "success",
+      "output": "artifacts/formal/selection_runs/nc_p_tabdpt_w20_s5_lrNone_post_unitwise_awkw29",
+      "physical_gpu": 1,
+      "logical_device": "cuda:0",
+      "best_val_loss": 0.013514513149857521,
+      "test_disabled_log_verified": true,
+      "selection_sha256": "fde4020eeab69f2bc176386b8baa8994de31a5ef000634f0d2996db8da08677f",
+      "execution_overrides": [
+        "model.model_weight_path=/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/artifacts/dependencies/tabdpt1_1.safetensors",
+        "model.inf_batch_size=32",
+        "model.context_size=2048",
+        "model.n_ensembles=8",
+        "model.compile=false"
+      ]
     },
     {
       "dataset": "nc_p",
@@ -135,10 +169,20 @@
       ],
       "cost_estimate": null,
       "cost_status": "not_measured_on_candidate_exact_context_and_features",
-      "status": "running",
-      "output": "artifacts/formal/selection_runs/nc_p_tabdpt_w50_s50_lrNone_awkw29_fixed_hydra_gpu3",
-      "physical_gpu": 3,
-      "logical_device": "cuda:0"
+      "status": "success",
+      "output": "artifacts/formal/selection_runs/nc_p_tabdpt_w50_s50_lrNone_post_unitwise_awkw29",
+      "physical_gpu": 1,
+      "logical_device": "cuda:0",
+      "best_val_loss": 0.022940920665860176,
+      "test_disabled_log_verified": true,
+      "selection_sha256": "fde4020eeab69f2bc176386b8baa8994de31a5ef000634f0d2996db8da08677f",
+      "execution_overrides": [
+        "model.model_weight_path=/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/artifacts/dependencies/tabdpt1_1.safetensors",
+        "model.inf_batch_size=32",
+        "model.context_size=2048",
+        "model.n_ensembles=8",
+        "model.compile=false"
+      ]
     },
     {
       "dataset": "nc_p",
@@ -1203,7 +1247,27 @@
       "cost_status": "not_measured_on_candidate_exact_context_and_features",
       "status": "failed_validation_oom_default_cached_fit",
       "failure_output": "artifacts/formal/selection_runs/xjtu_tabpfn_w1_s1_lrNone_formal_awkw29_gpu2",
-      "validation_metrics_present": false
+      "validation_metrics_present": false,
+      "low_memory_yield32_status": "success",
+      "low_memory_yield32_overrides": [
+        "model.fit_mode=low_memory",
+        "model.yield_strategy=true",
+        "model.yield_batch_size=32"
+      ],
+      "low_memory_yield32_output": "artifacts/formal/selection_runs/xjtu_tabpfn_w1_s1_lrNone_formal_awkw29_lowmem_yield32_gpu2",
+      "low_memory_yield32_best_val_loss": 0.09925700724124908,
+      "low_memory_yield32_metrics_csv": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal_xjtu_tabpfn_w1_s1_lrNone_formal_awkw29_lowmem_yield32_gpu2_seed72_selection/runs/formal_xjtu_tabpfn_w1_s1_lrNone_formal_awkw29_lowmem_yield32_gpu2_seed72_selection+xjtu_sy+prognostics+phmd_split+combined+tabpfn_fit_predict/2026-09-28_22-17-52/csv_logs/version_0/metrics.csv",
+      "low_memory_yield32_physical_gpu": 2,
+      "low_memory_yield32_logical_device": "cuda:0",
+      "low_memory_yield32_elapsed_seconds": 675.8967414032668,
+      "low_memory_yield32_peak_gpu_memory_mib": 23736,
+      "low_memory_yield32_test_disabled_log_verified": true,
+      "low_memory_yield32_test_fields_populated": false,
+      "low_memory_yield32_training_shape": [
+        6557,
+        460
+      ],
+      "low_memory_yield32_selection_protocol_distinct": true
     },
     {
       "dataset": "xjtu",
@@ -1226,7 +1290,27 @@
       ],
       "cost_estimate": null,
       "cost_status": "not_measured_on_candidate_exact_context_and_features",
-      "status": "pending_separate_low_memory_protocol_grid"
+      "status": "default_cached_fit_not_evaluated",
+      "low_memory_yield32_status": "success",
+      "low_memory_yield32_overrides": [
+        "model.fit_mode=low_memory",
+        "model.yield_strategy=true",
+        "model.yield_batch_size=32"
+      ],
+      "low_memory_yield32_output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_tabpfn_w5_s1_lrNone_lowmem_yield32_resume3_gpu4",
+      "low_memory_yield32_physical_gpu": 4,
+      "low_memory_yield32_logical_device": "cuda:0",
+      "low_memory_yield32_best_val_loss": 0.12284890562295914,
+      "low_memory_yield32_metrics_csv": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal_xjtu_tabpfn_w5_s1_lrNone_lowmem_yield32_resume3_gpu4_seed72_selection/runs/formal_xjtu_tabpfn_w5_s1_lrNone_lowmem_yield32_resume3_gpu4_seed72_selection+xjtu_sy+prognostics+phmd_split+combined+tabpfn_fit_predict/2026-09-28_22-57-38/csv_logs/version_0/metrics.csv",
+      "low_memory_yield32_elapsed_seconds": 3624.3410552069545,
+      "low_memory_yield32_peak_gpu_memory_mib": 17162,
+      "low_memory_yield32_test_disabled_log_verified": true,
+      "low_memory_yield32_test_fields_populated": false,
+      "low_memory_yield32_training_shape": [
+        6557,
+        2300
+      ],
+      "low_memory_yield32_selection_protocol_distinct": true
     },
     {
       "dataset": "xjtu",
@@ -1249,7 +1333,27 @@
       ],
       "cost_estimate": null,
       "cost_status": "not_measured_on_candidate_exact_context_and_features",
-      "status": "pending_separate_low_memory_protocol_grid"
+      "status": "default_cached_fit_not_evaluated",
+      "low_memory_yield32_status": "success",
+      "low_memory_yield32_overrides": [
+        "model.fit_mode=low_memory",
+        "model.yield_strategy=true",
+        "model.yield_batch_size=32"
+      ],
+      "low_memory_yield32_output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_tabpfn_w10_s5_lrNone_lowmem_yield32_resume3_gpu4",
+      "low_memory_yield32_best_val_loss": 0.11653939634561539,
+      "low_memory_yield32_metrics_csv": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal_xjtu_tabpfn_w10_s5_lrNone_lowmem_yield32_resume3_gpu4_seed72_selection/runs/formal_xjtu_tabpfn_w10_s5_lrNone_lowmem_yield32_resume3_gpu4_seed72_selection+xjtu_sy+prognostics+phmd_split+combined+tabpfn_fit_predict/2026-09-28_23-58-03/csv_logs/version_0/metrics.csv",
+      "low_memory_yield32_physical_gpu": 4,
+      "low_memory_yield32_logical_device": "cuda:0",
+      "low_memory_yield32_elapsed_seconds": 1124.9393884837627,
+      "low_memory_yield32_peak_gpu_memory_mib": 19898,
+      "low_memory_yield32_test_disabled_log_verified": true,
+      "low_memory_yield32_test_fields_populated": false,
+      "low_memory_yield32_training_shape": [
+        1316,
+        4600
+      ],
+      "low_memory_yield32_selection_protocol_distinct": true
     },
     {
       "dataset": "xjtu",
@@ -1272,7 +1376,27 @@
       ],
       "cost_estimate": null,
       "cost_status": "not_measured_on_candidate_exact_context_and_features",
-      "status": "pending_separate_low_memory_protocol_grid"
+      "status": "default_cached_fit_not_evaluated",
+      "low_memory_yield32_status": "success",
+      "low_memory_yield32_overrides": [
+        "model.fit_mode=low_memory",
+        "model.yield_strategy=true",
+        "model.yield_batch_size=32"
+      ],
+      "low_memory_yield32_output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_tabpfn_w20_s5_lrNone_lowmem_yield32_resume3_gpu4",
+      "low_memory_yield32_best_val_loss": 0.10546215623617172,
+      "low_memory_yield32_metrics_csv": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal_xjtu_tabpfn_w20_s5_lrNone_lowmem_yield32_resume3_gpu4_seed72_selection/runs/formal_xjtu_tabpfn_w20_s5_lrNone_lowmem_yield32_resume3_gpu4_seed72_selection+xjtu_sy+prognostics+phmd_split+combined+tabpfn_fit_predict/2026-09-29_00-16-48/csv_logs/version_0/metrics.csv",
+      "low_memory_yield32_physical_gpu": 4,
+      "low_memory_yield32_logical_device": "cuda:0",
+      "low_memory_yield32_elapsed_seconds": 2955.893806271255,
+      "low_memory_yield32_peak_gpu_memory_mib": 11176,
+      "low_memory_yield32_test_disabled_log_verified": true,
+      "low_memory_yield32_test_fields_populated": false,
+      "low_memory_yield32_training_shape": [
+        1316,
+        9200
+      ],
+      "low_memory_yield32_selection_protocol_distinct": true
     },
     {
       "dataset": "xjtu",
@@ -1295,7 +1419,27 @@
       ],
       "cost_estimate": null,
       "cost_status": "not_measured_on_candidate_exact_context_and_features",
-      "status": "pending_separate_low_memory_protocol_grid"
+      "status": "default_cached_fit_not_evaluated",
+      "low_memory_yield32_status": "success",
+      "low_memory_yield32_overrides": [
+        "model.fit_mode=low_memory",
+        "model.yield_strategy=true",
+        "model.yield_batch_size=32"
+      ],
+      "low_memory_yield32_output": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal/selection_runs/xjtu_tabpfn_w50_s50_lrNone_lowmem_yield32_resume3_gpu4",
+      "low_memory_yield32_best_val_loss": 0.040901441127061844,
+      "low_memory_yield32_metrics_csv": "/home/xiongjiatao/.aaa-newproj/.aa-alarmllm/picid-release copy/.worktrees/formal-baselines/artifacts/formal_xjtu_tabpfn_w50_s50_lrNone_lowmem_yield32_resume3_gpu4_seed72_selection/runs/formal_xjtu_tabpfn_w50_s50_lrNone_lowmem_yield32_resume3_gpu4_seed72_selection+xjtu_sy+prognostics+phmd_split+combined+tabpfn_fit_predict/2026-09-29_01-06-04/csv_logs/version_0/metrics.csv",
+      "low_memory_yield32_physical_gpu": 4,
+      "low_memory_yield32_logical_device": "cuda:0",
+      "low_memory_yield32_elapsed_seconds": 3129.74899931252,
+      "low_memory_yield32_peak_gpu_memory_mib": 12534,
+      "low_memory_yield32_test_disabled_log_verified": true,
+      "low_memory_yield32_test_fields_populated": false,
+      "low_memory_yield32_training_shape": [
+        134,
+        23000
+      ],
+      "low_memory_yield32_selection_protocol_distinct": true
     },
     {
       "dataset": "xjtu",
@@ -1772,21 +1916,62 @@
       "model": "tabdpt",
       "seed": 72,
       "stage": "final",
-      "status": "blocked_on_validation_freeze_and_execution_equivalence"
+      "status": "completed_audited_device_macro",
+      "selection_sha256": "fde4020eeab69f2bc176386b8baa8994de31a5ef000634f0d2996db8da08677f",
+      "selected_window": 1,
+      "selected_stride": 1,
+      "output": "artifacts/formal/nc_p_tabdpt11_selected_seed72_final_retry1",
+      "physical_gpu": 0,
+      "logical_device": "cuda:0",
+      "physical_gpus": [
+        0
+      ],
+      "elapsed_seconds": 30463.191647220403,
+      "peak_gpu_memory_mib": 3868,
+      "result": "artifacts/formal/results/nc_p_tabdpt11_device_metrics_seed72.json",
+      "prediction_audit": "artifacts/formal/results/nc_p_tabdpt11_prediction_audit_seed72.json",
+      "critical_result": "artifacts/formal/results/nc_p_tabdpt11_critical_metrics_seed72.json",
+      "nasa_result": "artifacts/formal/results/nc_p_tabdpt11_nasa_metrics_seed72.json",
+      "prediction_rows": 196153,
+      "test_device_count": 16
     },
     {
       "dataset": "nc_p",
       "model": "tabdpt",
       "seed": 88,
       "stage": "final",
-      "status": "blocked_on_validation_freeze_and_execution_equivalence"
+      "status": "running",
+      "selection_sha256": "fde4020eeab69f2bc176386b8baa8994de31a5ef000634f0d2996db8da08677f",
+      "selected_window": 1,
+      "selected_stride": 1,
+      "physical_gpus": [
+        2
+      ],
+      "logical_device": "cuda:0",
+      "output": "artifacts/formal/nc_p_tabdpt11_selected_seed88_final_retry1",
+      "expected_peak_mib": 5000,
+      "reserve_mib": 1024,
+      "preflight_monitor_failure_output": "artifacts/formal/nc_p_tabdpt11_selected_seed88_final/manifest.json",
+      "preflight_monitor_failure_reason": "Sandboxed Python subprocess could not query NVML; model command was not launched; elevated tracked retry follows."
     },
     {
       "dataset": "nc_p",
       "model": "tabdpt",
       "seed": 101,
       "stage": "final",
-      "status": "blocked_on_validation_freeze_and_execution_equivalence"
+      "status": "running",
+      "selection_sha256": "fde4020eeab69f2bc176386b8baa8994de31a5ef000634f0d2996db8da08677f",
+      "selected_window": 1,
+      "selected_stride": 1,
+      "physical_gpus": [
+        3
+      ],
+      "logical_device": "cuda:0",
+      "output": "artifacts/formal/nc_p_tabdpt11_selected_seed101_final_retry1",
+      "expected_peak_mib": 5000,
+      "reserve_mib": 1024,
+      "preflight_monitor_failure_output": "artifacts/formal/nc_p_tabdpt11_selected_seed101_final/manifest.json",
+      "preflight_monitor_failure_reason": "Sandboxed Python subprocess could not query NVML; model command was not launched; elevated tracked retry follows."
     },
     {
       "dataset": "nc_p",
@@ -2005,21 +2190,45 @@
       "model": "tabpfn",
       "seed": 72,
       "stage": "final",
-      "status": "blocked_on_validation_freeze_and_execution_equivalence"
+      "status": "running",
+      "physical_gpus": [
+        4
+      ],
+      "logical_device": "cuda:0",
+      "output": "artifacts/formal/xjtu_tabpfn_lowmem_yield32_w50_seed72_final_retry1",
+      "selected_window": 50,
+      "selected_stride": 50,
+      "selection_sha256": "4e70b9558c1fbc88a9ea68133141c88f5ada25fefbc0318478c8d5dda1f849c5",
+      "execution_overrides": [
+        "model.fit_mode=low_memory",
+        "model.yield_strategy=true",
+        "model.yield_batch_size=32"
+      ],
+      "expected_peak_mib": 16000,
+      "reserve_mib": 1024,
+      "test_access": "public_benchmark_test_history_disclosed",
+      "preflight_monitor_failure_output": "artifacts/formal/xjtu_tabpfn_lowmem_yield32_w50_seed72_final/manifest.json",
+      "preflight_monitor_failure_reason": "Sandboxed Python subprocess could not query NVML; model command was not launched; elevated tracked retry follows."
     },
     {
       "dataset": "xjtu",
       "model": "tabpfn",
       "seed": 88,
       "stage": "final",
-      "status": "blocked_on_validation_freeze_and_execution_equivalence"
+      "status": "pending_seed72_final_test",
+      "selection_sha256": "4e70b9558c1fbc88a9ea68133141c88f5ada25fefbc0318478c8d5dda1f849c5",
+      "selected_window": 50,
+      "selected_stride": 50
     },
     {
       "dataset": "xjtu",
       "model": "tabpfn",
       "seed": 101,
       "stage": "final",
-      "status": "blocked_on_validation_freeze_and_execution_equivalence"
+      "status": "pending_seed72_final_test",
+      "selection_sha256": "4e70b9558c1fbc88a9ea68133141c88f5ada25fefbc0318478c8d5dda1f849c5",
+      "selected_window": 50,
+      "selected_stride": 50
     },
     {
       "dataset": "xjtu",
@@ -2082,7 +2291,80 @@
       "status": "completed_device_macro_public_test_history_disclosed"
     }
   ],
-  "updated_utc": "2026-09-28T14:25:14.082997+00:00",
+  "updated_utc": "2026-09-29T06:02:38.854059+00:00",
+  "baseline_completeness_audit": {
+    "checked_utc": "2026-09-28T15:23:25+00:00",
+    "status": "tabdpt120_weights_unavailable; supplementary_efficiency_claim_pending",
+    "official_release": "https://github.com/layer6ai-labs/TabDPT-inference/releases/tag/v1.2.0",
+    "paper": "https://arxiv.org/abs/2608.01400",
+    "reported_speedup": "approximately 120x average on TabArena, as reported by the authors",
+    "installed_or_evaluated": false,
+    "adapter_implemented": true,
+    "core_candidate_grid_changed": false,
+    "supplementary_grid": {
+      "candidate_count": 10,
+      "datasets": [
+        "nc_p",
+        "xjtu"
+      ],
+      "window_stride_pairs": [
+        [
+          1,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          10,
+          5
+        ],
+        [
+          20,
+          5
+        ],
+        [
+          50,
+          50
+        ]
+      ],
+      "test_access": false,
+      "status": "not_started_pending_pinned_environment_and_weight_digest"
+    },
+    "required_protocol": "separate pinned environment and weight digest; match device split and report context semantics, throughput, latency, and peak VRAM; never attribute version-level differences to one mechanism",
+    "direction_1": "add v1.2 as the nearest released efficiency comparator before claiming a novel compute-budget advantage",
+    "direction_2": "broad cross-condition RUL-to-warning with uncertainty overlaps 2026 N-CMAPSS multitask/conformal work; only a narrower device-level alert-burden study remains unestablished",
+    "standard_split_conformal_90pct": {
+      "order_statistic": "ceil((n+1)*0.9)",
+      "xjtu_training_bearings": 8,
+      "xjtu_required_rank": 9,
+      "xjtu_finite_quantile": false,
+      "nc_p_validation_engines": 4,
+      "nc_p_required_rank": 5,
+      "nc_p_finite_quantile": false
+    },
+    "evidence_document": "docs/research/CANDIDATE_EVIDENCE_MATRIX.md",
+    "tabdpt120_environment": "Python 3.12 / torch 2.9.1 isolated environment installed; package import verified",
+    "tabdpt120_weight_revision": "a5ca6e01c0fa09ec68c73e958e5199d1932abb3",
+    "tabdpt120_weight_status": "download blocked by proxy TLS EOF; no official weight file or SHA-256 verified; no model run launched",
+    "xjtu_tabpfn_low_memory_yield32_selection": {
+      "status": "completed_validation_only_frozen",
+      "frozen_config": "artifacts/formal/xjtu_tabpfn_frozen_seed72.json",
+      "selection_sha256": "4e70b9558c1fbc88a9ea68133141c88f5ada25fefbc0318478c8d5dda1f849c5",
+      "selected_candidate": {
+        "dataset": "xjtu",
+        "lr": null,
+        "model": "tabpfn",
+        "stride": 50,
+        "window": 50
+      },
+      "test_access": false,
+      "results": "artifacts/formal/results/xjtu_tabpfn_lowmem_yield32_selection_seed72.json"
+    },
+    "tabdpt120_context_policy": "context_size=null; official unbounded default; actual context rows logged after fit",
+    "tabdpt120_batch_api": "inf_batch_size config is forwarded as predict(batch_size=...)"
+  },
   "analysis": {
     "xjtu_warning_horizons": {
       "status": "derived_from_train_devices_only",

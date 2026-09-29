@@ -46,8 +46,10 @@ not presented as the paper's five-seed numeric reproduction.
 4. Test XJTU's locked PHMD RUL-to-HI equation, inverse units, fit-on-train feature
    scalers, training-only ICL contexts, label/window alignment and cache equality.
 5. After complete source files pass archive/CRC checks, run seed 72 and record
-   time/peak memory; freeze validation-selected configurations, then run seeds 88 and 101. Use only physical GPUs
-   0/1/2 with explicit CUDA_VISIBLE_DEVICES and record logical cuda:0 separately.
+   time/peak memory; freeze validation-selected configurations, then run seeds
+   88 and 101. Under the user's latest authorization, formal GPU work may use
+   physical GPUs 0–5, with an explicit CUDA_VISIBLE_DEVICES subset and the
+   logical device recorded separately.
 
 Validation-only context/stride selection depends on the top-level `test=false`
 flag. The imported runner ignored that flag and still called `trainer.test`; the
@@ -434,13 +436,21 @@ The TabDPT 1.1.13 seed-72 window-1 validation run completed on 2026-09-28 at
 The sampled peak memory on its assigned physical GPU 1 was 3,866 MiB. Test
 evaluation was disabled and confirmed in the log.
 
-The corrected window-5/stride-1 and window-10/stride-5 candidates were
-restarted at 14:55 with unique Hydra `experiment_group` values and isolated
-`model_cache_dir` paths on physical GPUs 2 and 0. Both completed with
-`test=false`; validation losses were 0.012012 for 5/1 and 0.010536 for 10/5.
-Window-1 remains the best of the completed candidates at 0.009772. Window-20/5
-and window-50/50 are running in separate cache/output groups on physical GPUs
-0 and 3. Their test stages are disabled.
+All five seed-72 validation candidates were rerun after the per-engine window
+boundary fix, with unique Hydra `experiment_group` values and isolated output
+groups. Their validation losses were 0.009772 (1/1), 0.012012 (5/1), 0.010536
+(10/5), 0.013515 (20/5), and 0.022941 (50/50). Window-1 is selected and its
+frozen configuration SHA-256 is
+`fde4020eeab69f2bc176386b8baa8994de31a5ef000634f0d2996db8da08677f`. The
+selected seed-72 test run completed on physical GPU 0 in 30,463 seconds
+(8.46 h), with a tracked peak of 3,868 MiB. Its test predictions reconcile
+against all 16 held-out engines and 196,153 query rows at `atol=1e-4`,
+`rtol=1e-6`. Device-macro normalized MAE/RMSE are 0.07015/0.09491, PHM score
+0.40488, NASA score 1.51611, and critical-stage normalized MAE at the frozen
+5%/10%/20% horizons is 0.01995/0.02035/0.02596. The per-device metrics,
+prediction audit, critical-stage metrics, NASA metrics, and full tracked command
+are retained in `artifacts/formal/results/nc_p_tabdpt11_*_seed72.json` and the
+run manifest. Seeds 88 and 101 are now running concurrently on physical GPUs 2 and 3 under the same frozen window-1 configuration.
 
 Selection uses the plan's configured validation loss (`val/loss`, normalized
 query-weighted MSE). The headline test table is separately device-macro. These
@@ -543,18 +553,64 @@ bearing lifetime contributes. This freezes horizon labels only. No XJTU warning
 probabilities or alert metrics have been evaluated, and no test lifetime is
 used to turn an HI prediction into online remaining time.
 
-The NC-P LSTM seeds completed on physical GPUs 0, 3, and 2. During these runs,
-the current user authorization allowed GPUs 0–3; GPU 1 remained occupied and
-was not used. Manifests distinguish physical IDs from `cuda:0`. NC-P TabDPT
-1.1.13 window-20/50 validation candidates remain running. TabPFN remains
-incomplete. Its NC-P full-context validation failed with a CUDA kernel error;
-the XJTU default cached fit mode OOMed during validation fitting at 6,557 rows
-and 460 features. A full XJTU window-1 validation run using `low_memory`
-completed with `test=false` and `val/loss=0.09925`. On a matched 2,049-row by
-460-feature training slice and 398 validation queries, cached and low-memory
-predictions differed by at most 0.10086 (mean absolute difference 0.01015),
-above `atol=1e-4, rtol=1e-4`; each path replayed deterministically on its own.
-They remain separate execution protocols. The low-memory candidate grid with
-32-query chunks has not been completed, and no XJTU TabPFN test score is
-reported. The comparison report is
-`artifacts/formal/results/xjtu_tabpfn_execution_mode_comparison.json`.
+### Baseline-version completeness audit
+
+The agreed core comparison evaluates TabDPT v1.1.13 and v1.3.0 separately.
+An additional literature check found the official v1.2.0 / TabDPT-Turbo
+release (June 2026), which changes the default to long context without
+retrieval, introduces new weights, and reports roughly 120× average speedup on
+TabArena. Since v1.3 is described by its authors as similar to v1.2 with
+additional predictive improvements, omitting v1.2 would leave the proposed
+compute-budget question without its closest recent efficiency comparator.
+The v1.1.13/v1.3.0 results remain valid as the preregistered core comparison,
+but no broad efficiency-superiority claim should be made until v1.2 is run as a
+supplementary version baseline. The isolated Python 3.12 / torch 2.9.1
+environment and TabDPT 1.2.0 package are installed and import successfully;
+the official weight revision is pinned, but the weight file could not be
+retrieved through the current proxy because TLS connections terminate with
+EOF. The adapter passes the native `context_size=None` default, uses the v1.2
+prediction-time `batch_size` API, and records the actual context row count; it
+does not cap context at 2,048 rows. No v1.2 model run was launched and no weight
+digest is claimed. Its throughput comparison remains pending until the
+official checkpoint is available and verified.
+Because all three versions change weights and training/interface details,
+between-version score differences are descriptive and cannot identify the
+effect of any one architectural change.
+
+The NC-P LSTM seeds completed on physical GPUs 0, 3, and 2. Manifests
+distinguish physical IDs from `cuda:0`; the current GPU authorization covers
+physical GPUs 0–5. The NC-P TabDPT 1.1.13 seed-72 test is complete and audited,
+and seeds 88 and 101 use the same frozen configuration. TabPFN remains
+incomplete on NC-P: its full-context validation ended with a CUDA kernel error.
+On XJTU, the default cached fit mode OOMed during validation fitting at 6,557
+rows and 460 features. A separate low-memory path reproduced deterministically,
+but on a matched 2,049-row by 460-feature training slice and 398 validation
+queries cached and low-memory predictions differed by up to 0.10086 (mean
+absolute difference 0.01015), above `atol=1e-4, rtol=1e-4`. These execution
+paths therefore remain separate protocols. All five XJTU low-memory plus
+32-query-yield validation candidates completed with `test=false`; their losses
+for windows 1/1, 5/1, 10/5, 20/5, and 50/50 were 0.099257, 0.122849, 0.116539,
+0.105462, and 0.040901. Window 50/50 is frozen under SHA-256
+`4e70b9558c1fbc88a9ea68133141c88f5ada25fefbc0318478c8d5dda1f849c5`. Its
+validation run took 3,130 seconds with a tracked peak of 12,534 MiB on physical
+GPU 4. The seed-72 final evaluation uses this same low-memory execution
+protocol on physical GPU 4; the run has not produced an audited test score yet. Cached-path results are not pooled with it. Candidate-level costs
+and manifests are recorded in
+`artifacts/formal/results/xjtu_tabpfn_lowmem_yield32_selection_seed72.json`.
+
+| Window / stride | Training rows × features | Validation loss | End-to-end seconds | Peak VRAM (MiB) |
+|---|---:|---:|---:|---:|
+| 1 / 1 | 6,557 × 460 | 0.099257 | 676 | 23,736 |
+| 5 / 1 | 6,557 × 2,300 | 0.122849 | 3,624 | 17,162 |
+| 10 / 5 | 1,316 × 4,600 | 0.116539 | 1,125 | 19,898 |
+| 20 / 5 | 1,316 × 9,200 | 0.105462 | 2,956 | 11,176 |
+| 50 / 50 | 134 × 23,000 | 0.040901 | 3,130 | 12,534 |
+
+These are measured run costs with cached preprocessing, not a matched inference
+throughput benchmark: window 1 ran on GPU 2 and the others on GPU 4. Window and
+training stride also change together, which changes both the training rows and
+validation query set. The loss sweep therefore freezes the best candidate for
+this protocol but does not isolate a causal effect of longer windows or
+sparser supervision. A controlled fixed-query, fixed-context analysis is still
+required for the temporal-information research question. The comparison report
+remains `artifacts/formal/results/xjtu_tabpfn_execution_mode_comparison.json`.

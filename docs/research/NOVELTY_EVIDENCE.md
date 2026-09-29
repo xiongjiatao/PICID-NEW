@@ -25,11 +25,16 @@ Candidate questions, not established contributions:
    balanced context, simple nearest-neighbor retrieval, calibrated versus raw
    probabilities, and condition-level results.
 
-The two questions may overlap with other recent work. Dedicated full-text
-retrieval/context, survival-TFM, and industrial early-warning literature searches
-remain outstanding. A single authoritative paper cannot prove two new methods
-novel, and this matrix does not establish that novelty.
+The two questions may overlap with other recent work. A single authoritative
+paper cannot prove two new methods novel, and this matrix does not establish
+that novelty.
 
 ## 2026-09-28 evidence refresh
 
 Full-text HTML was additionally reviewed for [End-to-End Compression for Tabular Foundation Models (TACO, arXiv:2602.05649)](https://arxiv.org/html/2602.05649v1), [Tabular Foundation Models Can Do Survival Analysis (arXiv:2601.22259)](https://arxiv.org/html/2601.22259v1), [Tabular Foundation Models for Clinical Survival Analysis via Survival-Aware Adaptation (arXiv:2606.12006)](https://arxiv.org/html/2606.12006v1), and [SurvPFN (arXiv:2606.04564)](https://arxiv.org/html/2606.04564v1). TACO rules out a generic learned-table-compression claim. The 2026 survival papers rule out generic dynamic TFM failure-risk formulation as novelty; any remaining warning direction needs a more specific device-level industrial calibration question, while the available evaluation units remain small. Candidate contribution directions and stop criteria are detailed in [CANDIDATE_EVIDENCE_MATRIX.md](CANDIDATE_EVIDENCE_MATRIX.md).
+
+## Evidence refresh: 2026-09-28
+
+The [official TabDPT v1.2.0 release](https://github.com/layer6ai-labs/TabDPT-inference/releases/tag/v1.2.0) and [TabDPT-Turbo paper](https://arxiv.org/abs/2608.01400) reveal a major missing efficiency comparator in the current v1.1.13/v1.3.0 plan: v1.2 changes to long-context, no-retrieval defaults and reports approximately 120× average speedup on TabArena. The v1.2 package is installed in the isolated Python 3.12 / torch 2.9.1 environment, but the pinned official checkpoint download currently terminates with a proxy TLS EOF; no weight digest or model result is available. Therefore the current version comparison is valid for its stated pair, but it cannot support a general claim that its approach is compute-efficient relative to current released TabDPT.
+
+The broad warning direction is also substantially occupied. Alomari's [2026 IEEE Access framework](https://doi.org/10.1109/ACCESS.2026.3685622) jointly predicts RUL and failure proximity, adds conformal intervals, and evaluates N-CMAPSS ID/OOD generalization. Wang et al.'s [2026 XJTU-SY conformal RUL study](https://doi.org/10.36001/phme.2026.v9i1.4902) directly covers probabilistic bearing RUL and calibration on the same dataset. This evidence rejects generic “RUL-to-cross-condition warning with uncertainty” as a novelty claim; only a narrower repeated-device alert-burden/lead-time evaluation question remains, and the four XJTU test bearings are too few to establish strong deployment guarantees. See the refreshed evidence and finite-sample constraints in [CANDIDATE_EVIDENCE_MATRIX.md](CANDIDATE_EVIDENCE_MATRIX.md).
