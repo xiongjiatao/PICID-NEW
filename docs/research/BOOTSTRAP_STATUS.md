@@ -1,6 +1,30 @@
-# Execution status — updated 2026-09-29
+# Execution status — updated 2026-09-30
 
-## Superseding status update — 2026-09-29
+## Host reconciliation — 2026-09-30 00:25 Asia/Shanghai
+
+Host-level process and GPU inspection found no surviving PICID model or tracker
+processes. Earlier `running` statements below are historical, not current status.
+NC-P TabDPT v1.1 seed101 stopped without a recorded exit code after six of eight
+test ensemble members; TabPFN NC-P 10/5, 20/5 retry and XJTU seeds88/101 also
+lack completion evidence. These attempts are excluded from result averages.
+Their manifests and partial logs are retained; the cause is not established.
+The input-export preprocessing job likewise has no surviving process.
+
+NC-P TabDPT v1.1 seed88 completed and its saved 196,153 predictions reconcile
+against all 16 devices: native device-macro MAE 7.0351963, RMSE 9.5353289.
+The stricter prediction audit now rejects empty/nonfinite arrays, nonintegral
+IDs, invalid tolerances and nonfinite reported metrics.
+Four validation audit/manifest JSON files for NC-P TabPFN 1/1 and 5/1 had
+literal trailing backslash-n bytes. Original bytes are archived alongside the
+files; valid JSON and audit digest links are repaired, without changing scores.
+See local `artifacts/formal/results/json_serialization_repair_20260930.json`.
+
+The latest supplied AGENTS instructions restrict new scheduling to physical
+GPUs0–2. Previous GPUs1–6 assignments remain historical provenance. Host memory
+is also a constraint: the completed TabDPT seed88 tracker observed about
+208,441 MiB peak process-tree RSS; do not relaunch all pending tasks together.
+
+## Superseding status update — 2026-09-30
 
 - All five seed-72 XJTU TabPFN validation candidates completed with
   `test=false` under the low-memory, 32-query-yield path. The frozen 50/50
@@ -21,15 +45,18 @@
   package declares an intended range of 10,000 rows and 500 features. A
   separate, explicit 10,000-row device-balanced temporal training-context
   policy is being validated. Seed-72 1/1 completed with validation loss
-  0.0097866 after 11,937 s on physical GPU5. The 5/1 candidate is still active
-  on GPU1 after more than eight hours, and 10/5 is active on GPU2; all use
-  `test=false`. The first 20/5 attempt OOMed during fit on GPU1 while the 5/1
+  0.0097866 after 11,937 s on physical GPU5. The 5/1 candidate completed
+  validation on GPU1 with loss 0.0122329 after 33,144 s (9.21 h); its audit
+  confirms `test=false` and no populated test metrics. The 10/5 candidate is
+  active on GPU2; all use `test=false`. The first 20/5 attempt OOMed during fit
+  on GPU1 while the 5/1
   run shared the card (15.85 GiB plus 2.11 GiB resident; a 6.47 GiB allocation
   failed with 5.72 GiB free). That attempt has no score and is retained as a
   concurrency-induced failure; a follow-up launcher rejected GPU6 before model
   start because the experiment allow-list ended at GPU5. The allow-list now
-  matches the current authorized GPUs 1–6 and its regression test passes; the
-  isolated retry is ready to launch. The 50/50
+  matches the current authorized GPUs 1–6 and its regression test passes. The
+  isolated retry is running on GPU6 with a 23,000 MiB peak budget and 1,024 MiB
+  reserve under a tracked manifest. The 50/50
   candidate is pending and is outside TabPFN's documented 500-feature range.
 - NC-P TabDPT 1.1.13 seed 72 is complete and audited. Seeds 88 and 101 remain
   active; their preprocessing is currently CPU-bound, while model inference is

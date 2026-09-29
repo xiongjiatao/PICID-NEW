@@ -32,7 +32,7 @@ def test_tabdpt120_config_keeps_native_unbounded_context():
 
 
 def test_formal_runner_accepts_the_currently_authorized_physical_gpus():
-    assert PHYSICAL_GPUS == (1, 2, 3, 4, 5, 6)
+    assert PHYSICAL_GPUS == (0, 1, 2)
 
 
 def test_selection_rejects_missing_failed_or_test_accessed_results():

@@ -659,9 +659,14 @@ remains unsupported: its 265,359-row input is about 26.5 times TabPFN 2.2.1's
 10,000-row intended range, and the observed run ended with a CUDA kernel
 configuration error, not a confirmed OOM. A separately named 10,000-row,
 unit-balanced temporal-context seed-72 validation grid is incomplete. Its 1/1
-candidate is audited at `val/loss=0.0097866`; 5/1 and 10/5 remain active,
-20/5's first attempt failed from measured same-GPU contention, and its isolated
-retry plus 50/50 remain pending. All selection jobs use `test=false`; no NC-P
+candidate is audited at `val/loss=0.0097866` (audit:
+`artifacts/formal/results/nc_p_tabpfn_balanced10k_w1_s1_seed72_validation_audit.json`).
+The 5/1 candidate finished on
+physical GPU1 in 33,144 s (9.21 h), with a tracked peak of 7,866 MiB and
+`val/loss=0.0122329`; the audit confirms `test=false` and no populated test
+metrics. The 10/5 candidate remains active. The first 20/5 attempt failed from
+measured same-GPU contention; its isolated retry is running on physical GPU6.
+The 50/50 candidate remains pending. All selection jobs use `test=false`; no NC-P
 TabPFN test score is claimed. A fixed-input query-batch comparison helper is
 implemented and still needs a cache-backed input export and a GPU slot with
 enough memory for the fitted context.

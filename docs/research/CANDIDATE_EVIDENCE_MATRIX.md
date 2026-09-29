@@ -1,6 +1,6 @@
 # PICID candidate contribution evidence matrix
 
-Evidence reviewed 2026-09-29. This is a research decision record, not a novelty claim. The local 43-page TFM-PHM source and the official TabDPT v1.3 release were also checked. Recheck this landscape before method submission because relevant preprints are appearing rapidly.
+Evidence reviewed 2026-09-30. This is a research decision record, not a novelty claim. The local 43-page TFM-PHM source and the official TabDPT v1.3 release were also checked. Recheck this landscape before method submission because relevant preprints are appearing rapidly.
 
 The corrected full-timeline NC-P device-validation protocol and blind-test
 eligibility gate are frozen in
@@ -70,11 +70,31 @@ GPU load and is not suitable for ranking these representations. Per-seed
 manifests and per-representation metrics are under
 `artifacts/research/ncp_temporal_control_seed*_gpu*_20260929/`.
 
-**Evidence needed before implementation.** The first validation-only accuracy comparison is now available, but its small, source-heterogeneous critical-5% gain does not isolate a degradation transition or survive a meaningful device-resampling analysis. The unit-boundary invariant has a synthetic regression test, and each generated history is constrained to one engine. Next, vary history support and query locations separately on additional device-disjoint validation folds, include TabDPT v1.2/Turbo when its checkpoint is obtainable, and report cold-start/steady-state latency under a recorded concurrency profile. Implement a mechanism only if a reproducible phase-specific information loss remains after those matched controls.
+The preregistered full-query grouped-CV extension is now complete on all 20
+training engines, with five folds and five seeds. It resolves an important
+stability issue in the small validation comparison above: its modest W50
+critical-5% gain did not repeat across the larger device pool. With TabDPT
+1.3.0, 2,048 context rows, eight ensembles, and every held-out time row,
+device-macro native-RUL MAE (mean ± seed SD) was 10.3084 ± 0.0509 for 1/1,
+10.8741 ± 0.0505 for 5/1, 11.2172 ± 0.0554 for 10/5, 11.6201 ± 0.1125 for
+20/5, and 13.4467 ± 0.1188 for 50/50. The 5/1 comparison holds the stride at
+1 and is already worse; for the remaining settings, window and stride change
+together. Source-stratified, paired engine-bootstrap MAE increases over 1/1
+were 0.5657 [0.0810, 1.0715], 0.9088 [0.4844, 1.3159], 1.3117 [0.7667,
+1.8077], and 3.1383 [2.2021, 4.0207], respectively. The confidence intervals
+resample 20 engines after averaging predictions across seeds; they are
+device-level descriptive intervals, not seed-level tests. Critical 5%, 10%,
+and 20% MAE also increased for every candidate. Full per-device results and
+costs are recorded in
+`artifacts/research/ncp_device_cv_v2/summary.json`. This larger control
+therefore weakens the earlier W50 critical-stage observation rather than
+supporting a general longer-history benefit.
+
+**Evidence needed before implementation.** The small critical-5% W50 gain on four validation engines does not generalize to the 20-engine grouped-CV control, where critical and all-stage errors both favor W1. The existing tests verify unit isolation, but the representation comparison has not yet shown a reproducible phase-specific information loss that an added mechanism could repair. Next, separate history support from training stride while keeping query rows and context budget fixed, add native retrieval/reduction and TabDPT v1.2/Turbo when its checkpoint is obtainable, and measure isolated cold/steady latency. Implement a method only if one of those matched, device-disjoint controls leaves a stable failure mode.
 
 Before making a broad “industrial time-series foundation model” claim, add a compatible Chronos-2 RUL baseline or explicitly scope conclusions to the tabular foundation models evaluated. The two new studies show that omitting TSFMs would leave a direct recent RUL baseline family untested. Their tasks and data protocols differ from NC-P and XJTU, so their published metrics must not be ranked directly against PICID results.
 
-**Falsification / stop rule.** Stop or reformulate if equal-budget PCA/statistics/native TabDPT preserve critical-stage metrics, if no robust phase-specific error appears across device resamples, if the gain disappears under matched chronological query points, or if a released general-purpose compressor already provides the same temporal guarantee. Current status: **not established**. The pilot batch-size tests in `artifacts/formal/ncp_tabdpt*_batch_preflight` do not test this hypothesis.
+**Falsification / stop rule.** Stop or reformulate if equal-budget PCA/statistics/native TabDPT preserve critical-stage metrics, if no robust phase-specific error appears across device resamples, if the gain disappears under matched chronological query points, or if a released general-purpose compressor already provides the same temporal guarantee. Current evidence rejects a generic longer-window accuracy claim but does not establish a new temporal mechanism. Candidate status: **not established**. The pilot batch-size tests in `artifacts/formal/ncp_tabdpt*_batch_preflight` do not test this hypothesis.
 
 ## Candidate B — reliable failure-proximity alerts from dynamic predictions
 

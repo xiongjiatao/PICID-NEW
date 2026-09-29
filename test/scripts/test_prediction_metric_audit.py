@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 import xarray as xr
 
@@ -85,3 +86,27 @@ def test_xjtu_metrics_use_bearing_identifiers():
 
     assert result["device_count"] == 2
     assert max(result["max_abs_metric_difference"].values()) < 1e-4
+
+
+@pytest.mark.parametrize("field", ["preds", "targets", "preds_normalized", "targets_normalized", "unit_ids"])
+@pytest.mark.parametrize("bad", [np.nan, np.inf, -np.inf])
+def test_audit_rejects_nonfinite_arrays(field, bad):
+    dataset = xr.Dataset({
+        name: (("sample",), np.array([0.0]))
+        for name in ("preds", "targets", "preds_normalized", "targets_normalized")
+    })
+    dataset["unit_ids"] = (("sample", "id"), np.array([[1.0, 7.0]]))
+    dataset[field].values.flat[0] = bad
+    with pytest.raises(ValueError, match="non-finite"):
+        audit_arrays(dataset, {"dataset": "nc_p", "per_device": {}})
+
+
+def test_audit_rejects_nonfinite_report():
+    dataset = xr.Dataset({
+        name: (("sample",), np.array([0.0]))
+        for name in ("preds", "targets", "preds_normalized", "targets_normalized")
+    })
+    dataset["unit_ids"] = (("sample", "id"), np.array([[1.0, 7.0]]))
+    with pytest.raises(ValueError, match="Non-finite metric"):
+        audit_arrays(dataset, {"dataset": "nc_p", "per_device": {
+            "DS01-unit07": {"mae_denormalized": float("nan")}}})

@@ -28,6 +28,8 @@ def _digest(path: Path) -> str:
 
 
 def audit_arrays(dataset, report: dict, atol: float = 1e-4, rtol: float = 1e-6):
+    if not np.isfinite([atol, rtol]).all() or min(atol, rtol) < 0:
+        raise ValueError("Audit tolerances must be finite and nonnegative")
     pred = dataset["preds"].values.reshape(-1)
     target = dataset["targets"].values.reshape(-1)
     pred_norm = dataset["preds_normalized"].values.reshape(-1)
@@ -35,6 +37,13 @@ def audit_arrays(dataset, report: dict, atol: float = 1e-4, rtol: float = 1e-6):
     ids = dataset["unit_ids"].values
     if ids.ndim != 2 or ids.shape[1] != 2:
         raise ValueError(f"Expected composite source/unit IDs, received {ids.shape}")
+    for name, values in (("predictions", pred), ("targets", target),
+                         ("normalized predictions", pred_norm),
+                         ("normalized targets", target_norm), ("device IDs", ids)):
+        if not values.size or not np.isfinite(values).all():
+            raise ValueError(f"Empty or non-finite {name}")
+    if not np.equal(ids, np.floor(ids)).all():
+        raise ValueError("Device IDs must be integers")
     ids = ids.astype(np.int64)
     if not (len(pred) == len(target) == len(pred_norm) == len(target_norm) == len(ids)):
         raise ValueError("Saved predictions, targets and IDs have different row counts")
@@ -60,7 +69,10 @@ def audit_arrays(dataset, report: dict, atol: float = 1e-4, rtol: float = 1e-6):
             if "normalized" in key and "denormalized" not in key
         })
         for metric, value in observed.items():
-            difference = abs(value - float(report["per_device"][device][metric]))
+            reference = float(report["per_device"][device][metric])
+            if not np.isfinite([value, reference]).all():
+                raise ValueError(f"Non-finite metric: {device}/{metric}")
+            difference = abs(value - reference)
             max_difference[metric] = max(max_difference[metric], difference)
             tolerance = atol + rtol * abs(float(report["per_device"][device][metric]))
             if difference > tolerance:
