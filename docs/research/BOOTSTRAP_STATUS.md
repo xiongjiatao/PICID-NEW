@@ -14,8 +14,9 @@
   configuration error, not a confirmed OOM. The pinned local TabPFN 2.2.1
   package declares an intended range of 10,000 rows and 500 features. A
   separate, explicit 10,000-row device-balanced temporal training-context
-  policy is being validated. Its seed-72 1/1 candidate is running on physical
-  GPU5 with `test=false`; no validation metric is available yet.
+  policy is being validated. Seed-72 1/1 is predicting validation queries on
+  physical GPU5, and 5/1 has started on GPU1; both use `test=false`, and no
+  validation metric is available yet.
 - NC-P TabDPT 1.1.13 seed 72 is complete and audited. Seeds 88 and 101 remain
   active; their preprocessing is currently CPU-bound, while model inference is
   expected to use the assigned GPUs. Do not interpret short GPU-idle intervals

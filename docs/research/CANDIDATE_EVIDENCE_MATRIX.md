@@ -17,8 +17,9 @@ Evidence reviewed 2026-09-28. This is a research decision record, not a novelty 
 The current `unit_balanced_temporal` TabPFN fit-context sampler is one explicit
 device-balanced subsampling control under the v2 10,000-row intended range. It
 uses training `unit_id` only, keeps the validation/test query rows untouched,
-and is an engineering baseline rather than a proposed contribution. Its NC-P
-validation pilot is running; no accuracy or cost result is claimed yet.
+and is an engineering baseline rather than a proposed contribution. NC-P
+seed-72 1/1 and 5/1 validation pilots are running; no accuracy or cost result
+is claimed yet.
 
 **Evidence needed before implementation.** A measured accuracy-versus-budget curve from a validation-only sweep must show that current methods lose performance specifically around identifiable degradation transitions, and that the signal loss is not explained by row count, feature count, stride, context retrieval, or a split artifact. A local synthetic unit test should prove no history window crosses device boundaries. Candidate mechanism should then target the observed lost evidence.
 

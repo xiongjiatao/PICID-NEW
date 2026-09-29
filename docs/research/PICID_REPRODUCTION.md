@@ -318,8 +318,9 @@ and identity manifest are under ignored `artifacts/formal/inputs/nc_p_unitwise_w
   engine and selecting rows evenly across its chronological order. Row-aligned
   `unit_id=(source, local unit)` metadata is used only during fitting; validation
   and test query sets are unchanged. The implementation is unit-tested. The
-  seed-72 1/1 `test=false` validation pilot is running on physical GPU5; the
-  remaining four candidates and their resource costs are pending. Window-50
+  seed-72 1/1 and 5/1 `test=false` validation candidates are running on
+  physical GPUs 5 and 1, respectively; the remaining three candidates and
+  their resource costs are pending. Window-50
   cases remain beyond the 500-feature intended range and will be labelled as
   extrapolative if retained.
 - The earlier XJTU LSTM validation-only search has all nine seed-72 losses.
@@ -596,8 +597,9 @@ full-context TabPFN validation remains ineligible as a supported baseline: its
 265,359-row input is about 26.5 times TabPFN 2.2.1's 10,000-row intended range,
 and the observed run ended with a CUDA kernel configuration error. A separately
 named 10,000-row, unit-balanced temporal-context validation grid is running
-its seed-72 1/1 pilot on physical GPU5 with test evaluation disabled; the other
-four candidates remain pending. No NC-P TabPFN score is claimed yet.
+seed-72 1/1 and 5/1 candidates on physical GPUs5 and1 with test evaluation
+disabled; the other three candidates remain pending. No NC-P TabPFN score is
+claimed yet.
 On XJTU, the default cached fit mode OOMed during validation fitting at 6,557
 rows and 460 features. A separate low-memory path reproduced deterministically,
 but on a matched 2,049-row by 460-feature training slice and 398 validation

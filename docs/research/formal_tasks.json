@@ -2291,7 +2291,7 @@
       "status": "completed_device_macro_public_test_history_disclosed"
     }
   ],
-  "updated_utc": "2026-09-29T06:36:18+00:00",
+  "updated_utc": "2026-09-29T06:43:04+00:00",
   "baseline_completeness_audit": {
     "checked_utc": "2026-09-28T15:23:25+00:00",
     "status": "tabdpt120_weights_unavailable; supplementary_efficiency_claim_pending",
@@ -2422,7 +2422,7 @@
       "test_metrics_accessed": false
     },
     "nc_p_tabpfn_capped_context": {
-      "status": "seed72_validation_pilot_running",
+      "status": "seed72_validation_grid_running",
       "full_context_failure": "265359 training rows; CUDA invalid configuration argument after about 1197 seconds; not established as OOM",
       "tabpfn_version": "2.2.1",
       "intended_sample_limit": 10000,
@@ -2447,6 +2447,20 @@
       "pilot_test_enabled": false,
       "pilot_physical_gpu": 5,
       "pilot_logical_device": "cuda:0",
+      "parallel_pilot": {
+        "status": "running",
+        "output": "artifacts/formal/nc_p_tabpfn_balanced10k_w5_s1_seed72_selection_pilot",
+        "manifest": "artifacts/formal/nc_p_tabpfn_balanced10k_w5_s1_seed72_selection_pilot/manifest.json",
+        "started_utc": "2026-09-29T06:42:38.469107+00:00",
+        "seed": 72,
+        "window": 5,
+        "stride": 1,
+        "test_enabled": false,
+        "physical_gpu": 1,
+        "logical_device": "cuda:0",
+        "expected_peak_mib": 20000,
+        "reserve_mib": 1024
+      },
       "feature_extrapolation": "window 50 has 900 flattened columns and exceeds the 500-feature intended range; report separately",
       "result": null,
       "test_access": false
