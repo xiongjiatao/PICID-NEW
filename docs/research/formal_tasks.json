@@ -2190,12 +2190,23 @@
       "model": "tabpfn",
       "seed": 72,
       "stage": "final",
-      "status": "running",
+      "status": "completed_audited_alternate_low_memory_execution_path",
       "physical_gpus": [
         4
       ],
       "logical_device": "cuda:0",
       "output": "artifacts/formal/xjtu_tabpfn_lowmem_yield32_w50_seed72_final_retry1",
+      "prediction_audit": "artifacts/formal/results/xjtu_tabpfn_lowmem_yield32_prediction_audit_seed72.json",
+      "prediction_sha256": "e8469cc4923aa4c443cecde376c3164bf978c3cfb5cb37c123fbfa7b2e1e43fb",
+      "prediction_rows": 2261,
+      "test_device_count": 4,
+      "device_macro_normalized_mae": 0.1774199,
+      "query_weighted_normalized_mae": 0.2210549,
+      "device_macro_denormalized_mae": 124.9513,
+      "query_weighted_denormalized_mae": 290.5995,
+      "device_macro_phm_score": 0.3024668,
+      "elapsed_seconds": 21957.3538,
+      "peak_gpu_memory_mib": 12698,
       "selected_window": 50,
       "selected_stride": 50,
       "selection_sha256": "4e70b9558c1fbc88a9ea68133141c88f5ada25fefbc0318478c8d5dda1f849c5",
@@ -2215,20 +2226,32 @@
       "model": "tabpfn",
       "seed": 88,
       "stage": "final",
-      "status": "pending_seed72_final_test",
+      "status": "running_alternate_low_memory_execution_path",
+      "physical_gpus": [
+        4
+      ],
+      "logical_device": "cuda:0",
+      "output": "artifacts/formal/xjtu_tabpfn_lowmem_yield32_w50_s50_seed88_final",
       "selection_sha256": "4e70b9558c1fbc88a9ea68133141c88f5ada25fefbc0318478c8d5dda1f849c5",
       "selected_window": 50,
-      "selected_stride": 50
+      "selected_stride": 50,
+      "test_access": "public_benchmark_test_history_disclosed"
     },
     {
       "dataset": "xjtu",
       "model": "tabpfn",
       "seed": 101,
       "stage": "final",
-      "status": "pending_seed72_final_test",
+      "status": "running_alternate_low_memory_execution_path",
+      "physical_gpus": [
+        5
+      ],
+      "logical_device": "cuda:0",
+      "output": "artifacts/formal/xjtu_tabpfn_lowmem_yield32_w50_s50_seed101_final",
       "selection_sha256": "4e70b9558c1fbc88a9ea68133141c88f5ada25fefbc0318478c8d5dda1f849c5",
       "selected_window": 50,
-      "selected_stride": 50
+      "selected_stride": 50,
+      "test_access": "public_benchmark_test_history_disclosed"
     },
     {
       "dataset": "xjtu",
@@ -2291,7 +2314,7 @@
       "status": "completed_device_macro_public_test_history_disclosed"
     }
   ],
-  "updated_utc": "2026-09-29T06:53:36+00:00",
+  "updated_utc": "2026-09-29T15:47:18+00:00",
   "baseline_completeness_audit": {
     "checked_utc": "2026-09-28T15:23:25+00:00",
     "status": "tabdpt120_weights_unavailable; supplementary_efficiency_claim_pending",
@@ -2379,6 +2402,76 @@
       },
       "evaluation_device_lifetimes_used_for_thresholds": false
     },
+    "nc_p_grouped_device_cv_v2": {
+      "status": "complete_five_seed_full_query_device_held_out_development_control",
+      "run_root": "artifacts/research/ncp_device_cv_v2",
+      "summary": "artifacts/research/ncp_device_cv_v2/summary.json",
+      "source_commit": "b343543eb1e9281affde6edfeeb67c3f666249ae",
+      "seeds": [72, 88, 101, 666, 226688],
+      "folds": 5,
+      "held_out_engine_count": 20,
+      "candidate_evaluations": 125,
+      "query_rows_per_candidate": 1326795,
+      "model": "TabDPT 1.3.0; context_size=2048; n_ensembles=8; inference_batch_size=512",
+      "candidate_metrics_and_cost": {
+        "w1_s1": {
+          "native_rul_mae_mean_sd": [10.3083869152, 0.0508524011],
+          "native_rul_rmse_mean_sd": [13.0864655549, 0.0547980669],
+          "nasa_score_mean_sd": [2.7367177724, 0.0336424024],
+          "mean_candidate_wall_seconds": 40.9414482909,
+          "query_throughput_rows_per_second": 1341.1596948798,
+          "max_peak_allocated_gib": 0.4746637344,
+          "max_peak_reserved_gib": 0.5625
+        },
+        "w5_s1": {
+          "native_rul_mae_mean_sd": [10.8741070084, 0.0504813235],
+          "native_rul_rmse_mean_sd": [13.7207214386, 0.0479512734],
+          "nasa_score_mean_sd": [3.1761438409, 0.0215681669],
+          "mean_candidate_wall_seconds": 40.0159060109,
+          "query_throughput_rows_per_second": 1369.8349178364,
+          "max_peak_allocated_gib": 0.4856081009,
+          "max_peak_reserved_gib": 0.587890625
+        },
+        "w10_s5": {
+          "native_rul_mae_mean_sd": [11.2171725452, 0.0554183498],
+          "native_rul_rmse_mean_sd": [14.4165841371, 0.0769510489],
+          "nasa_score_mean_sd": [3.3757896439, 0.0415475125],
+          "mean_candidate_wall_seconds": 39.9490407599,
+          "query_throughput_rows_per_second": 1376.9898182637,
+          "max_peak_allocated_gib": 0.4970293045,
+          "max_peak_reserved_gib": 0.5859375
+        },
+        "w20_s5": {
+          "native_rul_mae_mean_sd": [11.6201155539, 0.1125341541],
+          "native_rul_rmse_mean_sd": [14.8810008598, 0.0944515503],
+          "nasa_score_mean_sd": [3.6229147612, 0.0589664008],
+          "mean_candidate_wall_seconds": 44.1951059031,
+          "query_throughput_rows_per_second": 1237.770580168,
+          "max_peak_allocated_gib": 0.4966449738,
+          "max_peak_reserved_gib": 0.63671875
+        },
+        "w50_s50": {
+          "native_rul_mae_mean_sd": [13.4466932711, 0.1188493217],
+          "native_rul_rmse_mean_sd": [17.0139577421, 0.1229059438],
+          "nasa_score_mean_sd": [5.3759851548, 0.1165195607],
+          "mean_candidate_wall_seconds": 49.6023624849,
+          "query_throughput_rows_per_second": 1103.1640545318,
+          "max_peak_allocated_gib": 0.5401263237,
+          "max_peak_reserved_gib": 0.7890625
+        }
+      },
+      "paired_mae_increase_vs_w1_s1": {
+        "bootstrap_unit": "engine; source-stratified; seed-averaged per engine",
+        "replicates": 10000,
+        "seed": 20260929,
+        "w5_s1_mean_ci95": [0.5657200933, 0.0809792308, 1.0715047563],
+        "w10_s5_mean_ci95": [0.9087856300, 0.4843984468, 1.3158604043],
+        "w20_s5_mean_ci95": [1.3117286387, 0.7667078439, 1.8077145966],
+        "w50_s50_mean_ci95": [3.1383063559, 2.2020998440, 4.0206730618]
+      },
+      "negative_result": "All longer-window settings increased device-macro native-RUL MAE; even the same-stride w5_s1 control regressed. This does not support a longer-context gain under this protocol.",
+      "scope_note": "Development-pool grouped CV only; canonical test units 7-10 and external test remain untouched. GPU queues were co-scheduled; throughput is descriptive, not isolated-latency evidence."
+    },
     "nc_p_lstm": {
       "status": "completed_audited_three_seed_fixed_configuration",
       "device_metrics": "artifacts/formal/results/nc_p_lstm_three_seed_summary.json",
@@ -2399,7 +2492,7 @@
       "device_metrics": "artifacts/formal/results/xjtu_tabdpt11_three_seed_summary.json"
     },
     "xjtu_tabpfn": {
-      "status": "default_cached_mode_oom; low_memory_is_separate_non_equivalent_protocol",
+      "status": "cached_mode_oom; low_memory_is_non_equivalent_separate_protocol; seed72_final_audited; seeds88_101_running",
       "default_fit_mode": "fit_with_cache_single_step_inference",
       "low_memory_mode": "low_memory",
       "default_fit_mode_failed_manifest": "artifacts/formal/selection_runs/xjtu_tabpfn_w1_s1_lrNone_formal_awkw29_gpu2/manifest.json",
@@ -2417,12 +2510,18 @@
       "equivalence_atol": 0.0001,
       "equivalence_rtol": 0.0001,
       "equivalent": false,
-      "low_memory_selection_protocol": "pending; use fit_mode=low_memory and yield_batch_size=32; freeze execution overrides",
-      "additional_query_batch_preflight": "pending GPU2 availability",
-      "test_metrics_accessed": false
+      "low_memory_selection_protocol": "completed_validation_only_frozen; final evaluation is recorded as a separate execution path",
+      "additional_query_batch_preflight": "pending; cached versus low-memory equivalence failed",
+      "seed72_final_audit": "artifacts/formal/results/xjtu_tabpfn_lowmem_yield32_prediction_audit_seed72.json",
+      "seed72_selection_sha256": "4e70b9558c1fbc88a9ea68133141c88f5ada25fefbc0318478c8d5dda1f849c5",
+      "seed88_output": "artifacts/formal/xjtu_tabpfn_lowmem_yield32_w50_s50_seed88_final",
+      "seed101_output": "artifacts/formal/xjtu_tabpfn_lowmem_yield32_w50_s50_seed101_final",
+      "final_execution_path_note": "seed72 final metrics remain outside the paper-matched cached baseline table",
+      "test_metrics_accessed": true,
+      "test_access_history": "public benchmark test access is disclosed; not a blind evaluation"
     },
     "nc_p_tabpfn_capped_context": {
-      "status": "seed72_validation_grid_running",
+      "status": "seed72_validation_grid_incomplete",
       "full_context_failure": "265359 training rows; CUDA invalid configuration argument after about 1197 seconds; not established as OOM",
       "tabpfn_version": "2.2.1",
       "intended_sample_limit": 10000,
@@ -2447,6 +2546,48 @@
       "pilot_test_enabled": false,
       "pilot_physical_gpu": 5,
       "pilot_logical_device": "cuda:0",
+      "pilot_best_val_loss": 0.009786614216864109,
+      "pilot_elapsed_seconds": 11937,
+      "candidate_status": {
+        "w1_s1": {
+          "status": "completed_validation_audited",
+          "physical_gpu": 5,
+          "test_enabled": false,
+          "best_val_loss": 0.009786614216864109
+        },
+        "w5_s1": {
+          "status": "running",
+          "physical_gpu": 1,
+          "test_enabled": false
+        },
+        "w10_s5": {
+          "status": "running",
+          "physical_gpu": 2,
+          "test_enabled": false
+        },
+        "w20_s5_first_attempt": {
+          "status": "failed_concurrency_oom",
+          "physical_gpu": 1,
+          "test_enabled": false,
+          "has_validation_score": false,
+          "manifest": "artifacts/formal/nc_p_tabpfn_balanced10k_w20_s5_seed72_selection_pilot/manifest.json"
+        },
+        "w20_s5_retry1": {
+          "status": "ready_for_isolated_gpu6_retry_after_allowlist_fix",
+          "physical_gpu": 6,
+          "logical_device": "cuda:0",
+          "test_enabled": false,
+          "expected_peak_mib": 23000,
+          "reserve_mib": 1024,
+          "reason": "first launcher rejected GPU6 before model start; allow-list now fixed and tested"
+        },
+        "w50_s50": {
+          "status": "pending",
+          "test_enabled": false,
+          "flattened_feature_count": 900,
+          "intended_limit_exceeded": true
+        }
+      },
       "parallel_pilot": {
         "status": "running",
         "output": "artifacts/formal/nc_p_tabpfn_balanced10k_w5_s1_seed72_selection_pilot",

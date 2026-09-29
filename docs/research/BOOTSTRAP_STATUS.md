@@ -3,10 +3,16 @@
 ## Superseding status update — 2026-09-29
 
 - All five seed-72 XJTU TabPFN validation candidates completed with
-  `test=false` under the low-memory, 32-query-yield execution path. The
-  selected 50/50 final evaluation is now running on physical GPU4; the public
-  test-access history remains disclosed, and no audited final metric is
-  available yet.
+  `test=false` under the low-memory, 32-query-yield path. The frozen 50/50
+  seed-72 final run completed on physical GPU4 in 21,957 s and its saved
+  predictions reconcile against all four bearings and six regression metrics.
+  It produced device-macro normalized MAE 0.17742 and query-weighted MAE
+  0.22105 over 2,261 query rows. This result is kept outside the
+  paper-matched cached baseline because cached/low-memory predictions failed
+  the registered equivalence tolerance and 50/50 uses 23,000 features, far
+  beyond TabPFN v2's documented 500-feature intended range. Seeds 88 and 101
+  are now running the same frozen alternate execution path on physical GPUs 4
+  and 5. Prior public test access remains disclosed.
 - The earlier statement that further XJTU TabPFN retries were not planned is
   superseded. Retries are allowed after an execution-path and resource
   preflight; prior OOM/slow attempts and test access remain part of the record.
@@ -14,13 +20,31 @@
   configuration error, not a confirmed OOM. The pinned local TabPFN 2.2.1
   package declares an intended range of 10,000 rows and 500 features. A
   separate, explicit 10,000-row device-balanced temporal training-context
-  policy is being validated. Seed-72 1/1 is predicting validation queries on
-  physical GPU5, and 5/1 has started on GPU1; both use `test=false`, and no
-  validation metric is available yet.
+  policy is being validated. Seed-72 1/1 completed with validation loss
+  0.0097866 after 11,937 s on physical GPU5. The 5/1 candidate is still active
+  on GPU1 after more than eight hours, and 10/5 is active on GPU2; all use
+  `test=false`. The first 20/5 attempt OOMed during fit on GPU1 while the 5/1
+  run shared the card (15.85 GiB plus 2.11 GiB resident; a 6.47 GiB allocation
+  failed with 5.72 GiB free). That attempt has no score and is retained as a
+  concurrency-induced failure; a follow-up launcher rejected GPU6 before model
+  start because the experiment allow-list ended at GPU5. The allow-list now
+  matches the current authorized GPUs 1–6 and its regression test passes; the
+  isolated retry is ready to launch. The 50/50
+  candidate is pending and is outside TabPFN's documented 500-feature range.
 - NC-P TabDPT 1.1.13 seed 72 is complete and audited. Seeds 88 and 101 remain
   active; their preprocessing is currently CPU-bound, while model inference is
   expected to use the assigned GPUs. Do not interpret short GPU-idle intervals
   as a failed run.
+- The supplementary NC-P grouped device-held-out window control v2 completed
+  all five folds × five seeds × five candidates. It evaluated every query row
+  for all 20 development engines (1,326,795 rows per candidate); canonical
+  test units were untouched. TabDPT 1.3.0's native-RUL device-macro MAE rose
+  from 10.3084 ± 0.0509 at 1/1 to 10.8741, 11.2172, 11.6201, and 13.4467 for
+  5/1, 10/5, 20/5, and 50/50. Source-stratified engine bootstrap intervals for
+  paired MAE increases are above zero for each longer window. Preserve this
+  negative result; it is development-pool evidence, not a blind test or a
+  replacement for the main split. Full results are under
+  `artifacts/research/ncp_device_cv_v2/`.
 
 ## Completed in this project
 
@@ -141,10 +165,10 @@
   cache-reusing test-only attempt with 32-query wrapper chunks then ran for
   30m59s without writing metrics and was stopped. These attempts touched the
   public test split and must remain disclosed. As of the superseding update
-  above, all five validation-only candidates have completed under the
-  low-memory/yield32 path and the selected seed-72 final evaluation is running;
-  its result is pending audit. The earlier no-retry sentence is historical
-  and no longer describes the active plan.
+  above, all five validation-only candidates completed under the low-memory /
+  yield32 path. The selected seed-72 final output and its per-bearing metric
+  reconciliation are complete; seeds 88 and 101 are running. The earlier
+  no-retry sentence is historical and no longer describes the active plan.
   Per-run manifests record both the successful validation candidates and failed
   test attempts under their ignored `artifacts/` directories.
 - The mislabeled sklearn GradientBoosting control was stopped at the user's

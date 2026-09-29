@@ -326,11 +326,16 @@ and identity manifest are under ignored `artifacts/formal/inputs/nc_p_unitwise_w
   engine and selecting rows evenly across its chronological order. Row-aligned
   `unit_id=(source, local unit)` metadata is used only during fitting; validation
   and test query sets are unchanged. The implementation is unit-tested. The
-  seed-72 1/1 and 5/1 `test=false` validation candidates are running on
-  physical GPUs 5 and 1, respectively; the remaining three candidates and
-  their resource costs are pending. Window-50
-  cases remain beyond the 500-feature intended range and will be labelled as
-  extrapolative if retained.
+  seed-72 1/1 validation completed with `val/loss=0.0097866` after 11,937 s
+  on physical GPU 5; the tracked log confirms `test=false` and the validation
+  loss passed the selection parser. The 5/1 candidate remains active on GPU1
+  after more than eight hours, and 10/5 is active on GPU2. A first 20/5 try on
+  GPU1 OOMed during cached fitting while 5/1 shared that card: the new process
+  held 15.85 GiB, the older process 2.11 GiB, and a 6.47 GiB allocation failed
+  with 5.72 GiB free. It produced no validation score and is retained as a
+  concurrency-induced failure; retry it on an isolated card. The 50/50
+  candidate has not started. Window-50 has 900 flattened features, outside the
+  documented 500-feature intended range, and must be labelled extrapolative.
 - The earlier XJTU LSTM validation-only search has all nine seed-72 losses.
   It selects window 50, train batch 512, learning rate 1e-4 with minimum
   normalized validation loss 0.047744. The frozen configuration and result
@@ -369,6 +374,46 @@ For the formal three-seed runs, `subset_seed=72` stays fixed because the
 registered NC-P protocol uses `subset_ratio=1.0`; this avoids invalidating the
 preprocessed cache without changing the selected rows. Model RNG remains the
 reported run seed (72, 88 or 101).
+
+## NC-P grouped device-held-out window control
+
+The supplementary v2 development-pool control is complete for all five
+pre-registered seeds (72, 88, 101, 666, 226688), all five device folds, and all
+five window/stride candidates: 125 candidate evaluations. In each fold, one
+engine from each of DS01/04/05/07 is held out and every chronological query row
+from those four engines is evaluated; the other 16 of the 20 DS/source-unit
+training engines fit the model. This covers all 20 engines out-of-fold and
+1,326,795 query rows per candidate across the five seeds. The canonical held-out
+units 7–10 were not used. These folds are development evidence, not the
+preregistered test or a blind evaluation.
+
+Every candidate used TabDPT 1.3.0, 2,048 context rows, eight ensembles, and
+prediction batches of 512. Results below are device-macro native-RUL metrics;
+the parenthesized SD is across the five model seeds. Cost is mean candidate
+wall time per fold/seed under the recorded co-scheduled GPU execution, so it
+describes this workload rather than an isolated latency benchmark.
+
+| Window / stride | MAE | RMSE | NASA score | Mean seconds | Query rows/s |
+|---|---:|---:|---:|---:|---:|
+| 1 / 1 | 10.3084 (0.0509) | 13.0865 (0.0548) | 2.7367 (0.0336) | 40.94 | 1,341 |
+| 5 / 1 | 10.8741 (0.0505) | 13.7207 (0.0480) | 3.1761 (0.0216) | 40.02 | 1,370 |
+| 10 / 5 | 11.2172 (0.0554) | 14.4166 (0.0770) | 3.3758 (0.0415) | 39.95 | 1,377 |
+| 20 / 5 | 11.6201 (0.1125) | 14.8810 (0.0945) | 3.6229 (0.0590) | 44.20 | 1,238 |
+| 50 / 50 | 13.4467 (0.1188) | 17.0140 (0.1229) | 5.3760 (0.1165) | 49.60 | 1,103 |
+
+The same-stride 5/1 control is worse than 1/1 by 0.5657 native-RUL MAE. For
+10/5, 20/5, and 50/50, paired source-stratified bootstrap intervals over the
+20 engines for MAE increases versus 1/1 are respectively 0.4844–1.3159,
+0.7667–1.8077, and 2.2021–4.0207 (10,000 engine resamples; seeds are first
+averaged per engine). These are descriptive device-level intervals, not a
+seed-level significance test. In this control, longer and more sparsely
+sampled windows do not improve accuracy; 50/50 also has the lowest measured
+throughput. Because stride changes for the last three candidates, those
+contrasts do not isolate window length. The complete predictions, manifests,
+hashes, seed variation, paired intervals, and cost breakdown are in
+`artifacts/research/ncp_device_cv_v2/summary.json` and its fold directories.
+Candidate time includes model initialization, preparation, prediction, and
+serialization; simultaneous runs are recorded in each manifest.
 
 ## Device-macro final results
 
@@ -606,17 +651,20 @@ between-version score differences are descriptive and cannot identify the
 effect of any one architectural change.
 
 The NC-P LSTM seeds completed on physical GPUs 0, 3, and 2. Manifests
-distinguish physical IDs from `cuda:0`; the current GPU authorization covers
-physical GPUs 0–5. The NC-P TabDPT 1.1.13 seed-72 test is complete and audited,
-and seeds 88 and 101 use the same frozen configuration. The original
-full-context TabPFN validation remains ineligible as a supported baseline: its
-265,359-row input is about 26.5 times TabPFN 2.2.1's 10,000-row intended range,
-and the observed run ended with a CUDA kernel configuration error. A separately
-named 10,000-row, unit-balanced temporal-context validation grid is running
-seed-72 1/1 and 5/1 candidates on physical GPUs5 and1 with test evaluation
-disabled; the other three candidates remain pending. No NC-P TabPFN score is
-claimed yet. A fixed-input query-batch comparison helper is implemented and
-awaits a cache-backed input export plus an uncontended GPU slot.
+distinguish physical IDs from `cuda:0`; the historical runs used GPUs 0/2/3,
+and the current task-specific authorization covers physical GPUs 1–6. The
+NC-P TabDPT 1.1.13 seed-72 test is complete and audited, and seeds 88 and 101
+use the same frozen configuration. The original full-context TabPFN validation
+remains unsupported: its 265,359-row input is about 26.5 times TabPFN 2.2.1's
+10,000-row intended range, and the observed run ended with a CUDA kernel
+configuration error, not a confirmed OOM. A separately named 10,000-row,
+unit-balanced temporal-context seed-72 validation grid is incomplete. Its 1/1
+candidate is audited at `val/loss=0.0097866`; 5/1 and 10/5 remain active,
+20/5's first attempt failed from measured same-GPU contention, and its isolated
+retry plus 50/50 remain pending. All selection jobs use `test=false`; no NC-P
+TabPFN test score is claimed. A fixed-input query-batch comparison helper is
+implemented and still needs a cache-backed input export and a GPU slot with
+enough memory for the fitted context.
 On XJTU, the default cached fit mode OOMed during validation fitting at 6,557
 rows and 460 features. A separate low-memory path reproduced deterministically,
 but on a matched 2,049-row by 460-feature training slice and 398 validation
@@ -629,9 +677,25 @@ for windows 1/1, 5/1, 10/5, 20/5, and 50/50 were 0.099257, 0.122849, 0.116539,
 `4e70b9558c1fbc88a9ea68133141c88f5ada25fefbc0318478c8d5dda1f849c5`. Its
 validation run took 3,130 seconds with a tracked peak of 12,534 MiB on physical
 GPU 4. The seed-72 final evaluation uses this same low-memory execution
-protocol on physical GPU 4; the run has not produced an audited test score yet. Cached-path results are not pooled with it. Candidate-level costs
-and manifests are recorded in
-`artifacts/formal/results/xjtu_tabpfn_lowmem_yield32_selection_seed72.json`.
+protocol on physical GPU 4. Seed 72 completed in 21,957 s (6.10 h), with
+12,698 MiB tracked peak VRAM. Its saved 2,261-row prediction artifact was
+recomputed against all six normalized and denormalized per-bearing regression
+metrics; the maximum absolute difference was 0.00489 for MSE and remained
+within the metric-specific `atol=1e-4, rtol=1e-6` tolerance. The bearing query
+counts are 52, 161, 533, and 1,515. The device-macro normalized MAE is 0.17742
+while the query-weighted MAE is 0.22105; report both because the bearing
+trajectory lengths are highly unequal. The prediction digest is
+`e8469cc4923aa4c443cecde376c3164bf978c3cfb5cb37c123fbfa7b2e1e43fb`; the
+audit is `artifacts/formal/results/xjtu_tabpfn_lowmem_yield32_prediction_audit_seed72.json`.
+This remains a separate low-memory/yield32 result: the matched cached versus
+low-memory slice failed equivalence, and 50/50 expands 460 features to 23,000,
+far beyond the 500-feature intended range. It is not pooled into the
+paper-matched cached baseline table. The audited seed-72 result is a separate
+execution protocol; seeds 88 and 101 are now evaluating the same frozen 50/50
+low-memory configuration on physical GPUs 4 and 5. Candidate
+selection and run manifests are in
+`artifacts/formal/results/xjtu_tabpfn_lowmem_yield32_selection_seed72.json`
+and the adjacent `artifacts/formal/xjtu_tabpfn_lowmem_yield32_w50_s50_seed*_final/` directories.
 
 | Window / stride | Training rows × features | Validation loss | End-to-end seconds | Peak VRAM (MiB) |
 |---|---:|---:|---:|---:|
