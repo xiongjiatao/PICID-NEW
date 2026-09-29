@@ -47,6 +47,8 @@ The released artifact includes README, protocol, code, and JSON/CSV results, but
 
 **Required comparisons.** RUL threshold; TabDPT 1.3 full CDF; TabPFN full output/residual ECDF; separately held-out device calibration; discrete-time event classifier and a small DeepHit/MTLR-style model; calibration off/on; condition and device-wise leave-out. Derive 5%, 10%, 20% horizons from training-device median life in native units, then freeze them. For XJTU derive labels from the raw timeline and never use an evaluation bearing's realized total life to create an online horizon.
 
+**Compute-budget control.** Reuse the same frozen point-prediction checkpoint and query rows when comparing threshold, CDF, and residual-ECDF decisions; report the incremental calibration/preprocessing time, per-query alert latency, and peak VRAM separately. A trained event-time model must report full fitting plus inference cost on the same GPU class and split. Set the numeric latency/VRAM ceiling only after the pending uncontended batch-size preflight, then freeze that ceiling before the alert comparison; do not infer a budget from utilization snapshots or combine runtimes from contended GPUs.
+
 **Frozen XJTU horizon definition.** The eight PHMD training bearings have
 median maximum RUL 354 acquisition intervals (RUL is `N-1` for `N` ordered
 acquisitions). This fixes candidate horizons at 17.7, 35.4, and 70.8 intervals.
