@@ -49,6 +49,29 @@ def test_selection_rejects_missing_failed_or_test_accessed_results():
         freeze_selection(grid, {})
 
 
+def test_resource_feasible_selection_hashes_explicit_oom_exclusions():
+    from picid.research.protocol import Candidate
+
+    grid = [Candidate("nc_p", "tabpfn", window, stride)
+            for window, stride in ((1, 1), (5, 1), (10, 5), (50, 50))]
+    results = {c.key: dict(status="success", seed=72, test_enabled=False,
+                           val_loss=float(index)) for index, c in enumerate(grid)}
+    exclusion = {
+        "candidate": {"dataset": "nc_p", "model": "tabpfn", "window": 20,
+                      "stride": 5, "lr": None},
+        "reason": "repeated CUDA OOM at the registered 10,000-row context budget",
+        "attempts": ["retry4", "retry5", "retry6"],
+    }
+    frozen = freeze_selection(grid, results, resource_exclusions=[exclusion])
+    assert frozen["candidate"]["window"] == 1
+    assert frozen["protocol"] == "three_seed_fixed_configuration_resource_feasible_subset"
+    assert frozen["resource_exclusions"] == [exclusion]
+    with pytest.raises(ValueError, match="resource exclusion"):
+        freeze_selection(grid, results, resource_exclusions=[{
+            **exclusion, "candidate": {**exclusion["candidate"], "window": 10}
+        }])
+
+
 def test_interrupted_resume_is_complete_and_ordered(tmp_path):
     X = np.arange(30).reshape(10, 3)
     identity = dict(config="c", weights="w", training_input="t", code="v", physical_gpus=[0])

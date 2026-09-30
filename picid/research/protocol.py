@@ -64,13 +64,23 @@ def candidates(include_supplemental=False):
                     yield Candidate(dataset, model, window, stride)
 
 
-def freeze_selection(grid, results, execution_overrides=()):
+def freeze_selection(grid, results, execution_overrides=(), resource_exclusions=()):
     """Fail closed on missing/failed candidates or accidental test evaluation."""
     expected = {c.key: c for c in grid}
     if set(results) != set(expected) or not expected:
         raise ValueError("All registered candidates must finish before selection")
     if len({(c.dataset, c.model) for c in grid}) != 1:
         raise ValueError("Selection must contain one dataset/model family")
+    exclusions = list(resource_exclusions)
+    excluded_keys = set()
+    for exclusion in exclusions:
+        candidate = Candidate(**exclusion["candidate"])
+        if (not exclusion.get("reason") or candidate.key in expected
+                or candidate.key in excluded_keys
+                or (candidate.dataset, candidate.model) not in {(c.dataset, c.model) for c in grid}
+                or not exclusion.get("attempts")):
+            raise ValueError("Invalid or unaudited resource exclusion")
+        excluded_keys.add(candidate.key)
     for result in results.values():
         if (result["status"] != "success" or result["seed"] != 72
                 or result["test_enabled"]
@@ -80,8 +90,11 @@ def freeze_selection(grid, results, execution_overrides=()):
     winner = min(expected, key=lambda key: (
         results[key].get("val_loss", results[key].get("best_val_loss", math.inf)), key
     ))
-    payload = {"protocol": "three_seed_fixed_configuration", "seeds": SEEDS,
+    payload = {"protocol": ("three_seed_fixed_configuration_resource_feasible_subset"
+                            if exclusions else "three_seed_fixed_configuration"), "seeds": SEEDS,
                "candidate": asdict(expected[winner]),
                "execution_overrides": list(execution_overrides),
                "selection_results": results}
+    if exclusions:
+        payload["resource_exclusions"] = exclusions
     return {**payload, "sha256": digest(payload)}

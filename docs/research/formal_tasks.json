@@ -2783,6 +2783,7 @@
       ],
       "w20_retry4_status": "failed_oom_on_unoccupied_gpu0; peak23100MiB; allocation6.47GiB; free1.36GiB; memory_saving_mode=true",
       "w20_retry5_status": "failed_oom_on_unoccupied_gpu0; peak23100MiB; same_6.47GiB_allocation_failure_with_expandable_segments",
+      "w20_retry6_status": "failed_oom_on_unoccupied_gpu0; peak22858MiB; same_6.47GiB_allocation_failure_with_factor16_overlay",
       "memory_factor16_overlay": "artifacts/formal/tabpfn_overlays/tabpfn_2.2.1_memory_factor16_stable/overlay_manifest.json",
       "memory_factor16_patch": "patches/tabpfn/tabpfn_2.2.1_memory_factor16.patch",
       "memory_factor_equivalence_probe": "artifacts/formal/results/tabpfn_memory_chunk_equivalence_probe_factor16.json",
@@ -2795,6 +2796,15 @@
       },
       "w50_manifest": "artifacts/formal/nc_p_tabpfn_balanced10k_w50_s50_seed72_selection_pilot_completion1/manifest.json",
       "reconciled_plan": "artifacts/formal/tabpfn_completion_20260930/nc_p_factor16_reconciled.json",
+      "resource_feasible_plan": "artifacts/formal/tabpfn_completion_20260930/nc_p_resource_feasible_reconciled.json",
+      "resource_feasible_results": "artifacts/formal/results/nc_p_tabpfn_balanced10k_cached_yield32_resource_feasible",
+      "resource_feasible_candidate_windows": [
+        [1, 1],
+        [5, 1],
+        [10, 5],
+        [50, 50]
+      ],
+      "five_candidate_search_complete": false,
       "selection_rule": "freeze only with all five finite validation results; candidate execution and dependency overlay hashes remain in the frozen record"
     }
   },

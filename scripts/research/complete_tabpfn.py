@@ -131,7 +131,10 @@ def execute(plan, path):
                     records[candidate.key] = {'status': 'failed', 'seed': 72, 'error': repr(exc),
                                               'output': stage['output']}
                 atomic_json(results / 'selection_progress.json', records)
-            frozen = freeze_selection(grid, records, plan['execution_overrides'])
+            frozen = freeze_selection(
+                grid, records, plan['execution_overrides'],
+                resource_exclusions=plan.get('resource_exclusions', ()),
+            )
             atomic_json(results / 'frozen_seed72.json', frozen)
             candidate = Candidate(**frozen['candidate'])
             candidate_specific = records[candidate.key].get('candidate_execution_overrides', [])
@@ -139,7 +142,8 @@ def execute(plan, path):
             final_peak_mib = records[candidate.key].get('final_peak_mib', 23000)
             stages = []
             for seed in (72, 88, 101):
-                name = f"nc_p_tabpfn_balanced10k_cached_yield32_seed{seed}_final"
+                prefix = plan.get('final_experiment_prefix', "nc_p_tabpfn_balanced10k_cached_yield32")
+                name = f"{prefix}_seed{seed}_final"
                 command = [python, 'picid/run.py', *candidate.overrides(seed=seed, test=True),
                            f'experiment_group={name}', *plan['execution_overrides'],
                            *candidate_specific, *plan['data_overrides']]
