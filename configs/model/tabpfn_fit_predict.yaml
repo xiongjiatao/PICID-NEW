@@ -27,3 +27,6 @@ fit_sample_strategy: none
 #   repeat: 1
 #   activities: ["CPU", "CUDA"]
 #   trace_path: "trace.json"
+# Match TabPFN's documented memory-saving default while allowing an explicit
+# chunked-forward retry for feature windows that exceed a 24-GiB accelerator.
+memory_saving_mode: auto

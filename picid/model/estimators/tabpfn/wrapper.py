@@ -109,6 +109,7 @@ class FitPredictTabPFNWrapper(AbstractFitPredictWrapper):
                 device=device,
                 n_jobs=kwargs.get("n_jobs", -1),
                 fit_mode=kwargs.get("fit_mode", "fit_preprocessors"),
+                memory_saving_mode=kwargs.get("memory_saving_mode", "auto"),
             )
         else:
             backbone = TabPFNRegressor(
@@ -119,6 +120,7 @@ class FitPredictTabPFNWrapper(AbstractFitPredictWrapper):
                 device=device,
                 n_jobs=kwargs.get("n_jobs", -1),
                 fit_mode=kwargs.get("fit_mode", "fit_preprocessors"),
+                memory_saving_mode=kwargs.get("memory_saving_mode", "auto"),
             )
 
         logger.info(f"Using TabPFN on device: {backbone.device}, kwargs: {kwargs}")

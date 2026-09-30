@@ -17,6 +17,7 @@ _STUBBED_MODULES = (_TABPFN, _WRAPPER)
 class _StubTabPFNRegressor:
     def __init__(self, **kwargs):
         self.device = kwargs.get("device", "cpu")
+        self.kwargs = kwargs
 
     def fit(self, X, y=None):
         self.fit_X = (
@@ -47,6 +48,7 @@ class _StubTabPFNRegressor:
 class _StubTabPFNClassifier:
     def __init__(self, **kwargs):
         self.device = kwargs.get("device", "cpu")
+        self.kwargs = kwargs
 
     def fit(self, X, y=None):
         return self
@@ -110,6 +112,21 @@ def test_allows_multi_target_is_false():
         device="cpu", task_type="regression", **_common_kwargs()
     )
     assert w.allows_multi_target is False
+
+
+
+
+def test_memory_saving_mode_is_exposed_to_backbone():
+    FitPredictTabPFNWrapper = _cls()
+    default = FitPredictTabPFNWrapper(
+        device="cpu", task_type="regression", **_common_kwargs()
+    )
+    bounded = FitPredictTabPFNWrapper(
+        device="cpu", task_type="regression", memory_saving_mode=10,
+        **_common_kwargs()
+    )
+    assert default.backbone.kwargs["memory_saving_mode"] == "auto"
+    assert bounded.backbone.kwargs["memory_saving_mode"] == 10
 
 
 def test_regression_predict_without_full_outputs_path():
