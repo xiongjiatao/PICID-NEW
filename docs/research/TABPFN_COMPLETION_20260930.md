@@ -99,3 +99,6 @@ registered candidate has a finite validation result. If 20/5 still fails,
 there is no five-candidate selection or final three-seed claim. If all five
 complete, the selected configuration is evaluated on seeds72/88/101 in
 parallel on GPUs2/3/6, with per-seed prediction audits before aggregation.
+Retry6 is running on GPU0 with the allocator and verified factor16 overlay
+recorded. The factor16 controller is waiting on the matching existing 10/5
+validation and will reuse retry6 rather than launch a duplicate.

@@ -2770,7 +2770,7 @@
     },
     "nc_p_tabpfn_balanced10k_cached_yield32": {
       "status": "selection_in_progress",
-      "selection_worker": "artifacts/formal/results/nc_p_tabpfn_balanced10k_cached_yield32/workers/nc_p_selection_and_finals/completion_status.json",
+      "selection_worker": "artifacts/formal/results/nc_p_tabpfn_balanced10k_cached_yield32_memory_factor16_reconciled/workers/nc_p_memory_factor16_reconciled/completion_status.json",
       "w10_manifest": "artifacts/formal/nc_p_tabpfn_balanced10k_w10_s5_seed72_selection_pilot_completion1/manifest.json",
       "w20_default_failed": "artifacts/formal/nc_p_tabpfn_balanced10k_w20_s5_seed72_selection_pilot_completion1_completion1/manifest.json",
       "w20_memory_saving_attempts": [
@@ -2794,7 +2794,7 @@
         "PYTORCH_ALLOC_CONF": "expandable_segments:True"
       },
       "w50_manifest": "artifacts/formal/nc_p_tabpfn_balanced10k_w50_s50_seed72_selection_pilot_completion1/manifest.json",
-      "reconciled_plan": "artifacts/formal/tabpfn_completion_20260930/nc_p_reconciled.json",
+      "reconciled_plan": "artifacts/formal/tabpfn_completion_20260930/nc_p_factor16_reconciled.json",
       "selection_rule": "freeze only with all five finite validation results; candidate execution and dependency overlay hashes remain in the frozen record"
     }
   },
