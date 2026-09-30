@@ -52,3 +52,38 @@ Both admission checks require23,000 MiB estimated peak plus1,024 MiB reserve;
 this is only a ceiling and the 50/50 candidate may fail. Existing GPU0–2 tasks
 continue. GPUs5–6 remain available for additional stages after observed memory
 and process checks.
+
+## Results and current status — 2026-09-30
+
+XJTU TabPFN's three-seed `low_memory` / `yield32` alternate is now complete.
+All three prediction exports reconcile with per-bearing metrics (2,261 rows on
+four bearings per seed). Across seeds, normalized device-macro MAE is
+0.178463 (sample SD 0.001536); offline-denormalized device-macro MAE is
+127.343 (SD 2.423), and PHM score is 0.297971 (SD 0.003923). The bearing-level
+95% bootstrap interval for normalized macro MAE is [0.10790, 0.24903], based
+on four test bearings; it is not a population-level guarantee. Public test
+access and the low-memory/cached execution difference remain disclosed.
+
+The native TabPFN `memory_saving_mode=True` retry3 OOMed under GPU contention:
+its tracked peak was 15.85 GiB, another process used 2.18 GiB, and only 5.65 GiB
+remained for a 6.47-GiB allocation. That external process was not stopped.
+Retry4 used the same memory-saving mode on an otherwise empty GPU0 and still
+OOMed: this process held 22.32 GiB, only 1.36 GiB was free, and the next
+allocation required 6.47 GiB. PyTorch reported 7.29 GiB reserved but
+unallocated, so retry5 keeps the training rows and model settings fixed while
+testing `PYTORCH_ALLOC_CONF=expandable_segments:True`. The environment setting
+is stored in the run manifest and, if selected, carried into every final seed.
+The first retry failed before data loading because a nested symlink was created
+in an existing empty `datasets` directory; that attempt is retained. The later
+retry resolved the canonical dataset path and reached model fitting.
+
+NC-P 10/5 remains in validation on GPU1 and 50/50 remains in validation on
+GPU4. The original 20/5 default execution and retry4 both failed with OOM. A
+reconciled controller reuses audited 1/1 and 5/1, waits for the in-flight 10/5
+and 50/50, then validates 20/5 retry5. Its final-seed memory estimate uses the
+selected candidate's measured peak, with the tracked runner preserving 1 GiB
+of headroom. It freezes a configuration only after every
+registered candidate has a finite validation result. If 20/5 still fails,
+there is no five-candidate selection or final three-seed claim. If all five
+complete, the selected configuration is evaluated on seeds72/88/101 in
+parallel on GPUs2/3/6, with per-seed prediction audits before aggregation.

@@ -80,11 +80,21 @@ def main():
                         help="Free VRAM to keep beyond the estimated peak (default: 1024)")
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--stage", required=True)
+    parser.add_argument("--env", action="append", default=[], metavar="KEY=VALUE",
+                        help="Explicit child environment override; repeated options are allowed")
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args()
     command = args.command[1:] if args.command[:1] == ["--"] else args.command
     if not command:
         parser.error("Command required")
+    environment_overrides = {}
+    for assignment in args.env:
+        key, separator, value = assignment.partition("=")
+        if (not separator or not key or key in environment_overrides
+                or key == "CUDA_VISIBLE_DEVICES"):
+            parser.error(f"Invalid or duplicate environment override: {assignment!r}")
+        environment_overrides[key] = value
+    shell_command = shlex.join([*(f"{key}={value}" for key, value in environment_overrides.items()), *command])
     if args.output.exists():
         if not args.output.is_dir() or any(args.output.iterdir()):
             raise FileExistsError(args.output)
@@ -97,7 +107,8 @@ def main():
     except subprocess.CalledProcessError as exc:
         failure = {
             "command": command,
-            "shell_command": shlex.join(command),
+            "shell_command": shell_command,
+            "environment_overrides": environment_overrides,
             "cwd": str(Path.cwd()),
             "seed": args.seed,
             "stage": args.stage,
@@ -125,7 +136,9 @@ def main():
                 for row in initial["gpus"].splitlines()}
         assert_gpu_memory_budget(free[args.gpu], args.expected_peak_mib, args.reserve_mib)
     env = dict(os.environ, CUDA_VISIBLE_DEVICES="" if args.gpu is None else str(args.gpu))
-    manifest = {"command": command, "shell_command": shlex.join(command), "cwd": str(Path.cwd()),
+    env.update(environment_overrides)
+    manifest = {"command": command, "shell_command": shell_command,
+                "environment_overrides": environment_overrides, "cwd": str(Path.cwd()),
                 "seed": args.seed, "stage": args.stage, "status": "running",
                 "physical_gpus": [] if args.gpu is None else [args.gpu],
                 "gpu_assignment": "cpu_only" if args.gpu is None else "single_physical_gpu",

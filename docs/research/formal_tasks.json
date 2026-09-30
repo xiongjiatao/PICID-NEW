@@ -2593,7 +2593,7 @@
       "previous_status": "cached_mode_oom; low_memory_is_non_equivalent_separate_protocol; seed72_final_audited; seeds88_101_running"
     },
     "nc_p_tabpfn_capped_context": {
-      "status": "seed72_validation_grid_incomplete",
+      "status": "validation_grid_in_progress_all_five_candidates_required_before_freeze",
       "full_context_failure": "265359 training rows; CUDA invalid configuration argument after about 1197 seconds; not established as OOM",
       "tabpfn_version": "2.2.1",
       "intended_sample_limit": 10000,
@@ -2643,10 +2643,10 @@
           "result_audit": "artifacts/formal/results/nc_p_tabpfn_balanced10k_w5_s1_seed72_validation_audit.json"
         },
         "w10_s5": {
-          "status": "requires_host_reconciliation_no_picid_process_20260930",
-          "physical_gpu": 2,
+          "status": "running",
+          "physical_gpu": 1,
           "test_enabled": false,
-          "previous_status": "running"
+          "manifest": "artifacts/formal/nc_p_tabpfn_balanced10k_w10_s5_seed72_selection_pilot_completion1/manifest.json"
         },
         "w20_s5_first_attempt": {
           "status": "failed_concurrency_oom",
@@ -2669,10 +2669,31 @@
           "previous_status": "running_isolated_gpu6_retry"
         },
         "w50_s50": {
-          "status": "pending",
+          "status": "running",
+          "physical_gpu": 4,
           "test_enabled": false,
-          "flattened_feature_count": 900,
-          "intended_limit_exceeded": true
+          "manifest": "artifacts/formal/nc_p_tabpfn_balanced10k_w50_s50_seed72_selection_pilot_completion1/manifest.json"
+        },
+        "w20_s5_default": {
+          "status": "failed_oom",
+          "physical_gpu": 3,
+          "test_enabled": false,
+          "elapsed_seconds": 155.9548,
+          "manifest": "artifacts/formal/nc_p_tabpfn_balanced10k_w20_s5_seed72_selection_pilot_completion1/manifest.json"
+        },
+        "w20_s5_memory_saving_retry3": {
+          "status": "failed_external_gpu_contention",
+          "physical_gpu": 5,
+          "test_enabled": false,
+          "peak_tracked_process_memory_mib": 15850,
+          "external_process_memory_mib": 2180,
+          "manifest": "artifacts/formal/nc_p_tabpfn_balanced10k_w20_s5_seed72_selection_memory_saving_retry3/manifest.json"
+        },
+        "w20_s5_memory_saving_retry4": {
+          "status": "running",
+          "physical_gpu": 0,
+          "test_enabled": false,
+          "manifest": "artifacts/formal/nc_p_tabpfn_balanced10k_w20_s5_seed72_selection_memory_saving_retry4/manifest.json"
         }
       },
       "parallel_pilot": {
@@ -2722,7 +2743,50 @@
         "launch_gate": "run on an available GPU without sharing its measured throughput with another model task"
       },
       "result": null,
-      "test_access": false
+      "test_access": false,
+      "reconciled_completion_plan": "artifacts/formal/tabpfn_completion_20260930/nc_p_reconciled.json",
+      "freeze_guard": "No final evaluation starts unless all five candidate validation results are finite and audited."
+    },
+    "xjtu_tabpfn_lowmem_yield32": {
+      "status": "complete_three_seed_alternate_execution_protocol_audited",
+      "protocol": "window50/stride50; fit_mode=low_memory; yield_strategy=true; batch32",
+      "summary": "artifacts/formal/results/xjtu_tabpfn_lowmem_yield32/three_seed_summary.json",
+      "audits": [
+        "artifacts/formal/results/xjtu_tabpfn_lowmem_yield32/prediction_audit_seed72.json",
+        "artifacts/formal/results/xjtu_tabpfn_lowmem_yield32/prediction_audit_seed88.json",
+        "artifacts/formal/results/xjtu_tabpfn_lowmem_yield32/prediction_audit_seed101.json"
+      ],
+      "normalized_device_macro_mae_mean_sd": [
+        0.17846346398194632,
+        0.0015358978560765346
+      ],
+      "denormalized_device_macro_mae_mean_sd": [
+        127.34261067708333,
+        2.4228486076037394
+      ],
+      "rows_per_seed": 2261,
+      "bearings_per_seed": 4,
+      "public_test_access_disclosed": true
+    },
+    "nc_p_tabpfn_balanced10k_cached_yield32": {
+      "status": "selection_in_progress",
+      "selection_worker": "artifacts/formal/results/nc_p_tabpfn_balanced10k_cached_yield32/workers/nc_p_selection_and_finals/completion_status.json",
+      "w10_manifest": "artifacts/formal/nc_p_tabpfn_balanced10k_w10_s5_seed72_selection_pilot_completion1/manifest.json",
+      "w20_default_failed": "artifacts/formal/nc_p_tabpfn_balanced10k_w20_s5_seed72_selection_pilot_completion1_completion1/manifest.json",
+      "w20_memory_saving_attempts": [
+        "artifacts/formal/nc_p_tabpfn_balanced10k_w20_s5_seed72_selection_memory_saving_retry1/manifest.json",
+        "artifacts/formal/nc_p_tabpfn_balanced10k_w20_s5_seed72_selection_memory_saving_retry2/manifest.json",
+        "artifacts/formal/nc_p_tabpfn_balanced10k_w20_s5_seed72_selection_memory_saving_retry3/manifest.json",
+        "artifacts/formal/nc_p_tabpfn_balanced10k_w20_s5_seed72_selection_memory_saving_retry4/manifest.json",
+        "artifacts/formal/nc_p_tabpfn_balanced10k_w20_s5_seed72_selection_memory_saving_allocator_retry5/manifest.json"
+      ],
+      "w20_retry4_status": "failed_oom_on_unoccupied_gpu0; peak23100MiB; allocation6.47GiB; free1.36GiB; memory_saving_mode=true",
+      "retry5_environment_override": {
+        "PYTORCH_ALLOC_CONF": "expandable_segments:True"
+      },
+      "w50_manifest": "artifacts/formal/nc_p_tabpfn_balanced10k_w50_s50_seed72_selection_pilot_completion1/manifest.json",
+      "reconciled_plan": "artifacts/formal/tabpfn_completion_20260930/nc_p_reconciled.json",
+      "selection_rule": "freeze only with all five finite validation results; candidate execution and environment overrides remain in frozen result record"
     }
   },
   "host_reconciliation_20260930": {
@@ -2740,6 +2804,26 @@
       "mae_native_device_macro": 7.035196304321289,
       "rmse_native_device_macro": 9.53532886505127
     },
-    "remaining": "NC-P TabDPT11 seed101; NC-P TabPFN candidates10/5,20/5,50/50 and frozen finals; XJTU TabPFN88/101 alternate protocol"
+    "remaining": "NC-P TabPFN five-candidate validation grid and frozen three-seed finals; XJTU TabPFN low-memory alternate is now complete/audited"
+  },
+  "gpu_authorization_update_20260930": {
+    "user_authorized_physical_gpus": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "currently_scheduled_by_user_authorization": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "constraint": "do not interrupt third-party GPU processes"
   }
 }

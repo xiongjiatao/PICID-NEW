@@ -33,13 +33,22 @@ def verify_command(actual, expected):
 def run_stage(stage, root, gpu, python, status):
     output = Path(stage['output'])
     command = stage['command']
+    environment = stage.get('environment_overrides', {})
     manifest_path = output / 'manifest.json'
     if manifest_path.exists():
-        manifest = json.loads(manifest_path.read_text())
-        verify_command(manifest['command'], command)
-        if manifest.get('exit_code') != 0:
-            raise RuntimeError(f'Existing attempt is incomplete/failed; preserve it: {output}')
-        return output
+        while True:
+            manifest = json.loads(manifest_path.read_text())
+            verify_command(manifest['command'], command)
+            if manifest.get('environment_overrides', {}) != environment:
+                raise ValueError(f'Existing attempt has different environment overrides: {output}')
+            if manifest.get('exit_code') == 0:
+                return output
+            if manifest.get('exit_code') is not None or manifest.get('status') != 'running':
+                raise RuntimeError(f'Existing attempt is incomplete/failed; preserve it: {output}')
+            atomic_json(status, {'status': 'waiting_for_existing_matching_attempt',
+                                 'stage': str(output), 'pid': manifest.get('pid'),
+                                 'gpu': manifest.get('physical_gpus'), 'updated_unix': time.time()})
+            time.sleep(30)
     while True:
         snapshot = gpu_snapshot()
         free = {int(row.split(',')[0]): int(row.split(',')[2])
@@ -54,10 +63,12 @@ def run_stage(stage, root, gpu, python, status):
         time.sleep(30)
     atomic_json(status, {'status': 'running', 'stage': str(output), 'gpu': gpu,
                          'updated_unix': time.time()})
-    subprocess.run([python, 'scripts/research/run_tracked.py', '--output', str(output),
+    tracker_command = [python, 'scripts/research/run_tracked.py', '--output', str(output),
                     '--gpu', str(gpu), '--expected-peak-mib', str(stage['peak_mib']),
-                    '--seed', overrides(command)['seed'], '--stage', stage['kind'], '--',
-                    *command], cwd=root, check=True)
+                    '--seed', overrides(command)['seed'], '--stage', stage['kind']]
+    for key, value in environment.items():
+        tracker_command.extend(['--env', f'{key}={value}'])
+    subprocess.run([*tracker_command, '--', *command], cwd=root, check=True)
     manifest = json.loads(manifest_path.read_text())
     if manifest.get('exit_code') != 0:
         raise RuntimeError('Tracked process did not finish successfully')
@@ -102,11 +113,19 @@ def execute(plan, path):
                 grid.append(candidate)
                 try:
                     expected = [python, 'picid/run.py', *candidate.overrides(seed=72, test=False),
-                                *plan['execution_overrides'], *plan['data_overrides']]
+                                *plan['execution_overrides'],
+                                *stage.get('candidate_execution_overrides', []),
+                                *plan['data_overrides']]
                     verify_command(stage['command'], expected)
-                    output = run_stage(stage, root, gpu, python, status)
+                    output = run_stage(stage, root, stage.get('gpu', gpu), python, status)
                     metrics = parse_validation_metrics(output / 'stdout.log')
                     records[candidate.key] = {'status': 'success', 'seed': 72, 'test_enabled': False,
+                                              'candidate_execution_overrides': stage.get('candidate_execution_overrides', []),
+                                              'candidate_environment_overrides': stage.get('environment_overrides', {}),
+                                              'final_peak_mib': max(3000, int(max(
+                                                  json.loads((output / 'manifest.json').read_text()).get(
+                                                      'observed_peak_tracked_process_gpu_memory_mib_by_physical_gpu', {}).values(),
+                                                      default=0))),
                                               **metrics, 'manifest_sha256': file_digest(output / 'manifest.json')}
                 except (subprocess.CalledProcessError, RuntimeError) as exc:
                     records[candidate.key] = {'status': 'failed', 'seed': 72, 'error': repr(exc),
@@ -115,13 +134,18 @@ def execute(plan, path):
             frozen = freeze_selection(grid, records, plan['execution_overrides'])
             atomic_json(results / 'frozen_seed72.json', frozen)
             candidate = Candidate(**frozen['candidate'])
+            candidate_specific = records[candidate.key].get('candidate_execution_overrides', [])
+            candidate_environment = records[candidate.key].get('candidate_environment_overrides', {})
+            final_peak_mib = records[candidate.key].get('final_peak_mib', 23000)
             stages = []
             for seed in (72, 88, 101):
                 name = f"nc_p_tabpfn_balanced10k_cached_yield32_seed{seed}_final"
                 command = [python, 'picid/run.py', *candidate.overrides(seed=seed, test=True),
-                           f'experiment_group={name}', *plan['execution_overrides'], *plan['data_overrides']]
+                           f'experiment_group={name}', *plan['execution_overrides'],
+                           *candidate_specific, *plan['data_overrides']]
                 stages.append({'output': str(root / 'artifacts/formal' / name), 'command': command,
-                               'peak_mib': 23000, 'kind': 'frozen_final_balanced10k_cached_yield32'})
+                               'peak_mib': final_peak_mib, 'kind': 'frozen_final_balanced10k_cached_yield32',
+                               'environment_overrides': candidate_environment})
         else:
             frozen = json.loads(Path(plan['frozen']).read_text())
             if frozen['sha256'] != digest({k: v for k, v in frozen.items() if k != 'sha256'}):
@@ -129,15 +153,32 @@ def execute(plan, path):
             if frozen['sha256'] != plan['frozen_sha256']:
                 raise ValueError('Wrong frozen execution protocol')
             stages = plan['finals']
-        for stage in stages:
+        final_gpus = plan.get('parallel_final_gpus', {})
+        def finish_final(stage):
             seed = int(overrides(stage['command'])['seed'])
             expected = [python, 'picid/run.py',
                         *Candidate(**frozen['candidate']).overrides(seed=seed, test=True),
-                        *frozen['execution_overrides'], *plan['data_overrides']]
+                        *frozen['execution_overrides'],
+                        *frozen['selection_results'][Candidate(**frozen['candidate']).key].get('candidate_execution_overrides', []),
+                        *plan['data_overrides']]
             verify_command(stage['command'], expected)
-            output = run_stage(stage, root, gpu, python, status)
-            seed = int(overrides(stage['command'])['seed'])
+            expected_environment = frozen['selection_results'][Candidate(**frozen['candidate']).key].get(
+                'candidate_environment_overrides', {})
+            if stage.get('environment_overrides', {}) != expected_environment:
+                raise ValueError('Final stage environment differs from frozen validation configuration')
+            assigned_gpu = final_gpus.get(str(seed), gpu)
+            worker_status = status.parent / f'final_seed{seed}_status.json'
+            output = run_stage(stage, root, assigned_gpu, python, worker_status)
             audit_final(output, root, python, plan['dataset'], seed, frozen, results)
+        if final_gpus:
+            from concurrent.futures import ThreadPoolExecutor
+            with ThreadPoolExecutor(max_workers=len(final_gpus)) as executor:
+                futures = [executor.submit(finish_final, stage) for stage in stages]
+                for future in futures:
+                    future.result()
+        else:
+            for stage in stages:
+                finish_final(stage)
         # Each worker writes its own status; aggregation is safe only with all three audited seeds.
         reports = [results / f'device_metrics_seed{s}.json' for s in (72, 88, 101)]
         if all(p.exists() and (results / f'prediction_audit_seed{s}.json').exists()
