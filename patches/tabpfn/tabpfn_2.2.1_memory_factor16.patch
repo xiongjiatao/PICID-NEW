@@ -1,0 +1,6 @@
+--- a/architectures/base/memory.py
++++ b/architectures/base/memory.py
+@@ -108,2 +108,2 @@
+ class MemoryUsageEstimator:
+-    SAVE_PEAK_MEM_FACTOR = 8
++    SAVE_PEAK_MEM_FACTOR = 16

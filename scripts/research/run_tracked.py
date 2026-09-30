@@ -71,6 +71,40 @@ def gpu_snapshot():
             "observed_process_memory_mib_by_physical_gpu": peaks}
 
 
+def directory_digest(root):
+    digest = hashlib.sha256()
+    files = (p for p in root.rglob("*") if p.is_file()
+             and "__pycache__" not in p.parts and p.suffix not in {".pyc", ".pyo"})
+    for path in sorted(files):
+        digest.update(path.relative_to(root).as_posix().encode())
+        digest.update(b"\0")
+        with path.open("rb") as stream:
+            for block in iter(lambda: stream.read(1024 * 1024), b""):
+                digest.update(block)
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def dependency_overlays(environment_overrides):
+    overlays = []
+    for entry in environment_overrides.get("PYTHONPATH", "").split(os.pathsep):
+        if not entry:
+            continue
+        manifest_path = Path(entry) / "overlay_manifest.json"
+        if manifest_path.is_file():
+            content = manifest_path.read_bytes()
+            manifest = json.loads(content)
+            package = Path(entry) / "tabpfn"
+            package_hash = directory_digest(package)
+            if package_hash != manifest.get("patched_package_sha256"):
+                raise ValueError(f"Dependency overlay content hash mismatch: {package}")
+            overlays.append({"manifest_path": str(manifest_path.resolve()),
+                             "manifest_sha256": hashlib.sha256(content).hexdigest(),
+                             "package_sha256_verified": package_hash,
+                             "manifest": manifest})
+    return overlays
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, required=True)
@@ -109,6 +143,7 @@ def main():
             "command": command,
             "shell_command": shell_command,
             "environment_overrides": environment_overrides,
+            "dependency_overlays": dependency_overlays(environment_overrides),
             "cwd": str(Path.cwd()),
             "seed": args.seed,
             "stage": args.stage,
@@ -138,7 +173,9 @@ def main():
     env = dict(os.environ, CUDA_VISIBLE_DEVICES="" if args.gpu is None else str(args.gpu))
     env.update(environment_overrides)
     manifest = {"command": command, "shell_command": shell_command,
-                "environment_overrides": environment_overrides, "cwd": str(Path.cwd()),
+                "environment_overrides": environment_overrides,
+                "dependency_overlays": dependency_overlays(environment_overrides),
+                "cwd": str(Path.cwd()),
                 "seed": args.seed, "stage": args.stage, "status": "running",
                 "physical_gpus": [] if args.gpu is None else [args.gpu],
                 "gpu_assignment": "cpu_only" if args.gpu is None else "single_physical_gpu",

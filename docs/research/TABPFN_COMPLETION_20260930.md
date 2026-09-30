@@ -77,12 +77,24 @@ The first retry failed before data loading because a nested symlink was created
 in an existing empty `datasets` directory; that attempt is retained. The later
 retry resolved the canonical dataset path and reached model fitting.
 
+Retry5 reproduced the same 22.32-GiB OOM, so allocator configuration alone did
+not solve it. A local overlay now raises TabPFN 2.2.1's activation chunk factor
+from8 to16. It is built from the locked package into the result tree; neither
+the virtual environment nor installed dependency is edited. The patch changes
+only inference activation partitioning. A seed72 synthetic probe with 256 rows,
+360 features and32 queries produced bit-identical predictions for factors8 and
+16 (maximum difference0; tolerance1e-4); allocated peak was591 MiB for both, so
+this probe supports numerical equivalence but does not establish high-context
+memory reduction. Each run manifest records and verifies the patched package
+hash and overlay-manifest hash. NC-P w20 retry6 is a separate, explicitly
+identified validation attempt using the factor16 overlay.
+
 NC-P 10/5 remains in validation on GPU1 and 50/50 remains in validation on
-GPU4. The original 20/5 default execution and retry4 both failed with OOM. A
-reconciled controller reuses audited 1/1 and 5/1, waits for the in-flight 10/5
-and 50/50, then validates 20/5 retry5. Its final-seed memory estimate uses the
-selected candidate's measured peak, with the tracked runner preserving 1 GiB
-of headroom. It freezes a configuration only after every
+GPU4. The original 20/5 default execution, retry4 and retry5 all failed with
+OOM. The factor16 reconciled controller reuses audited 1/1 and 5/1, waits for
+the in-flight 10/5 and 50/50, then validates 20/5 retry6. Its final-seed memory
+estimate uses the selected candidate's measured peak, with the tracked runner
+preserving 1 GiB of headroom. It freezes a configuration only after every
 registered candidate has a finite validation result. If 20/5 still fails,
 there is no five-candidate selection or final three-seed claim. If all five
 complete, the selected configuration is evaluated on seeds72/88/101 in

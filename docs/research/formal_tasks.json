@@ -2778,15 +2778,24 @@
         "artifacts/formal/nc_p_tabpfn_balanced10k_w20_s5_seed72_selection_memory_saving_retry2/manifest.json",
         "artifacts/formal/nc_p_tabpfn_balanced10k_w20_s5_seed72_selection_memory_saving_retry3/manifest.json",
         "artifacts/formal/nc_p_tabpfn_balanced10k_w20_s5_seed72_selection_memory_saving_retry4/manifest.json",
-        "artifacts/formal/nc_p_tabpfn_balanced10k_w20_s5_seed72_selection_memory_saving_allocator_retry5/manifest.json"
+        "artifacts/formal/nc_p_tabpfn_balanced10k_w20_s5_seed72_selection_memory_saving_allocator_retry5/manifest.json",
+        "artifacts/formal/nc_p_tabpfn_balanced10k_w20_s5_seed72_selection_memory_factor16_retry6/manifest.json"
       ],
       "w20_retry4_status": "failed_oom_on_unoccupied_gpu0; peak23100MiB; allocation6.47GiB; free1.36GiB; memory_saving_mode=true",
+      "w20_retry5_status": "failed_oom_on_unoccupied_gpu0; peak23100MiB; same_6.47GiB_allocation_failure_with_expandable_segments",
+      "memory_factor16_overlay": "artifacts/formal/tabpfn_overlays/tabpfn_2.2.1_memory_factor16_stable/overlay_manifest.json",
+      "memory_factor16_patch": "patches/tabpfn/tabpfn_2.2.1_memory_factor16.patch",
+      "memory_factor_equivalence_probe": "artifacts/formal/results/tabpfn_memory_chunk_equivalence_probe_factor16.json",
+      "retry6_execution_overrides": [
+        "model.memory_saving_mode=true",
+        "PYTHONPATH=artifacts/formal/tabpfn_overlays/tabpfn_2.2.1_memory_factor16_stable"
+      ],
       "retry5_environment_override": {
         "PYTORCH_ALLOC_CONF": "expandable_segments:True"
       },
       "w50_manifest": "artifacts/formal/nc_p_tabpfn_balanced10k_w50_s50_seed72_selection_pilot_completion1/manifest.json",
       "reconciled_plan": "artifacts/formal/tabpfn_completion_20260930/nc_p_reconciled.json",
-      "selection_rule": "freeze only with all five finite validation results; candidate execution and environment overrides remain in frozen result record"
+      "selection_rule": "freeze only with all five finite validation results; candidate execution and dependency overlay hashes remain in the frozen record"
     }
   },
   "host_reconciliation_20260930": {
